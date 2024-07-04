@@ -1,0 +1,59 @@
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String   @unique
+  firstName     String?
+  lastName      String?
+  token Token?
+  // Relation
+  notifications Notification[]
+}
+
+model Event {
+  id       Int     @id @default(autoincrement())
+  title    String
+  date     DateTime
+  description String
+  thumbnail String
+}
+
+model Media {
+  id       Int     @id @default(autoincrement())
+  title    String
+  description String
+  coverPhoto String
+  source String
+  duration BigInt
+  type String
+  category String
+  dateInserted DateTime
+  viewCount BigInt
+  likeCount BigInt
+}
+
+model Notification {
+  id       Int     @id @default(autoincrement())
+  title    String
+  description String
+  dateInserted DateTime
+  read Boolean
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Token {
+  id       Int     @id @default(autoincrement())
+  token    String
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+}

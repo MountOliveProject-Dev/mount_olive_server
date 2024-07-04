@@ -1,0 +1,11 @@
+{
+  "apps": [
+    {
+      "name": "fs-platform",
+      "script": "server.ts",
+      "instances": 2,
+      "exec_mode": "cluster",
+      "listen_timeout": 8000
+    }
+  ]
+}

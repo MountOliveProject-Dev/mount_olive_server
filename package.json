@@ -4,21 +4,36 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "prisma generate",
+    "start": "node ./dist/src/index.js",
+    "compile": "tsc -p ./tsconfig.json",
+    "dev": "ts-node-dev --respawn ./src/index.ts",
+     "db:push": "prisma db push",
+    "migrate:reset": "prisma migrate reset",
+    "migrate:create": "prisma migrate dev --create-only",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "prisma:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@prisma/client": "^5.13.0",
-    "@types/node": "^20.12.10",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "@hapi/hapi": "^21.3.10",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "hapi-graceful-pm2": "^1.0.17",
     "joi": "^17.13.1",
     "prisma": "^5.13.0"
+  },
+  "directories": {
+    "dist": "dist"
   }
 }
