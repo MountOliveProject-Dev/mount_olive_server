@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import Hapi from '@hapi/hapi';
 
 import { pm2plugin, prismaPlugin } from "./Plugins";
-
+declare module '@hapi/hapi' {
+    interface ServerApplicationState {}
+  }
 
 dotenv.config();
 
@@ -31,7 +33,7 @@ export async function createServer(): Promise<Hapi.Server> {
     console.log("Running in production mode...");
   }
 
-  await server.register([pm2plugin, prismaPlugin]);
+  await server.register([prismaPlugin,pm2plugin]);
 
   await server.initialize();
 

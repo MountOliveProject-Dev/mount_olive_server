@@ -21,8 +21,10 @@ model User {
 
 model Event {
   id       Int     @id @default(autoincrement())
+  uniqueId String @unique @default(cuid())
   title    String
-  date     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   description String
   thumbnail String
 }
@@ -36,7 +38,8 @@ model Media {
   duration BigInt
   type String
   category String
-  dateInserted DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   viewCount BigInt
   likeCount BigInt
 }
@@ -45,7 +48,8 @@ model Notification {
   id       Int     @id @default(autoincrement())
   title    String
   description String
-  dateInserted DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   read Boolean
   userId Int
   user User @relation(fields: [userId], references: [id])
@@ -54,6 +58,7 @@ model Notification {
 model Token {
   id       Int     @id @default(autoincrement())
   token    String
+  createdAt     DateTime @default(now())
   userId Int @unique
   user User @relation(fields: [userId], references: [id])
 }
