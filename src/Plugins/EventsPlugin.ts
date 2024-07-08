@@ -1,6 +1,6 @@
 import Hapi from "@hapi/hapi";
 import Joi from "joi";
-
+import { listEventsHandler } from "../Handlers"
 
 export const eventsPlugin = {
     name: 'app/events',
@@ -9,12 +9,9 @@ export const eventsPlugin = {
     register: async function (server: Hapi.Server) {
         server.route({
             method: 'GET',
-            path: '/events',
-            handler: async () => {
-                return {
-                    ok: true
-                }
-            }
+            path: '/api/events',
+            handler: listEventsHandler,
+            
         })
     }
 
