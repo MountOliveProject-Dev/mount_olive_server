@@ -31,7 +31,7 @@ async function createServer() {
     else {
         console.log("Running in production mode...");
     }
-    await server.register([Plugins_1.prismaPlugin, Plugins_1.pm2plugin]);
+    await server.register([Plugins_1.prismaPlugin, Plugins_1.pm2plugin, Plugins_1.statusPlugin, Plugins_1.eventsPlugin]);
     await server.initialize();
     return server;
 }
