@@ -18,6 +18,14 @@ const eventInputValidator = joi_1.default.object({
         create: (schema) => schema.forbidden(),
         update: (schema) => schema.required(),
     }),
+    date: joi_1.default.date().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+    host: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
     description: joi_1.default.string().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),

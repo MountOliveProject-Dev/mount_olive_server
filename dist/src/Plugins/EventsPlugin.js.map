@@ -1,0 +1,1 @@
+{"version":3,"file":"EventsPlugin.js","sourceRoot":"","sources":["../../../src/Plugins/EventsPlugin.ts"],"names":[],"mappings":";;;AAEA,0CAA+C;AAElC,QAAA,YAAY,GAAG;IACxB,IAAI,EAAE,YAAY;IAClB,YAAY,EAAE,CAAC,QAAQ,CAAC;IAExB,QAAQ,EAAE,KAAK,WAAW,MAAmB;QACzC,MAAM,CAAC,KAAK,CAAC;YACT,MAAM,EAAE,KAAK;YACb,IAAI,EAAE,aAAa;YACnB,OAAO,EAAE,4BAAiB;SAE7B,CAAC,CAAA;IACN,CAAC;CAIJ,CAAA"}

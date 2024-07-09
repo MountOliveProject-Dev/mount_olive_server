@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "prisma generate",
-    "start": "node ./dist/index.js",
+    "start": "node ./dist/src/index.js",
     "compile": "tsc -p ./tsconfig.json",
+    "seed-init": "ts-node ./prisma/initSeed.ts",
     "dev": "ts-node-dev --respawn ./src/index.ts",
     "db:push": "prisma db push",
     "migrate:reset": "prisma migrate reset",
@@ -21,7 +22,7 @@
   "devDependencies": {
     "@prisma/client": "^5.13.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20.14.9", 
+    "@types/node": "^20.14.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
@@ -34,5 +35,4 @@
     "prisma": "^5.13.0",
     "ts-node-dev": "^2.0.0"
   }
- 
 }
