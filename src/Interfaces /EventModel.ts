@@ -4,6 +4,8 @@ export interface EventInput {
   description: String;
   thumbnail: String;
   createdAt: Date;
+  date: Date;
+  host : String;
   updatedAt: Date;
   uniqueId: String;
 }
