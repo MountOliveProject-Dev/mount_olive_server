@@ -18,4 +18,5 @@ __exportStar(require("./pm"), exports);
 __exportStar(require("./EventsPlugin"), exports);
 __exportStar(require("./prisma"), exports);
 __exportStar(require("./status"), exports);
+__exportStar(require("./firebaseAuthPlugin"), exports);
 //# sourceMappingURL=index.js.map
