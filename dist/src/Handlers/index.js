@@ -15,5 +15,5 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./eventHandlers"), exports);
-__exportStar(require("./authHandlers"), exports);
+//export * from "./authHandlers";
 //# sourceMappingURL=index.js.map
