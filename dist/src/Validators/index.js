@@ -15,4 +15,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./EventValidators"), exports);
+__exportStar(require("./NotificationValidators"), exports);
+__exportStar(require("./MediaValidators"), exports);
 //# sourceMappingURL=index.js.map

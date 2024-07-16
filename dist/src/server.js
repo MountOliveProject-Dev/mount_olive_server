@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.API_AUTH_STRATEGY = void 0;
 exports.createServer = createServer;
 exports.startServer = startServer;
 const dotenv_1 = __importDefault(require("dotenv"));
 const hapi_1 = __importDefault(require("@hapi/hapi"));
 const Plugins_1 = require("./Plugins");
 dotenv_1.default.config();
+exports.API_AUTH_STRATEGY = "firebase";
 const isProduction = process.env.NODE_ENV === "production";
 const server = hapi_1.default.server({
     port: process.env.PORT || 8001,
@@ -31,7 +33,7 @@ async function createServer() {
     else {
         console.log("Running in production mode...");
     }
-    await server.register([Plugins_1.prismaPlugin, Plugins_1.pm2plugin, Plugins_1.statusPlugin, Plugins_1.eventsPlugin]);
+    await server.register([Plugins_1.prismaPlugin, Plugins_1.pm2plugin, Plugins_1.statusPlugin, Plugins_1.eventsPlugin, Plugins_1.notificationsPlugin, Plugins_1.mediaPlugin]);
     await server.initialize();
     return server;
 }

@@ -6,7 +6,8 @@ import {
   prismaPlugin,
   statusPlugin,
   eventsPlugin,
-  
+  notificationsPlugin,
+  mediaPlugin
 } from "./Plugins";
 declare module '@hapi/hapi' {
     interface ServerApplicationState {}
@@ -14,6 +15,7 @@ declare module '@hapi/hapi' {
 
 dotenv.config();
 
+export const API_AUTH_STRATEGY = "firebase";
 const isProduction = process.env.NODE_ENV === "production";
 
 const server: Hapi.Server = Hapi.server({
@@ -39,7 +41,7 @@ export async function createServer(): Promise<Hapi.Server> {
     console.log("Running in production mode...");
   }
 
-  await server.register([ prismaPlugin,pm2plugin,statusPlugin, eventsPlugin]);
+  await server.register([ prismaPlugin,pm2plugin,statusPlugin, eventsPlugin, notificationsPlugin, mediaPlugin]);
 
   await server.initialize();
 

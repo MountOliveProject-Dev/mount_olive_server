@@ -13,6 +13,7 @@ exports.listEventsByDateHandler = listEventsByDateHandler;
 exports.listEventsByDateRangeHandler = listEventsByDateRangeHandler;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
+const notificationHandlers_1 = require("./notificationHandlers");
 async function listEventsHandler(request, h) {
     const { prisma } = server_1.default.app;
     try {
@@ -48,6 +49,13 @@ async function createEventHandler(request, h) {
                 updatedAt: new Date()
             },
         });
+        if (!event) {
+            return h.response({ message: "Failed to create the event" }).code(400);
+        }
+        const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, title, description, false);
+        if (!createNotification) {
+            return h.response({ message: "Failed to create the notification" }).code(400);
+        }
         return h.response(event).code(201);
     }
     catch (err) {
@@ -72,6 +80,13 @@ async function updateEventHandler(request, h) {
                 updatedAt: new Date(),
             },
         });
+        if (!event) {
+            return h.response({ message: "Failed to update the event" }).code(400);
+        }
+        const updateNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.id, title, description, false);
+        if (!updateNotification) {
+            return h.response({ message: "Failed to update the notification" }).code(400);
+        }
         return h.response(event).code(200);
     }
     catch (err) {
@@ -81,8 +96,13 @@ async function updateEventHandler(request, h) {
 }
 async function deleteEventHandler(request, h) {
     const { prisma } = server_1.default.app;
-    const { uniqueId } = request.payload;
+    const { uniqueId } = request.params;
     try {
+        const deleteEventEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "eventEngagement", "deleteMany", {
+            where: {
+                specialkey: uniqueId,
+            },
+        });
         const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
             where: {
                 uniqueId: uniqueId,
@@ -97,7 +117,7 @@ async function deleteEventHandler(request, h) {
 }
 async function getEventHandler(request, h) {
     const { prisma } = server_1.default.app;
-    const { uniqueId } = request.payload;
+    const { uniqueId } = request.params;
     try {
         const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {

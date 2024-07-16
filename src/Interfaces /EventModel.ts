@@ -1,11 +1,13 @@
+
+
 export interface EventInput {
   id: number;
-  title: String;
-  description: String;
-  thumbnail: String;
+  title: string;
+  description: string;
+  thumbnail: string;
   createdAt: Date;
   date: Date;
-  host : String;
+  host : string;
   updatedAt: Date;
-  uniqueId: String;
+  uniqueId: string;
 }

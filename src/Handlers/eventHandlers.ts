@@ -2,7 +2,7 @@ import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod } from "../Helpers";
 import { EventInput } from "../Interfaces ";
-
+import { createEventNotificationHandler } from "./notificationHandlers";
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
@@ -43,6 +43,13 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
                 updatedAt: new Date()
             },
         });
+        if(!event){
+            return h.response({message: "Failed to create the event"}).code(400);
+        }
+        const createNotification = await createEventNotificationHandler (event.uniqueId, title, description, false);
+        if(!createNotification){
+            return h.response({message: "Failed to create the notification"}).code(400);
+        }
         return h.response(event).code(201);
     }catch(err){
         console.log(err);
@@ -68,6 +75,14 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
                 updatedAt: new Date(),
             },
         });
+        if(!event){
+            return h.response({message: "Failed to update the event"}).code(400);
+        }
+
+        const updateNotification = await createEventNotificationHandler (event.id, title, description, false);
+        if(!updateNotification){
+            return h.response({message: "Failed to update the notification"}).code(400);
+        }
         return h.response(event).code(200);
     }catch(err){
         console.log(err);
@@ -77,9 +92,17 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
 
 export async function deleteEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { uniqueId } = request.payload as EventInput;
+    const { uniqueId } = request.params as EventInput;
 
     try{
+       
+        const deleteEventEngagement = await executePrismaMethod(prisma, "eventEngagement", "deleteMany", {
+            where: {
+                specialkey: uniqueId,
+
+            },
+
+        });
         const event = await executePrismaMethod(prisma, "event", "delete", {
             where: {
                 uniqueId: uniqueId,
@@ -94,7 +117,7 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
 
 export async function getEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { uniqueId } = request.payload as EventInput;
+    const { uniqueId } = request.params as EventInput;
 
     try{
         const event = await executePrismaMethod(prisma, "event", "findUnique", {

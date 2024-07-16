@@ -9,6 +9,14 @@ datasource db {
   url      = env("DATABASE_URL")
 
 }
+enum NotificationType {
+  MEDIA
+  EVENT
+}
+enum MediaType {
+  VIDEO
+  AUDIO
+}
 
 model User {
   id       Int     @id @default(autoincrement())
@@ -19,9 +27,8 @@ model User {
   profile        profile? @relation(fields: [profileId], references: [id]) 
     
   // Relation
-  notifications Notification[]
+  media           UserMediaEngagement[] 
 }
-
 model profile {
   id       Int     @id @default(autoincrement())
   dateOfBirth DateTime
@@ -34,6 +41,7 @@ model profile {
   user User?
 }
 
+
 model Event {
   id       Int     @id @default(autoincrement())
   uniqueId String @unique @default(cuid())
@@ -44,21 +52,9 @@ model Event {
   host String
   description String
   thumbnail String
-}
 
-model Media {
-  id       Int     @id @default(autoincrement())
-  title    String
-  description String
-  coverPhoto String
-  source String
-  duration BigInt
-  type String
-  category String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  viewCount BigInt
-  likeCount BigInt
+  //
+  eventNotifications notificationEngagements[]
 }
 
 model Notification {
@@ -68,8 +64,57 @@ model Notification {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   read Boolean
-  userId Int
-  user User @relation(fields: [userId], references: [id])
+
+  //
+  notificationEngagements notificationEngagements[]
+}
+
+model Media {
+  id       Int     @id @default(autoincrement())
+  uniqueId String @unique @default(cuid())
+  title    String
+  description String
+  coverPhoto String
+  source String
+  duration BigInt
+  type MediaType
+  category String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relation
+  MediaEngagement       UserMediaEngagement[]
+  mediaNotifications notificationEngagements[]  
+}
+
+model UserMediaEngagement {
+  userId          Int
+  mediaId         Int
+  viewCount BigInt
+  likeCount BigInt
+  user            User            @relation(fields: [userId], references: [id])
+  media           Media           @relation(fields: [mediaId], references: [id])
+
+  @@id([userId, mediaId])         // Composite primary key
+}
+model notificationEngagements{
+  id       Int     @id @default(autoincrement())
+  type          NotificationType
+  eventId       Int?
+  mediaId       Int?
+  specialKey    String @unique
+  notificationId Int
+  notification  Notification @relation(fields: [notificationId], references: [id])
+  event         Event?        @relation(fields: [eventId], references: [id])
+  media         Media?        @relation(fields: [mediaId], references: [id])
+}
+model MediaStorageToken {
+  id          Int      @id @default(autoincrement())
+  accessToken String
+  refreshToken String
+  scope       String
+  tokenType   String
+  expiryDate  Int
 }
 
 
