@@ -2,7 +2,8 @@ import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod } from "../Helpers";
 import { EventInput } from "../Interfaces ";
-import { createEventNotificationHandler } from "./notificationHandlers";
+import { createEventNotificationHandler, updateEventNotificationHandler } from "./notificationHandlers";
+import {NotificationType } from "../Helpers";       
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
@@ -46,7 +47,15 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
         if(!event){
             return h.response({message: "Failed to create the event"}).code(400);
         }
-        const createNotification = await createEventNotificationHandler (event.uniqueId, title, description, false);
+        const notificationTitle = "A New Event titled" + event.title + "has just been posted!";
+        const specialKey = event.uniqueId + NotificationType.EVENT;
+        const createNotification = await createEventNotificationHandler(
+          event.uniqueId,
+          specialKey,
+          notificationTitle,
+          description,
+          false
+        );
         if(!createNotification){
             return h.response({message: "Failed to create the notification"}).code(400);
         }
@@ -59,7 +68,7 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
 
 export async function updateEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { title, description, thumbnail, uniqueId, host, date } = request.payload as any;
+    const { title, description, thumbnail, uniqueId, host, date } = request.payload as EventInput;
 
     try{
         const event = await executePrismaMethod(prisma, "event", "update", {
@@ -78,8 +87,15 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         if(!event){
             return h.response({message: "Failed to update the event"}).code(400);
         }
-
-        const updateNotification = await createEventNotificationHandler (event.id, title, description, false);
+        const specialKey = event.uniqueId + NotificationType.EVENT;
+        const notificationTitle = "The Event titled" + event.title + "has just been posted!";
+        const updateNotification = await updateEventNotificationHandler(
+          event.uniqueId,
+          specialKey,
+          notificationTitle,
+          description,
+          false
+        );
         if(!updateNotification){
             return h.response({message: "Failed to update the notification"}).code(400);
         }
