@@ -45,7 +45,7 @@ export const eventsPlugin = {
           },
           {
             method: "POST",
-            path: "/api/create-event",
+            path: "/api/events/create-event",
             handler: createEventHandler,
             options: {
               auth: false,
@@ -59,7 +59,7 @@ export const eventsPlugin = {
           },
           {
             method: "POST",
-            path: "/api/update-event",
+            path: "/api/events/update-event",
             handler: updateEventHandler,
             options: {
               auth: false,
