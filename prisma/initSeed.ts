@@ -6,153 +6,153 @@ export const GOOGLE_DRIVE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nMIIEvwIBAD
 const prisma = new PrismaClient();
 
 async function main() {
-    // const event1 = await prisma.event.create({
-    //     data: {
-    //         title: "Event 1",
-    //         description: "Event 1 Description",
-    //         thumbnail: "https://via.placeholder.com/151",
-    //         date: new Date(),
-    //         host: "Host 1",
-    //         createdAt: new Date(),
-    //         updatedAt: new Date()
-    //     }
-    // });
-    // console.log(event1.title + " created");
+    const event1 = await prisma.event.create({
+        data: {
+            title: "Event 1",
+            description: "Event 1 Description",
+            thumbnail: "https://via.placeholder.com/151",
+            date: new Date(),
+            host: "Host 1",
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    });
+    console.log(event1.title + " created");
 
-    // const event2 = await prisma.event.create({
-    //     data: {
-    //         title: "Event 2",
-    //         description: "Event 2 Description",
-    //         thumbnail: "https://via.placeholder.com/152",
-    //         date: new Date(),
-    //         host: "Host 1",
-    //         createdAt: new Date(),
-    //         updatedAt: new Date()
-    //     }
-    // });
-    // console.log(event2.title + " created");
-    //   const event3 = await prisma.event.create({
-    //     data: {
-    //       title: "Event 3",
-    //       description: "Event 3 Description",
-    //       thumbnail: "https://via.placeholder.com/153",
-    //       date: new Date(),
-    //       host: "Host 1",
-    //       createdAt: new Date(),
-    //       updatedAt: new Date(),
-    //     },
-    //   });
-    //   console.log(event1.title + " created");
+    const event2 = await prisma.event.create({
+        data: {
+            title: "Event 2",
+            description: "Event 2 Description",
+            thumbnail: "https://via.placeholder.com/152",
+            date: new Date(),
+            host: "Host 1",
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }
+    });
+    console.log(event2.title + " created");
+      const event3 = await prisma.event.create({
+        data: {
+          title: "Event 3",
+          description: "Event 3 Description",
+          thumbnail: "https://via.placeholder.com/153",
+          date: new Date(),
+          host: "Host 1",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      console.log(event1.title + " created");
 
-    //   const event4 = await prisma.event.create({
-    //     data: {
-    //       title: "Event 4",
-    //       description: "Event 4 Description",
-    //       thumbnail: "https://via.placeholder.com/154",
-    //       date: new Date(),
-    //       host: "Host 1",
-    //       createdAt: new Date(),
-    //       updatedAt: new Date(),
-    //     },
-    //   });
-    //   console.log(event2.title + " created");
+      const event4 = await prisma.event.create({
+        data: {
+          title: "Event 4",
+          description: "Event 4 Description",
+          thumbnail: "https://via.placeholder.com/154",
+          date: new Date(),
+          host: "Host 1",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      console.log(event2.title + " created");
 
-    // const notification1 = await prisma.notification.create({
-    //     data: {
-    //         title: "A New Event titled" + event1.title + "has just been posted!",
-    //         description: event1.description,
-    //         createdAt: new Date(),
-    //         updatedAt: new Date(),
-    //         read: false
-    //     }
-    // });
-    // console.log(notification1.title + " created");
-    // const notificationEngagementsforNotification1 = await prisma.notificationEngagements.create(
-    //   {
-    //     data: {
-    //       notificationId: notification1.id,
-    //       eventId: event1.id,
-    //       specialKey : "specialKey",
-    //       type: NotificationType.EVENT,
+    const notification1 = await prisma.notification.create({
+        data: {
+            title: "A New Event titled" + event1.title + "has just been posted!",
+            description: event1.description,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            read: false
+        }
+    });
+    console.log(notification1.title + " created");
+    const notificationEngagementsforNotification1 = await prisma.notificationEngagements.create(
+      {
+        data: {
+          notificationId: notification1.id,
+          eventId: event1.id,
+          specialKey : "specialKey",
+          type: NotificationType.EVENT,
         
-    //     },
-    //   }
-    // );
+        },
+      }
+    );
 
 
-    // const notification2 = await prisma.notification.create({
-    //     data: {
-    //         title: "A New Event titled" + event2.title + "has just been posted!",
-    //         description: event2.description,
-    //         createdAt: new Date(),
-    //         updatedAt: new Date(),
-    //         read: false
-    //     }
-    // });
+    const notification2 = await prisma.notification.create({
+        data: {
+            title: "A New Event titled" + event2.title + "has just been posted!",
+            description: event2.description,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            read: false
+        }
+    });
 
-    // console.log(notification2.title + " created");
+    console.log(notification2.title + " created");
 
-    // const notificationEngagementsforNotification2 = await prisma.notificationEngagements.create(
-    //     {
-    //         data: {
-    //         notificationId: notification2.id,
-    //         specialKey : "specialKey2",
-    //         eventId: event2.id,
-    //         type: NotificationType.EVENT,
+    const notificationEngagementsforNotification2 = await prisma.notificationEngagements.create(
+        {
+            data: {
+            notificationId: notification2.id,
+            specialKey : "specialKey2",
+            eventId: event2.id,
+            type: NotificationType.EVENT,
             
-    //         },
-    //     }
-    //     );
+            },
+        }
+        );
 
-    // const notification3 = await prisma.notification.create({
-    //     data: {
-    //         title: "A New Event titled" + event3.title + "has just been posted!",
-    //         description: event3.description,
-    //         createdAt: new Date(),
-    //         updatedAt: new Date(),
-    //         read: false
-    //     }
-    // });
+    const notification3 = await prisma.notification.create({
+        data: {
+            title: "A New Event titled" + event3.title + "has just been posted!",
+            description: event3.description,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            read: false
+        }
+    });
 
-    // console.log(notification3.title + " created");
+    console.log(notification3.title + " created");
 
-    // const notificationEngagementsforNotification3 = await prisma.notificationEngagements.create(
-    //     {
-    //         data: {
-    //         notificationId: notification3.id,
-    //         specialKey : "specialKey3",
-    //         eventId: event3.id,
-    //         type: NotificationType.EVENT,
+    const notificationEngagementsforNotification3 = await prisma.notificationEngagements.create(
+        {
+            data: {
+            notificationId: notification3.id,
+            specialKey : "specialKey3",
+            eventId: event3.id,
+            type: NotificationType.EVENT,
             
-    //         },
-    //     }
-    //     );
+            },
+        }
+        );
 
-    // const notification4 = await prisma.notification.create({
-    //     data: {
-    //         title: "A New Event titled" + event4.title + "has just been posted!",
-    //         description: event4.description,
-    //         createdAt: new Date(),
-    //         updatedAt: new Date(),
-    //         read: false
-    //     }
-    // });
+    const notification4 = await prisma.notification.create({
+        data: {
+            title: "A New Event titled" + event4.title + "has just been posted!",
+            description: event4.description,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            read: false
+        }
+    });
 
-    // console.log(notification4.title + " created");
+    console.log(notification4.title + " created");
 
-    // const notificationEngagementsforNotification4 = await prisma.notificationEngagements.create(
-    //     {
-    //         data: {
-    //         notificationId: notification4.id,
-    //         specialKey : "specialKey4",
-    //         eventId: event4.id,
-    //         type: NotificationType.EVENT,
+    const notificationEngagementsforNotification4 = await prisma.notificationEngagements.create(
+        {
+            data: {
+            notificationId: notification4.id,
+            specialKey : "specialKey4",
+            eventId: event4.id,
+            type: NotificationType.EVENT,
             
-    //         },
-    //     }
-    //     );
+            },
+        }
+        );
 
-listAndShareAudioFiles();
+//listAndShareAudioFiles();
 
 
     

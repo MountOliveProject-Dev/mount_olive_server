@@ -2,7 +2,11 @@ import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod } from "../Helpers";
 import { EventInput } from "../Interfaces ";
-import { createEventNotificationHandler, updateEventNotificationHandler } from "./notificationHandlers";
+import {
+  createEventNotificationHandler,
+  updateEventNotificationHandler,
+  deleteEventNotificationHandler,
+} from "./notificationHandlers";
 import {NotificationType } from "../Helpers";       
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
@@ -111,18 +115,31 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
     const { uniqueId } = request.params as EventInput;
 
     try{
-       
-        const deleteEventEngagement = await executePrismaMethod(prisma, "eventEngagement", "deleteMany", {
-            where: {
-                specialkey: uniqueId,
-
-            },
-
-        });
-        const event = await executePrismaMethod(prisma, "event", "delete", {
+       const findEvent = await executePrismaMethod(prisma, "event", "findUnique", {
             where: {
                 uniqueId: uniqueId,
             },
+        });
+
+        if(!findEvent){
+            return h.response({message: "Event not found"}).code(404);
+        }
+
+        const specialKey = findEvent.uniqueId + NotificationType.EVENT;
+
+        const deleteNotification = await deleteEventNotificationHandler(
+          findEvent.uniqueId,
+          specialKey
+        );
+
+        if(!deleteNotification){
+            return h.response({message: "Failed to delete the notification"}).code(400);
+        }
+        
+        const event = await executePrismaMethod(prisma, "event", "delete", {
+          where: {
+            id: findEvent.id,
+          },
         });
         return h.response(event).code(200);
     }catch(err){

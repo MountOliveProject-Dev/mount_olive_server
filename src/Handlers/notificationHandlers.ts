@@ -1,6 +1,7 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod, NotificationType } from "../Helpers";
+import { not } from "joi";
 
 
 export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
@@ -8,7 +9,11 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
     const { prisma } = request.server.app;
 
     try{
-        const notifications = await executePrismaMethod(prisma, "notification", "findMany", {});
+        const notifications = await executePrismaMethod(prisma, "notification", "findMany", {
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
         return h.response(notifications).code(200);
     }catch(err){
         console.log(err);
@@ -119,7 +124,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
         });
         if(!notification){
             const message = "Failed to create the notification";
-            return message;
+            console.log(message);
         }
         
         const mediaNotificationEngagement = await executePrismaMethod(
@@ -141,7 +146,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
         );
         if(!mediaNotificationEngagement){
             const message = "Failed to create the notification engagement";
-            return message;
+            console.log(message);
         }
         const message = title + "  was created successfully";
         return message;
@@ -155,23 +160,6 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
 export const updateEventNotificationHandler = async (eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
   try {
-
-    const eventNotificationEngagement = await executePrismaMethod(
-      prisma,
-      "notificationEngagements",
-      "findUnique",
-      {
-        where: {
-          specialKey: specialKey,
-          type: NotificationType.EVENT,
-        }
-      }
-    );
-    if (!eventNotificationEngagement) {
-      const message = "Failed to update the notification engagement";
-      return message;
-    }
-
     const notification = await executePrismaMethod(
       prisma,
       "notification",
@@ -180,7 +168,8 @@ export const updateEventNotificationHandler = async (eventId: string,specialKey:
         where: {
             
           notificationEngagements: {
-            id: eventNotificationEngagement.id
+            specialKey: specialKey,
+            type: NotificationType.EVENT,
             event: {
                 uniqueId: eventId
             }
@@ -193,10 +182,11 @@ export const updateEventNotificationHandler = async (eventId: string,specialKey:
         }
        
       }
+    }
     );
     if (!notification) {
       const message = "Failed to update the notification";
-      return message;
+      console.log(message);
     }
 
     const message = title + "  was updated successfully";
@@ -215,22 +205,32 @@ export const deleteEventNotificationHandler = async (eventId: string, specialKey
             where: {
                 specialKey: specialKey,
                 type: NotificationType.EVENT
+            }, select:{
+                id: true,
+                notificationId: true
             }
         });
         if(!eventNotificationEngagement){
             const message = "Failed to get the notification engagement";
-            return message;
+             console.log(message);
         }
         const notification = await executePrismaMethod(prisma, "notification", "delete", {
             where: {
-                notificationEngagements: {
-                    id: eventNotificationEngagement.id
-                }
+               id: eventNotificationEngagement.notificationId
             }
         });
         if(!notification){
             const message = "Failed to delete the notification";
-            return message;
+            console.log(message);
+        }
+        const deleteEventNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "delete", {
+            where: {
+                id: eventNotificationEngagement.id
+            }
+        });
+        if(!deleteEventNotificationEngagement){
+            const message = "Failed to delete the notification engagement";
+            console.log(message);
         }
         const message = "Notification was deleted successfully";
         return message;

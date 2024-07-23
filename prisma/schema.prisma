@@ -66,7 +66,7 @@ model Notification {
   read Boolean
 
   //
-  notificationEngagements notificationEngagements[]
+  notificationEngagements notificationEngagements?
 }
 
 model Media {
@@ -103,8 +103,8 @@ model notificationEngagements{
   eventId       Int?
   mediaId       Int?
   specialKey    String @unique
-  notificationId Int
-  notification  Notification @relation(fields: [notificationId], references: [id])
+  notificationId Int @unique
+  notification  Notification  @relation(fields: [notificationId], references: [id])
   event         Event?        @relation(fields: [eventId], references: [id])
   media         Media?        @relation(fields: [mediaId], references: [id])
 }

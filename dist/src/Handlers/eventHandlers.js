@@ -14,6 +14,7 @@ exports.listEventsByDateRangeHandler = listEventsByDateRangeHandler;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
+const Helpers_2 = require("../Helpers");
 async function listEventsHandler(request, h) {
     const { prisma } = server_1.default.app;
     try {
@@ -52,7 +53,9 @@ async function createEventHandler(request, h) {
         if (!event) {
             return h.response({ message: "Failed to create the event" }).code(400);
         }
-        const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, title, description, false);
+        const notificationTitle = "A New Event titled" + event.title + "has just been posted!";
+        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+        const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
         if (!createNotification) {
             return h.response({ message: "Failed to create the notification" }).code(400);
         }
@@ -83,7 +86,9 @@ async function updateEventHandler(request, h) {
         if (!event) {
             return h.response({ message: "Failed to update the event" }).code(400);
         }
-        const updateNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.id, title, description, false);
+        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+        const notificationTitle = "The Event titled" + event.title + "has just been posted!";
+        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
         if (!updateNotification) {
             return h.response({ message: "Failed to update the notification" }).code(400);
         }
@@ -98,14 +103,22 @@ async function deleteEventHandler(request, h) {
     const { prisma } = server_1.default.app;
     const { uniqueId } = request.params;
     try {
-        const deleteEventEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "eventEngagement", "deleteMany", {
-            where: {
-                specialkey: uniqueId,
-            },
-        });
-        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+        const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {
                 uniqueId: uniqueId,
+            },
+        });
+        if (!findEvent) {
+            return h.response({ message: "Event not found" }).code(404);
+        }
+        const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
+        const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.uniqueId, specialKey);
+        if (!deleteNotification) {
+            return h.response({ message: "Failed to delete the notification" }).code(400);
+        }
+        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+            where: {
+                id: findEvent.id,
             },
         });
         return h.response(event).code(200);

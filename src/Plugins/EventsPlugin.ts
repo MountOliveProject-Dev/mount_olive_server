@@ -4,8 +4,10 @@ import {
   listEventsHandler,
   createEventHandler,
   getEventHandler,
+  deleteEventHandler,
+  updateEventHandler,
 } from "../Handlers";
-import { createEventInputValidator } from "../Validators";
+import { createEventInputValidator,updateEventInputValidator } from "../Validators";
 import {API_AUTH_STRATEGY} from "../server";
 
 
@@ -55,6 +57,36 @@ export const eventsPlugin = {
               },
             },
           },
+          {
+            method: "POST",
+            path: "/api/update-event",
+            handler: updateEventHandler,
+            options: {
+              auth: false,
+              validate: {
+                payload: updateEventInputValidator,
+                failAction: (request, h, err) => {
+                  throw err;
+                },
+              },
+            }
+        },
+        {
+          method: "DELETE",
+          path: "/api/events/delete-event",
+          handler: deleteEventHandler,
+          options: {
+            auth: false,
+            validate: {
+              payload: Joi.object({
+                uniqueId: Joi.string().required(),
+              }),
+              failAction: (request, h, err) => {
+                throw err;
+              },
+            },
+          },
+        }
         ]);
     }
 

@@ -50,6 +50,36 @@ exports.eventsPlugin = {
                     },
                 },
             },
+            {
+                method: "POST",
+                path: "/api/update-event",
+                handler: Handlers_1.updateEventHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: Validators_1.updateEventInputValidator,
+                        failAction: (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                }
+            },
+            {
+                method: "DELETE",
+                path: "/api/events/delete-event",
+                handler: Handlers_1.deleteEventHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: joi_1.default.object({
+                            uniqueId: joi_1.default.string().required(),
+                        }),
+                        failAction: (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            }
         ]);
     }
 };

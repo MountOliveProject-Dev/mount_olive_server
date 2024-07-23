@@ -3,13 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMediaNotificationHandler = exports.updateEventNotificationHandler = exports.createEventNotificationHandler = exports.createMediaNotificationHandler = exports.getNotificationHandler = exports.listNotificationsByTypeHandler = exports.listNotificationsHandler = void 0;
+exports.updateMediaNotificationHandler = exports.deleteEventNotificationHandler = exports.updateEventNotificationHandler = exports.createEventNotificationHandler = exports.createMediaNotificationHandler = exports.getNotificationHandler = exports.listNotificationsByTypeHandler = exports.listNotificationsHandler = void 0;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const listNotificationsHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {
-        const notifications = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findMany", {});
+        const notifications = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findMany", {
+            orderBy: {
+                createdAt: "desc"
+            }
+        });
         return h.response(notifications).code(200);
     }
     catch (err) {
@@ -102,7 +106,9 @@ const createMediaNotificationHandler = async (mediaId, title, description, read)
     }
 };
 exports.createMediaNotificationHandler = createMediaNotificationHandler;
-const createEventNotificationHandler = async (eventId, title, description, read) => {
+///
+//create event notification
+const createEventNotificationHandler = async (eventId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
@@ -120,23 +126,23 @@ const createEventNotificationHandler = async (eventId, title, description, read)
         });
         if (!notification) {
             const message = "Failed to create the notification";
-            return message;
+            console.log(message);
         }
         const mediaNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "create", {
             data: {
                 notificationId: notification.id,
                 type: Helpers_1.NotificationType.EVENT,
-                specialKey: eventId,
+                specialKey: specialKey,
                 event: {
                     connect: {
-                        uniqueId: eventId
-                    }
-                }
-            }
+                        uniqueId: eventId,
+                    },
+                },
+            },
         });
         if (!mediaNotificationEngagement) {
             const message = "Failed to create the notification engagement";
-            return message;
+            console.log(message);
         }
         const message = title + "  was created successfully";
         return message;
@@ -147,45 +153,29 @@ const createEventNotificationHandler = async (eventId, title, description, read)
     }
 };
 exports.createEventNotificationHandler = createEventNotificationHandler;
-const updateEventNotificationHandler = async (eventId, title, description, read) => {
+//update event notification
+const updateEventNotificationHandler = async (eventId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "update", {
             where: {
-                uniqueId: eventId
-            },
-            data: {
-                title: title,
-                description: description,
-                read: read
-            },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                read: true
+                notificationEngagements: {
+                    specialKey: specialKey,
+                    type: Helpers_1.NotificationType.EVENT,
+                    event: {
+                        uniqueId: eventId
+                    }
+                },
+                data: {
+                    title: title,
+                    description: description,
+                    read: read,
+                }
             }
         });
         if (!notification) {
             const message = "Failed to update the notification";
-            return message;
-        }
-        const mediaNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "update", {
-            where: {
-                notificationId: notification.id
-            },
-            data: {
-                type: Helpers_1.NotificationType.EVENT,
-                event: {
-                    connect: {
-                        id: eventId
-                    }
-                }
-            }
-        });
-        if (!mediaNotificationEngagement) {
-            const message = "Failed to update the notification engagement";
-            return message;
+            console.log(message);
         }
         const message = title + "  was updated successfully";
         return message;
@@ -196,6 +186,51 @@ const updateEventNotificationHandler = async (eventId, title, description, read)
     }
 };
 exports.updateEventNotificationHandler = updateEventNotificationHandler;
+//delete event notification
+const deleteEventNotificationHandler = async (eventId, specialKey) => {
+    const { prisma } = server_1.default.app;
+    try {
+        const eventNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "findUnique", {
+            where: {
+                specialKey: specialKey,
+                type: Helpers_1.NotificationType.EVENT
+            }, select: {
+                id: true,
+                notificationId: true
+            }
+        });
+        if (!eventNotificationEngagement) {
+            const message = "Failed to get the notification engagement";
+            console.log(message);
+        }
+        const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "delete", {
+            where: {
+                id: eventNotificationEngagement.notificationId
+            }
+        });
+        if (!notification) {
+            const message = "Failed to delete the notification";
+            console.log(message);
+        }
+        const deleteEventNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "delete", {
+            where: {
+                id: eventNotificationEngagement.id
+            }
+        });
+        if (!deleteEventNotificationEngagement) {
+            const message = "Failed to delete the notification engagement";
+            console.log(message);
+        }
+        const message = "Notification was deleted successfully";
+        return message;
+    }
+    catch (err) {
+        const message = err + " :Failed to delete the notification";
+        return message;
+    }
+};
+exports.deleteEventNotificationHandler = deleteEventNotificationHandler;
+///
 const updateMediaNotificationHandler = async (mediaId, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
