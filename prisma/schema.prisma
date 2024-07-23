@@ -33,7 +33,7 @@ model profile {
   id       Int     @id @default(autoincrement())
   dateOfBirth DateTime
   gender String
-  phone String
+  //phone String
   avatar String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
