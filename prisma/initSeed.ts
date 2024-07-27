@@ -17,6 +17,7 @@ async function main() {
             updatedAt: new Date()
         }
     });
+    //hjh
     console.log(event1.title + " created");
 
     const event2 = await prisma.event.create({
