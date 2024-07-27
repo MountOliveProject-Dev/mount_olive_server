@@ -1,7 +1,7 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod } from "../Helpers";
-import { EventInput } from "../Interfaces ";
+import { EventInput } from "../Interfaces";
 import {
   createEventNotificationHandler,
   updateEventNotificationHandler,
