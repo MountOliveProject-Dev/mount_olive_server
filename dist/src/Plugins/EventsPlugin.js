@@ -65,7 +65,7 @@ exports.eventsPlugin = {
                 }
             },
             {
-                method: "DELETE",
+                method: "POST",
                 path: "/api/events/delete-event",
                 handler: Handlers_1.deleteEventHandler,
                 options: {

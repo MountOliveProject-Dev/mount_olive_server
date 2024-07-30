@@ -6,7 +6,10 @@ export interface EventInput {
   description: string;
   thumbnail: string;
   createdAt: Date;
-  date: Date;
+  location: string;
+  date: string;
+  time: string;
+  venue: string;
   host : string;
   updatedAt: Date;
   uniqueId: string;

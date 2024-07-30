@@ -72,7 +72,7 @@ export const eventsPlugin = {
             }
         },
         {
-          method: "DELETE",
+          method: "POST",
           path: "/api/events/delete-event",
           handler: deleteEventHandler,
           options: {

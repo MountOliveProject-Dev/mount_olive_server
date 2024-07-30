@@ -18,4 +18,5 @@ __exportStar(require("./eventHandlers"), exports);
 //export * from "./authHandlers";
 __exportStar(require("./notificationHandlers"), exports);
 __exportStar(require("./mediaHandlers"), exports);
+//export * from "./googleHandlers";
 //# sourceMappingURL=index.js.map

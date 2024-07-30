@@ -34,7 +34,7 @@ export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseT
 
 export async function createEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { title, description, thumbnail, date, host } = request.payload as EventInput;
+    const { title, description, thumbnail, date, host, time, location, venue } = request.payload as EventInput;
 
     try{
         const event = await executePrismaMethod(prisma, "event", "create", {
@@ -42,6 +42,9 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
                 title: title,
                 description: description,
                 thumbnail: thumbnail,
+                location: location,
+                venue: venue,
+                time: time,
                 date: date,
                 host: host,
                 createdAt: new Date(),
@@ -72,7 +75,7 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
 
 export async function updateEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { title, description, thumbnail, uniqueId, host, date } = request.payload as EventInput;
+    const { title, description, thumbnail, uniqueId, host, date, time, location, venue } = request.payload as EventInput;
 
     try{
         const event = await executePrismaMethod(prisma, "event", "update", {
@@ -85,6 +88,9 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
                 thumbnail: thumbnail,
                 date: date,
                 host: host,
+                time: time,
+                location: location,
+                venue: venue,
                 updatedAt: new Date(),
             },
         });

@@ -13,10 +13,26 @@ const eventInputValidator = Joi.object({
     create: (schema) => schema.forbidden(),
     update: (schema) => schema.required(),
   }),
-  date: Joi.date().alter({
+  date: Joi.string().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),
+
+  time: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+
+  venue: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+
+  location: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+
   host: Joi.string().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),

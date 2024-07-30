@@ -15,7 +15,7 @@ async function listAndShareAudioFiles() {
             client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
             client_id: process.env.GOOGLE_DRIVE_CLIENT_ID,
         },
-        scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+        scopes: ["https://www.googleapis.com/auth/drive.file"],
     });
     // Initialize the Drive API client
     const drive = googleapis_1.google.drive({

@@ -48,7 +48,10 @@ model Event {
   title    String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  date DateTime
+  date String
+  time String
+  location String
+  venue String
   host String
   description String
   thumbnail String
@@ -76,6 +79,7 @@ model Media {
   description String
   coverPhoto String
   source String
+  host String
   duration BigInt
   type MediaType
   category String

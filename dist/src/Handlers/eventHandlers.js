@@ -37,13 +37,16 @@ async function listEventsHandler(request, h) {
 }
 async function createEventHandler(request, h) {
     const { prisma } = server_1.default.app;
-    const { title, description, thumbnail, date, host } = request.payload;
+    const { title, description, thumbnail, date, host, time, location, venue } = request.payload;
     try {
         const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
             data: {
                 title: title,
                 description: description,
                 thumbnail: thumbnail,
+                location: location,
+                venue: venue,
+                time: time,
                 date: date,
                 host: host,
                 createdAt: new Date(),
@@ -68,7 +71,7 @@ async function createEventHandler(request, h) {
 }
 async function updateEventHandler(request, h) {
     const { prisma } = server_1.default.app;
-    const { title, description, thumbnail, uniqueId, host, date } = request.payload;
+    const { title, description, thumbnail, uniqueId, host, date, time, location, venue } = request.payload;
     try {
         const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
             where: {
@@ -80,6 +83,9 @@ async function updateEventHandler(request, h) {
                 thumbnail: thumbnail,
                 date: date,
                 host: host,
+                time: time,
+                location: location,
+                venue: venue,
                 updatedAt: new Date(),
             },
         });
