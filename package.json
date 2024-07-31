@@ -30,6 +30,7 @@
     "@hapi/hapi": "^21.3.10",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "firebase-admin": "^12.3.0",
     "googleapis": "^140.0.1",
     "hapi-graceful-pm2": "^1.0.17",
     "joi": "^17.13.1",

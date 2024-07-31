@@ -118,7 +118,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
 
 export async function deleteEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
-    const { uniqueId } = request.params as EventInput;
+    const { uniqueId } = request.payload as EventInput;
 
     try{
        const findEvent = await executePrismaMethod(prisma, "event", "findUnique", {
@@ -147,7 +147,8 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
             id: findEvent.id,
           },
         });
-        return h.response(event).code(200);
+        const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
+        return h.response().code(201).message(message);
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to delete the event:" + uniqueId}).code(500);

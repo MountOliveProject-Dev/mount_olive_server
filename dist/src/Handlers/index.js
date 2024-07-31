@@ -19,4 +19,5 @@ __exportStar(require("./eventHandlers"), exports);
 __exportStar(require("./notificationHandlers"), exports);
 __exportStar(require("./mediaHandlers"), exports);
 //export * from "./googleHandlers";
+__exportStar(require("./firebaseHandler"), exports);
 //# sourceMappingURL=index.js.map

@@ -107,7 +107,7 @@ async function updateEventHandler(request, h) {
 }
 async function deleteEventHandler(request, h) {
     const { prisma } = server_1.default.app;
-    const { uniqueId } = request.params;
+    const { uniqueId } = request.payload;
     try {
         const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {
@@ -127,7 +127,8 @@ async function deleteEventHandler(request, h) {
                 id: findEvent.id,
             },
         });
-        return h.response(event).code(200);
+        const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
+        return h.response().code(201).message(message);
     }
     catch (err) {
         console.log(err);
