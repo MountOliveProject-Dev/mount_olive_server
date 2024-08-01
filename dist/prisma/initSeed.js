@@ -56,7 +56,7 @@ async function main() {
             updatedAt: (0, Helpers_1.getCurrentDate)(),
         },
     });
-    console.log(event1.title + " created");
+    console.log(event3.title + " created");
     const event4 = await prisma.event.create({
         data: {
             title: "Event 4",
@@ -72,7 +72,7 @@ async function main() {
             updatedAt: (0, Helpers_1.getCurrentDate)(),
         },
     });
-    console.log(event2.title + " created");
+    console.log(event4.title + " created");
     const title1 = "A New Event titled" + event1.title + " has just been posted!";
     const title2 = "A New Event titled" + event2.title + " has just been posted!";
     const title3 = "A New Event titled" + event3.title + " has just been posted!";

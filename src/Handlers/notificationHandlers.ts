@@ -57,7 +57,6 @@ export const getNotificationHandler = async (request: Hapi.Request, h: Hapi.Resp
     }
 }
 
-//get current date in day-month-year format
 
 
 
@@ -117,47 +116,42 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
     const { prisma } = server.app;
     try{
         console.log(eventId, specialKey, title, description, read);
-        const notification = await executePrismaMethod(prisma, "notification", "create", {
-            data: {
-                title: title,
-                description: description,
-                read: read,
-                createAt: getCurrentDate(),
-                updateAt: getCurrentDate()
-            },
-          
-        });
-        if(!notification){
-            const message = "Failed to create the notification";
-            console.log(message);
-        }
-        
-        const mediaNotificationEngagement = await executePrismaMethod(
+        const notification = await executePrismaMethod(
           prisma,
-          "notificationEngagements",
+          "notification",
           "create",
           {
             data: {
-              notificationId: notification.id,
-              type: NotificationType.EVENT,
-              specialKey: specialKey,
-              event: {
-                connect: {
-                  uniqueId: eventId,
+              title: title,
+              description: description,
+              read: read,
+              createdAt: getCurrentDate(),
+              updatedAt: getCurrentDate(),
+              notificationEngagements: {
+                create: {
+                    type: NotificationType.EVENT,
+                    specialKey: specialKey,
+                    event: {
+                        connect: {
+                        uniqueId: eventId,
+                        },
+                    },
                 },
               },
             },
+            select: true
           }
         );
-        if(!mediaNotificationEngagement){
-            const message = "Failed to create the notification engagement";
+        if(notification === null || notification === undefined){
+            const message = "Failed to create the notification";
             console.log(message);
         }
+       
         const message = title + "  was created successfully";
         console.log(message);
         return message;
     }catch(err){
-        const message = err + " :Failed to create the notification";
+        const message = err + " :Failed to create the notification!";
         console.log( message);
         return message;
     }

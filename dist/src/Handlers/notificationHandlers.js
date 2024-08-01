@@ -62,7 +62,6 @@ const getNotificationHandler = async (request, h) => {
     }
 };
 exports.getNotificationHandler = getNotificationHandler;
-//get current date in day-month-year format
 const createMediaNotificationHandler = async (mediaId, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
@@ -123,27 +122,22 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                 description: description,
                 read: read,
                 createAt: (0, Helpers_1.getCurrentDate)(),
-                updateAt: (0, Helpers_1.getCurrentDate)()
-            },
-        });
-        if (!notification) {
-            const message = "Failed to create the notification";
-            console.log(message);
-        }
-        const mediaNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "create", {
-            data: {
-                notificationId: notification.id,
-                type: Helpers_1.NotificationType.EVENT,
-                specialKey: specialKey,
-                event: {
-                    connect: {
-                        uniqueId: eventId,
+                updateAt: (0, Helpers_1.getCurrentDate)(),
+                notificationEngagements: {
+                    create: {
+                        type: Helpers_1.NotificationType.EVENT,
+                        specialKey: specialKey,
+                        event: {
+                            connect: {
+                                uniqueId: eventId,
+                            },
+                        },
                     },
                 },
             },
         });
-        if (!mediaNotificationEngagement) {
-            const message = "Failed to create the notification engagement";
+        if (notification === null || notification === undefined) {
+            const message = "Failed to create the notification";
             console.log(message);
         }
         const message = title + "  was created successfully";
