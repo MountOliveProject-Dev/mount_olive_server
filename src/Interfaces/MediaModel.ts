@@ -9,8 +9,8 @@ export interface MediaInput {
   duration: number;
   type: MediaType;
   category: String;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   viewCount: number;
   likeCount: number;
 }

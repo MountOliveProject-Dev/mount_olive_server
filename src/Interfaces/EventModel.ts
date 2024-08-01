@@ -5,12 +5,12 @@ export interface EventInput {
   title: string;
   description: string;
   thumbnail: string;
-  createdAt: Date;
+  createdAt: string;
   location: string;
   date: string;
   time: string;
   venue: string;
   host : string;
-  updatedAt: Date;
+  updatedAt: string;
   uniqueId: string;
 }

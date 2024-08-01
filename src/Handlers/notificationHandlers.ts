@@ -58,6 +58,16 @@ export const getNotificationHandler = async (request: Hapi.Request, h: Hapi.Resp
     }
 }
 
+//get current date in day-month-year format
+
+export const getCurrentDate = () => {
+    const date = new Date();
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    return day + "-" + month + "-" + year;
+}
+
 export const createMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
     const { prisma } = server.app;
     try{
@@ -65,13 +75,17 @@ export const createMediaNotificationHandler = async (mediaId: number, title: str
             data: {
                 title: title,
                 description: description,
-                read: read
+                read: read,
+                createdAt: getCurrentDate(),
+                updatedAt: getCurrentDate()
             },
             select: {
                 id: true,
                 title: true,
                 description: true,
-                read: true
+                read: true,
+                createdAt: true,
+                updatedAt: true
             }
         });
         if(!notification){
@@ -113,14 +127,11 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
             data: {
                 title: title,
                 description: description,
-                read: read
+                read: read,
+                createAt: getCurrentDate(),
+                updateAt: getCurrentDate()
             },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                read: true
-            }
+          
         });
         if(!notification){
             const message = "Failed to create the notification";
@@ -179,6 +190,7 @@ export const updateEventNotificationHandler = async (eventId: string,specialKey:
           title: title,
           description: description,
           read: read,
+          updatedAt : getCurrentDate()
         }
        
       }
@@ -205,6 +217,7 @@ export const deleteEventNotificationHandler = async (eventId: string, specialKey
             where: {
                 specialKey: specialKey,
                 type: NotificationType.EVENT
+                
             }, select:{
                 id: true,
                 notificationId: true

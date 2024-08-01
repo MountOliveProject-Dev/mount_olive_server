@@ -7,7 +7,9 @@ import {
   updateEventNotificationHandler,
   deleteEventNotificationHandler,
 } from "./notificationHandlers";
-import {NotificationType } from "../Helpers";       
+import {NotificationType } from "../Helpers"; 
+
+import {getCurrentDate} from "./notificationHandlers"
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
@@ -33,23 +35,23 @@ export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseT
 }
 
 export async function createEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
-    const { prisma } = server.app;
+    const { prisma } = request.server.app;
     const { title, description, thumbnail, date, host, time, location, venue } = request.payload as EventInput;
 
     try{
         const event = await executePrismaMethod(prisma, "event", "create", {
-            data: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail,
-                location: location,
-                venue: venue,
-                time: time,
-                date: date,
-                host: host,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
+          data: {
+            title: title,
+            description: description,
+            thumbnail: thumbnail,
+            location: location,
+            venue: venue,
+            time: time,
+            date: date,
+            host: host,
+            createdAt: getCurrentDate(),
+            updatedAt: getCurrentDate(),
+          },
         });
         if(!event){
             return h.response({message: "Failed to create the event"}).code(400);
@@ -79,20 +81,20 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
 
     try{
         const event = await executePrismaMethod(prisma, "event", "update", {
-            where: {
-               uniqueId: uniqueId,
-            },
-            data: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail,
-                date: date,
-                host: host,
-                time: time,
-                location: location,
-                venue: venue,
-                updatedAt: new Date(),
-            },
+          where: {
+            uniqueId: uniqueId,
+          },
+          data: {
+            title: title,
+            description: description,
+            thumbnail: thumbnail,
+            date: date,
+            host: host,
+            time: time,
+            location: location,
+            venue: venue,
+            updatedAt: getCurrentDate(),
+          },
         });
         if(!event){
             return h.response({message: "Failed to update the event"}).code(400);
@@ -117,7 +119,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
 }
 
 export async function deleteEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
-    const { prisma } = server.app;
+    const { prisma } = request.server.app;
     const { uniqueId } = request.payload as EventInput;
 
     try{

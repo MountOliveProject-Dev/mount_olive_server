@@ -33,10 +33,10 @@ model profile {
   id       Int     @id @default(autoincrement())
   dateOfBirth DateTime
   gender String
-  //phone String
+  phone String
   avatar String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     String
+  updatedAt     String 
   // Relation
   user User?
 }
@@ -46,8 +46,8 @@ model Event {
   id       Int     @id @default(autoincrement())
   uniqueId String @unique @default(cuid())
   title    String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     String
+  updatedAt     String 
   date String
   time String
   location String
@@ -64,8 +64,8 @@ model Notification {
   id       Int     @id @default(autoincrement())
   title    String
   description String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     String
+  updatedAt     String
   read Boolean
 
   //
@@ -83,8 +83,8 @@ model Media {
   duration BigInt
   type MediaType
   category String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     String
+  updatedAt     String
 
   // Relation
   MediaEngagement       UserMediaEngagement[]
