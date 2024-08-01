@@ -34,6 +34,7 @@
     "googleapis": "^140.0.1",
     "hapi-graceful-pm2": "^1.0.17",
     "joi": "^17.13.1",
+    "mount_olive_server": "file:",
     "prisma": "^5.13.0",
     "ts-node-dev": "^2.0.0"
   }

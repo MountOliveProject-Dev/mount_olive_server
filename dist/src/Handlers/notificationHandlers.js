@@ -116,6 +116,7 @@ exports.createMediaNotificationHandler = createMediaNotificationHandler;
 const createEventNotificationHandler = async (eventId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
+        console.log(eventId, specialKey, title, description, read);
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
             data: {
                 title: title,
