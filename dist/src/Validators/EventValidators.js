@@ -47,11 +47,11 @@ const eventInputValidator = joi_1.default.object({
         update: (schema) => schema.optional(),
     }),
     createdAt: joi_1.default.string().alter({
-        create: (schema) => schema.required(),
+        create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
     }),
     updatedAt: joi_1.default.string().alter({
-        create: (schema) => schema.required(),
+        create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
     }),
 });

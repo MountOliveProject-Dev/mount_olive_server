@@ -33,3 +33,21 @@ export async function getAllFirebaseUsers() {
     
   }
 }
+
+export async function verifyToken(token: string) {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    console.log("Decoded Token:", decodedToken);
+  } catch (error) {
+    console.error("Error verifying token:", error);
+  }
+}
+
+export async function verifyUser(email: string) {
+  try {
+    const user = await admin.auth().getUserByEmail(email);
+    console.log("User:", user);
+  } catch (error) {
+    console.error("Error verifying user:", error);
+  }
+}
