@@ -80,34 +80,40 @@ async function createManyEventsHandler(request, h) {
         event.updatedAt = (0, Helpers_1.getCurrentDate)();
     });
     try {
-        const createdEvents = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "createMany", {
-            data: events,
-            select: { id: true }
-        });
-        if (!createdEvents) {
+        const createdEventIds = []; // Assuming IDs are strings, change to number[] if they are numbers
+        for (const event of events) {
+            const createdEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
+                data: event,
+            });
+            createdEventIds.push(parseInt(createdEvent.id));
+        }
+        console.log('Created event IDs:', createdEventIds);
+        if (createdEventIds.length === 0) {
             return h.response({ message: "Failed to create the events" }).code(400);
         }
-        console.log(createdEvents);
         //create notification for each event
-        for (let i = 0; i < createdEvents.length; i++) {
+        for (let i = 0; i < createdEventIds.length; i++) {
             //use the id from the createdEvents to get the uniqueId
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
                 where: {
-                    id: createdEvents[i].id,
-                }, select: {
+                    id: createdEventIds[i],
+                },
+                select: {
                     uniqueId: true,
                     title: true,
-                    description: true
-                }
+                    description: true,
+                },
             });
             const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
             const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
             const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, event.description, false);
             if (!createNotification) {
-                return h.response({ message: "Failed to create the notification" }).code(400);
+                return h
+                    .response({ message: "Failed to create the notification" })
+                    .code(400);
             }
         }
-        return h.response(createdEvents).code(201);
+        return h.response().code(201);
     }
     catch (err) {
         console.log(err);
