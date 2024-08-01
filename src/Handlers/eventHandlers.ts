@@ -89,10 +89,17 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
     try{
         const createdEvents = await executePrismaMethod(prisma, "event", "createMany", {
           data: events,
+          select: {
+            uniqueId: true,
+            title: true,
+            description: true,
+          },
+        
         });
         if(!createdEvents){
             return h.response({message: "Failed to create the events"}).code(400);
         }
+        console.log(createdEvents);
         //create notification for each event
         for (let i = 0; i < createdEvents.length; i++) {
           const notificationTitle = "A New Event titled " + createdEvents[i].title + " has just been posted!";
