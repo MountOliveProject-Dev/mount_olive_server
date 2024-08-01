@@ -115,14 +115,13 @@ exports.createMediaNotificationHandler = createMediaNotificationHandler;
 const createEventNotificationHandler = async (eventId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
-        console.log(eventId, specialKey, title, description, read);
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
             data: {
                 title: title,
                 description: description,
                 read: read,
-                createAt: (0, Helpers_1.getCurrentDate)(),
-                updateAt: (0, Helpers_1.getCurrentDate)(),
+                createdAt: (0, Helpers_1.getCurrentDate)(),
+                updatedAt: (0, Helpers_1.getCurrentDate)(),
                 notificationEngagements: {
                     create: {
                         type: Helpers_1.NotificationType.EVENT,
@@ -135,6 +134,7 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                     },
                 },
             },
+            select: true
         });
         if (notification === null || notification === undefined) {
             const message = "Failed to create the notification";
@@ -145,7 +145,7 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
         return message;
     }
     catch (err) {
-        const message = err + " :Failed to create the notification";
+        const message = err + " :Failed to create the notification!";
         console.log(message);
         return message;
     }

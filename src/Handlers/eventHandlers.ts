@@ -55,7 +55,7 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
         if(!event){
             return h.response({message: "Failed to create the event"}).code(400);
         }
-        const notificationTitle = "A New Event titled" + event.title + "has just been posted!";
+        const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
         const specialKey = event.uniqueId + NotificationType.EVENT;
         const createNotification = await createEventNotificationHandler(
           event.uniqueId,

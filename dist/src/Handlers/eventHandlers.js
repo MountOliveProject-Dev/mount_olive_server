@@ -56,7 +56,7 @@ async function createEventHandler(request, h) {
         if (!event) {
             return h.response({ message: "Failed to create the event" }).code(400);
         }
-        const notificationTitle = "A New Event titled" + event.title + "has just been posted!";
+        const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
         const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
         const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
         if (!createNotification) {
