@@ -82,11 +82,7 @@ async function createManyEventsHandler(request, h) {
     try {
         const createdEvents = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "createMany", {
             data: events,
-            select: {
-                uniqueId: true,
-                title: true,
-                description: true,
-            },
+            select: { id: true }
         });
         if (!createdEvents) {
             return h.response({ message: "Failed to create the events" }).code(400);
@@ -94,9 +90,19 @@ async function createManyEventsHandler(request, h) {
         console.log(createdEvents);
         //create notification for each event
         for (let i = 0; i < createdEvents.length; i++) {
-            const notificationTitle = "A New Event titled " + createdEvents[i].title + " has just been posted!";
-            const specialKey = createdEvents[i].uniqueId + Helpers_2.NotificationType.EVENT;
-            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(createdEvents[i].uniqueId, specialKey, notificationTitle, createdEvents[i].description, false);
+            //use the id from the createdEvents to get the uniqueId
+            const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
+                where: {
+                    id: createdEvents[i].id,
+                }, select: {
+                    uniqueId: true,
+                    title: true,
+                    description: true
+                }
+            });
+            const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
+            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, event.description, false);
             if (!createNotification) {
                 return h.response({ message: "Failed to create the notification" }).code(400);
             }
