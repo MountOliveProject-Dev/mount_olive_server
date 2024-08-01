@@ -6,4 +6,5 @@ const getCurrentDate = () => {
     return new Date().toISOString().split("T")[0];
 };
 exports.getCurrentDate = getCurrentDate;
+//
 //# sourceMappingURL=extras.js.map

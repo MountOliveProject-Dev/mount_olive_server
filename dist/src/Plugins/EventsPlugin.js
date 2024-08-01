@@ -32,7 +32,7 @@ exports.eventsPlugin = {
                         }),
                         failAction: (request, h, err) => {
                             throw err;
-                        }
+                        },
                     },
                 },
             },
@@ -40,6 +40,20 @@ exports.eventsPlugin = {
                 method: "POST",
                 path: "/api/events/create-event",
                 handler: Handlers_1.createEventHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: Validators_1.createEventInputValidator,
+                        failAction: (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            },
+            {
+                method: "POST",
+                path: "/api/events/create-many-event",
+                handler: Handlers_1.createManyEventsHandler,
                 options: {
                     auth: false,
                     validate: {
@@ -62,7 +76,7 @@ exports.eventsPlugin = {
                             throw err;
                         },
                     },
-                }
+                },
             },
             {
                 method: "POST",
@@ -79,7 +93,7 @@ exports.eventsPlugin = {
                         },
                     },
                 },
-            }
+            },
         ]);
     }
 };

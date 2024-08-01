@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listEventsHandler = listEventsHandler;
 exports.createEventHandler = createEventHandler;
+exports.createManyEventsHandler = createManyEventsHandler;
 exports.updateEventHandler = updateEventHandler;
 exports.deleteEventHandler = deleteEventHandler;
 exports.getEventHandler = getEventHandler;
@@ -67,6 +68,33 @@ async function createEventHandler(request, h) {
     catch (err) {
         console.log(err);
         return h.response({ message: "Internal Server Error" + ":failed to create the event:" + title }).code(500);
+    }
+}
+// create many events
+async function createManyEventsHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { events } = request.payload;
+    try {
+        const createdEvents = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "createMany", {
+            data: events,
+        });
+        if (!createdEvents) {
+            return h.response({ message: "Failed to create the events" }).code(400);
+        }
+        //create notification for each event
+        for (let i = 0; i < createdEvents.length; i++) {
+            const notificationTitle = "A New Event titled " + createdEvents[i].title + " has just been posted!";
+            const specialKey = createdEvents[i].uniqueId + Helpers_2.NotificationType.EVENT;
+            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(createdEvents[i].uniqueId, specialKey, notificationTitle, createdEvents[i].description, false);
+            if (!createNotification) {
+                return h.response({ message: "Failed to create the notification" }).code(400);
+            }
+        }
+        return h.response(createdEvents).code(201);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to create the events" }).code(500);
     }
 }
 async function updateEventHandler(request, h) {
