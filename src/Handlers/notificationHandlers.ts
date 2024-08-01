@@ -1,7 +1,6 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
-import { executePrismaMethod, NotificationType } from "../Helpers";
-import { not } from "joi";
+import { executePrismaMethod, NotificationType, getCurrentDate } from "../Helpers";
 
 
 export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
@@ -60,13 +59,7 @@ export const getNotificationHandler = async (request: Hapi.Request, h: Hapi.Resp
 
 //get current date in day-month-year format
 
-export const getCurrentDate = () => {
-    const date = new Date();
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-    return day + "-" + month + "-" + year;
-}
+
 
 export const createMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
     const { prisma } = server.app;
@@ -160,9 +153,11 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
             console.log(message);
         }
         const message = title + "  was created successfully";
+        console.log(message);
         return message;
     }catch(err){
         const message = err + " :Failed to create the notification";
+        console.log( message);
         return message;
     }
 }
@@ -216,8 +211,10 @@ export const deleteEventNotificationHandler = async (eventId: string, specialKey
         const eventNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "findUnique", {
             where: {
                 specialKey: specialKey,
-                type: NotificationType.EVENT
-                
+                type: NotificationType.EVENT,
+                event:{
+                    uniqueId: eventId
+                }
             }, select:{
                 id: true,
                 notificationId: true

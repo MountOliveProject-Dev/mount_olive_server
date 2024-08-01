@@ -1,6 +1,6 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
-import { executePrismaMethod } from "../Helpers";
+import { executePrismaMethod, getCurrentDate } from "../Helpers";
 import { EventInput } from "../Interfaces";
 import {
   createEventNotificationHandler,
@@ -9,7 +9,6 @@ import {
 } from "./notificationHandlers";
 import {NotificationType } from "../Helpers"; 
 
-import {getCurrentDate} from "./notificationHandlers"
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = server.app;
