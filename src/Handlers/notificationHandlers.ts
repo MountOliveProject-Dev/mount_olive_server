@@ -129,17 +129,16 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
               updatedAt: getCurrentDate(),
               notificationEngagements: {
                 create: {
-                    type: NotificationType.EVENT,
-                    specialKey: specialKey,
-                    event: {
-                        connect: {
-                        uniqueId: eventId,
-                        },
+                  type: NotificationType.EVENT,
+                  specialKey: specialKey,
+                  event: {
+                    connect: {
+                      uniqueId: eventId,
                     },
+                  },
                 },
               },
             },
-            select: true
           }
         );
         if(notification === null || notification === undefined){

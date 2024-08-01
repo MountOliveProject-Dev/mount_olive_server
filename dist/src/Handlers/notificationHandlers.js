@@ -134,7 +134,6 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                     },
                 },
             },
-            select: true
         });
         if (notification === null || notification === undefined) {
             const message = "Failed to create the notification";
