@@ -38,11 +38,11 @@ const mediaInputValidator = joi_1.default.object({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),
-    createdAt: joi_1.default.date().alter({
+    createdAt: joi_1.default.string().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),
-    updatedAt: joi_1.default.date().alter({
+    updatedAt: joi_1.default.string().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMediaNotificationHandler = exports.deleteEventNotificationHandler = exports.updateEventNotificationHandler = exports.createEventNotificationHandler = exports.createMediaNotificationHandler = exports.getNotificationHandler = exports.listNotificationsByTypeHandler = exports.listNotificationsHandler = void 0;
+exports.updateMediaNotificationHandler = exports.deleteEventNotificationHandler = exports.updateEventNotificationHandler = exports.createEventNotificationHandler = exports.createMediaNotificationHandler = exports.getCurrentDate = exports.getNotificationHandler = exports.listNotificationsByTypeHandler = exports.listNotificationsHandler = void 0;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const listNotificationsHandler = async (request, h) => {
@@ -62,6 +62,15 @@ const getNotificationHandler = async (request, h) => {
     }
 };
 exports.getNotificationHandler = getNotificationHandler;
+//get current date in day-month-year format
+const getCurrentDate = () => {
+    const date = new Date();
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    return day + "-" + month + "-" + year;
+};
+exports.getCurrentDate = getCurrentDate;
 const createMediaNotificationHandler = async (mediaId, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
@@ -69,13 +78,17 @@ const createMediaNotificationHandler = async (mediaId, title, description, read)
             data: {
                 title: title,
                 description: description,
-                read: read
+                read: read,
+                createdAt: (0, exports.getCurrentDate)(),
+                updatedAt: (0, exports.getCurrentDate)()
             },
             select: {
                 id: true,
                 title: true,
                 description: true,
-                read: true
+                read: true,
+                createdAt: true,
+                updatedAt: true
             }
         });
         if (!notification) {
@@ -115,14 +128,10 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
             data: {
                 title: title,
                 description: description,
-                read: read
+                read: read,
+                createAt: (0, exports.getCurrentDate)(),
+                updateAt: (0, exports.getCurrentDate)()
             },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                read: true
-            }
         });
         if (!notification) {
             const message = "Failed to create the notification";
@@ -170,6 +179,7 @@ const updateEventNotificationHandler = async (eventId, specialKey, title, descri
                     title: title,
                     description: description,
                     read: read,
+                    updatedAt: (0, exports.getCurrentDate)()
                 }
             }
         });

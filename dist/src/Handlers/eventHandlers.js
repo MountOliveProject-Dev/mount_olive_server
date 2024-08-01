@@ -15,6 +15,7 @@ const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
 const Helpers_2 = require("../Helpers");
+const notificationHandlers_2 = require("./notificationHandlers");
 async function listEventsHandler(request, h) {
     const { prisma } = server_1.default.app;
     try {
@@ -36,7 +37,7 @@ async function listEventsHandler(request, h) {
     }
 }
 async function createEventHandler(request, h) {
-    const { prisma } = server_1.default.app;
+    const { prisma } = request.server.app;
     const { title, description, thumbnail, date, host, time, location, venue } = request.payload;
     try {
         const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
@@ -49,8 +50,8 @@ async function createEventHandler(request, h) {
                 time: time,
                 date: date,
                 host: host,
-                createdAt: new Date(),
-                updatedAt: new Date()
+                createdAt: (0, notificationHandlers_2.getCurrentDate)(),
+                updatedAt: (0, notificationHandlers_2.getCurrentDate)(),
             },
         });
         if (!event) {
@@ -86,7 +87,7 @@ async function updateEventHandler(request, h) {
                 time: time,
                 location: location,
                 venue: venue,
-                updatedAt: new Date(),
+                updatedAt: (0, notificationHandlers_2.getCurrentDate)(),
             },
         });
         if (!event) {
@@ -106,7 +107,7 @@ async function updateEventHandler(request, h) {
     }
 }
 async function deleteEventHandler(request, h) {
-    const { prisma } = server_1.default.app;
+    const { prisma } = request.server.app;
     const { uniqueId } = request.payload;
     try {
         const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
