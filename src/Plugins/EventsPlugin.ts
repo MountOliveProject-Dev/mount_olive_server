@@ -6,6 +6,7 @@ import {
   getEventHandler,
   deleteEventHandler,
   updateEventHandler,
+  createManyEventsHandler,
 } from "../Handlers";
 import { createEventInputValidator,updateEventInputValidator } from "../Validators";
 import {API_AUTH_STRATEGY} from "../server";
@@ -34,19 +35,31 @@ export const eventsPlugin = {
               validate: {
                 params: Joi.object({
                   uniqueId: Joi.string().required(),
-
                 }),
                 failAction: (request, h, err) => {
                   throw err;
-                }
+                },
               },
-
             },
           },
           {
             method: "POST",
             path: "/api/events/create-event",
             handler: createEventHandler,
+            options: {
+              auth: false,
+              validate: {
+                payload: createEventInputValidator,
+                failAction: (request, h, err) => {
+                  throw err;
+                },
+              },
+            },
+          },
+          {
+            method: "POST",
+            path: "/api/events/create-many-event",
+            handler: createManyEventsHandler,
             options: {
               auth: false,
               validate: {
@@ -69,24 +82,24 @@ export const eventsPlugin = {
                   throw err;
                 },
               },
-            }
-        },
-        {
-          method: "POST",
-          path: "/api/events/delete-event",
-          handler: deleteEventHandler,
-          options: {
-            auth: false,
-            validate: {
-              payload: Joi.object({
-                uniqueId: Joi.string().required(),
-              }),
-              failAction: (request, h, err) => {
-                throw err;
+            },
+          },
+          {
+            method: "POST",
+            path: "/api/events/delete-event",
+            handler: deleteEventHandler,
+            options: {
+              auth: false,
+              validate: {
+                payload: Joi.object({
+                  uniqueId: Joi.string().required(),
+                }),
+                failAction: (request, h, err) => {
+                  throw err;
+                },
               },
             },
           },
-        }
         ]);
     }
 

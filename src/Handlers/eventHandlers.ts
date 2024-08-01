@@ -1,7 +1,7 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod, getCurrentDate } from "../Helpers";
-import { EventInput } from "../Interfaces";
+import { EventInput, ManyEventInput } from "../Interfaces";
 import {
   createEventNotificationHandler,
   updateEventNotificationHandler,
@@ -71,6 +71,40 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to create the event:" + title}).code(500);
+    }
+}
+
+// create many events
+export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+    const { prisma } = request.server.app;
+    const { events } = request.payload as ManyEventInput;
+
+    try{
+        const createdEvents = await executePrismaMethod(prisma, "event", "createMany", {
+          data: events,
+        });
+        if(!createdEvents){
+            return h.response({message: "Failed to create the events"}).code(400);
+        }
+        //create notification for each event
+        for (let i = 0; i < createdEvents.length; i++) {
+          const notificationTitle = "A New Event titled " + createdEvents[i].title + " has just been posted!";
+          const specialKey = createdEvents[i].uniqueId + NotificationType.EVENT;
+          const createNotification = await createEventNotificationHandler(
+            createdEvents[i].uniqueId,
+            specialKey,
+            notificationTitle,
+            createdEvents[i].description,
+            false
+          );
+          if(!createNotification){
+              return h.response({message: "Failed to create the notification"}).code(400);
+          }
+        }
+        return h.response(createdEvents).code(201);
+    }catch(err){
+        console.log(err);
+        return h.response({message: "Internal Server Error" + ":failed to create the events"}).code(500);
     }
 }
 

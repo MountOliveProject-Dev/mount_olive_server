@@ -1,9 +1,10 @@
 
 
+
+
 export const getCurrentDate = () => {
-  const date = new Date();
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
-  return day + "-" + month + "-" + year;
+  //let getCurrentDate() use this format 2024-09-03
+  return new Date().toISOString().split("T")[0];
 };
+
+//

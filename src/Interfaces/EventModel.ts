@@ -14,3 +14,8 @@ export interface EventInput {
   updatedAt: string;
   uniqueId: string;
 }
+
+//create modal for to create manyevents
+export interface ManyEventInput {
+  events: EventInput[];
+}
