@@ -57,3 +57,8 @@ const eventInputValidator = Joi.object({
 
 export const createEventInputValidator = eventInputValidator.tailor("create");
 export const updateEventInputValidator = eventInputValidator.tailor("update");
+
+//create validation for createmanyevents 
+export const createManyEventsInputValidator = Joi.object({
+  events: Joi.array().items(eventInputValidator.tailor("create")),
+});

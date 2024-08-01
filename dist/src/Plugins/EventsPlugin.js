@@ -57,7 +57,7 @@ exports.eventsPlugin = {
                 options: {
                     auth: false,
                     validate: {
-                        payload: Validators_1.createEventInputValidator,
+                        payload: Validators_1.createManyEventsInputValidator,
                         failAction: (request, h, err) => {
                             throw err;
                         },

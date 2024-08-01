@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateEventInputValidator = exports.createEventInputValidator = void 0;
+exports.createManyEventsInputValidator = exports.updateEventInputValidator = exports.createEventInputValidator = void 0;
 const joi_1 = __importDefault(require("joi"));
 const eventInputValidator = joi_1.default.object({
     id: joi_1.default.number().alter({
@@ -57,4 +57,8 @@ const eventInputValidator = joi_1.default.object({
 });
 exports.createEventInputValidator = eventInputValidator.tailor("create");
 exports.updateEventInputValidator = eventInputValidator.tailor("update");
+//create validation for createmanyevents 
+exports.createManyEventsInputValidator = joi_1.default.object({
+    events: joi_1.default.array().items(eventInputValidator.tailor("create")),
+});
 //# sourceMappingURL=EventValidators.js.map

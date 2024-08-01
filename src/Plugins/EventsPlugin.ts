@@ -7,8 +7,13 @@ import {
   deleteEventHandler,
   updateEventHandler,
   createManyEventsHandler,
+
 } from "../Handlers";
-import { createEventInputValidator,updateEventInputValidator } from "../Validators";
+import {
+  createEventInputValidator,
+  updateEventInputValidator,
+  createManyEventsInputValidator,
+} from "../Validators";
 import {API_AUTH_STRATEGY} from "../server";
 
 
@@ -63,7 +68,7 @@ export const eventsPlugin = {
             options: {
               auth: false,
               validate: {
-                payload: createEventInputValidator,
+                payload: createManyEventsInputValidator,
                 failAction: (request, h, err) => {
                   throw err;
                 },
