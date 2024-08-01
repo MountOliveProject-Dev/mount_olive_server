@@ -61,4 +61,21 @@ exports.updateEventInputValidator = eventInputValidator.tailor("update");
 exports.createManyEventsInputValidator = joi_1.default.object({
     events: joi_1.default.array().items(eventInputValidator.tailor("create")),
 });
+/**
+ * got this error
+ * {
+    "statusCode": 400,
+    "error": "Bad Request",
+    "message": "\"value\" must be of type object",
+    "validation": {
+        "source": "payload",
+        "keys": [
+            ""
+        ]
+    }
+}
+ */
+// export const createManyEventsInputValidator = Joi.object({
+//   events: Joi.array().items(eventInputValidator.tailor("create")),
+// });
 //# sourceMappingURL=EventValidators.js.map

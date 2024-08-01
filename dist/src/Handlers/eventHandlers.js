@@ -74,6 +74,11 @@ async function createEventHandler(request, h) {
 async function createManyEventsHandler(request, h) {
     const { prisma } = request.server.app;
     const { events } = request.payload;
+    // add the createdAt and updatedAt to events
+    events.forEach((event) => {
+        event.createdAt = (0, Helpers_1.getCurrentDate)();
+        event.updatedAt = (0, Helpers_1.getCurrentDate)();
+    });
     try {
         const createdEvents = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "createMany", {
             data: events,

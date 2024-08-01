@@ -78,6 +78,13 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
 export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
     const { events } = request.payload as ManyEventInput;
+// add the createdAt and updatedAt to events
+    events.forEach((event) => {
+        event.createdAt = getCurrentDate();
+        event.updatedAt = getCurrentDate();
+    });
+
+
 
     try{
         const createdEvents = await executePrismaMethod(prisma, "event", "createMany", {
