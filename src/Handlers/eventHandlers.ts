@@ -89,12 +89,7 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
     try{
         const createdEvents = await executePrismaMethod(prisma, "event", "createMany", {
           data: events,
-          select: {
-            uniqueId: true,
-            title: true,
-            description: true,
-          },
-        
+          select:{id:true}
         });
         if(!createdEvents){
             return h.response({message: "Failed to create the events"}).code(400);
@@ -102,13 +97,23 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
         console.log(createdEvents);
         //create notification for each event
         for (let i = 0; i < createdEvents.length; i++) {
-          const notificationTitle = "A New Event titled " + createdEvents[i].title + " has just been posted!";
-          const specialKey = createdEvents[i].uniqueId + NotificationType.EVENT;
+            //use the id from the createdEvents to get the uniqueId
+            const event = await executePrismaMethod(prisma, "event", "findUnique", {
+                where: {
+                id: createdEvents[i].id,
+                }, select:{
+                    uniqueId:true,
+                    title:true,
+                    description:true
+                }
+            });
+          const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
+          const specialKey = event.uniqueId + NotificationType.EVENT;
           const createNotification = await createEventNotificationHandler(
-            createdEvents[i].uniqueId,
+            event.uniqueId,
             specialKey,
             notificationTitle,
-            createdEvents[i].description,
+            event.description,
             false
           );
           if(!createNotification){
