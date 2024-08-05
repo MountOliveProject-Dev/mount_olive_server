@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { NotificationType, getCurrentDate } from "../src/Helpers/";
-import {listAndShareAudioFiles} from "../src/Handlers/googledriveHandlers";
-//import { listAudioFiles} from "../src/Handlers/googleHandlers";
 import {
   getAllFirebaseUsers,
   createEventNotificationHandler,
   createFolder,
+  createAudioFile,
+  listAndShareAudioFiles,
 } from "../src/Handlers";
 
 
@@ -128,9 +128,23 @@ async function main() {
 
 //listAndShareAudioFiles();
 //listAndShareAudioFiles();
-//getAllFirebaseUsers();
-const mountOlive = createFolder("Mount Olive Church");
-console.log(mountOlive);
+getAllFirebaseUsers();
+//const mountOlive = createFolder("Mount Olive Church");
+//console.log(mountOlive);
+
+// const audioFile = {
+//   name: "test.mp3",
+//   mimeType: "audio/mpeg",
+//   body: "C:\\Users\\aatog\\Downloads\\Music\\Rema - HEHEHE.mp3",
+// };
+
+// // create a pop to select audio file from my drive
+
+// createAudioFile(audioFile);
+//listAndShareAudioFiles();
+
+
+
 
     
 }
