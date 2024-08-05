@@ -107,8 +107,34 @@ export async function createFolder(folderName: string) {
   }
 };
 
+export async function deleteFolder(folderId: string) {
+  const drive = google.drive({ version: "v3", auth });
+
+  try {
+    await drive.files.delete({
+      fileId: folderId,
+    });
+    console.log("Folder deleted successfully");
+  } catch (error) {
+    console.error("Error deleting folder:", error);
+  }
+}
+
 export async function getAllFilesInGoogleDriveFolder(){
     
+    const drive = google.drive({ version: "v3", auth });
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const listParams = {
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: 'files(id, name, mimeType)',
+    };
+    try {
+        const res = await drive.files.list(listParams);
+        const listResults = res.data.files || [];
+        console.log('Files in the folder:', listResults.length)
+        console.log(listResults);
+    } catch (error) {
+        console.error('Error listing files:', error);
+    }
     
-
 }

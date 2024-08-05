@@ -6,6 +6,7 @@ import {
   createFolder,
   createAudioFile,
   listAndShareAudioFiles,
+  getAllFilesInGoogleDriveFolder,
 } from "../src/Handlers";
 
 
@@ -128,7 +129,7 @@ async function main() {
 
 //listAndShareAudioFiles();
 //listAndShareAudioFiles();
-getAllFirebaseUsers();
+//getAllFirebaseUsers();
 //const mountOlive = createFolder("Mount Olive Church");
 //console.log(mountOlive);
 
@@ -142,6 +143,7 @@ getAllFirebaseUsers();
 
 // createAudioFile(audioFile);
 //listAndShareAudioFiles();
+getAllFilesInGoogleDriveFolder();
 
 
 
