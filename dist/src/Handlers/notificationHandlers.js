@@ -165,6 +165,7 @@ const updateEventNotificationHandler = async (notificationId, eventId, specialKe
                 },
             },
         });
+        console.log(notification);
         if (!notification) {
             const message = " Failed to update the notification :";
             console.log(notification + message);

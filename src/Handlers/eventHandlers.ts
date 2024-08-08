@@ -127,13 +127,13 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
           false
         );
         if (updateNotification.code== 500){
-            console.log("updateNotification.message");
+            console.log(updateNotification.message);
             //delete event
-            await executePrismaMethod(prisma, "event", "delete", {
-                where: {
-                    id: findEvent.id,
-                },
-            });
+            // await executePrismaMethod(prisma, "event", "delete", {
+            //     where: {
+            //         id: findEvent.id,
+            //     },
+            // });
             console.log("event deleted");
             return h.response({message: "Failed to update the event"}).code(400);
         }else if(updateNotification.code == 200){
