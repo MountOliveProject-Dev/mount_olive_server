@@ -183,8 +183,8 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
       }
     );
     if (!notification) {
-      const message = "Failed to update the notification";
-      console.log(message);
+      const message = " Failed to update the notification :";
+      console.log(notification + message);
     }
 
     const message = "notification with ID " + notification.id + " has been updated successfully";

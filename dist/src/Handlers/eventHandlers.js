@@ -114,13 +114,15 @@ async function updateEventHandler(request, h) {
         const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
         const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
         if (updateNotification.code == 500) {
+            console.log("updateNotification.message");
             //delete event
             await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
                 where: {
                     id: findEvent.id,
                 },
             });
-            return h.response({ message: "Failed to update the notification" }).code(400);
+            console.log("event deleted");
+            return h.response({ message: "Failed to update the event" }).code(400);
         }
         else if (updateNotification.code == 200) {
             return h.response({ message: "Event updated successfully!" }).code(201);
