@@ -202,8 +202,9 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
                 uniqueId: uniqueId,
             },
         });
-
+        console.log("found the event ", findEvent);
         if(!findEvent){
+            console.log("event not found");
             return h.response({message: "Event not found"}).code(404);
         }
 
@@ -215,9 +216,11 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
         );
         
         if(!deleteNotification){
+            console.log(deleteNotification);
             return h.response({message: "Failed to delete the notification"}).code(400);
         }else{
             console.log("notification deleted");
+            console.log(deleteNotification);
         }
         
         const eventDeletion = await executePrismaMethod(prisma, "event", "delete", {

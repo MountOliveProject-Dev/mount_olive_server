@@ -1,6 +1,7 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod, NotificationType, getCurrentDate } from "../Helpers";
+import { not } from "joi";
 
 
 export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
@@ -204,7 +205,7 @@ export const deleteEventNotificationHandler = async (eventId: string,specialKey:
     const notification = await executePrismaMethod(
       prisma,
       "notification",
-      "delete",
+      "findUnique",
       {
         where: {
           notificationEngagements: {
@@ -218,22 +219,39 @@ export const deleteEventNotificationHandler = async (eventId: string,specialKey:
     }
     );
     if (!notification) {
-      const message = "Failed to delete the notification";
+      const message = "notification not found";
       console.log(message);
     }
 
-    await executePrismaMethod(prisma, "notificationEngagements", "delete", {
+    const deleteNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "delete", {
         where: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
+            notificationId: notification.id,
             event: {
                 uniqueId: eventId
             }
         }
     });
 
-    const message = "Notification was deleted successfully";
-    return message;
+    if(!deleteNotificationEngagement){
+        const message = "Failed to delete the notification engagement";
+        console.log(message);
+    }else {
+        const deleteNotification = await executePrismaMethod(prisma, "notification", "delete", {
+            where: {
+                id: notification.id
+            }
+        });
+
+        if(!deleteNotification){
+            const message = "Failed to delete the notification";
+            console.log(message);
+        }
+
+        const message = "Notification was deleted successfully";
+        return message;
+    }
   } catch (err) {
     const message = err + " :Failed to delete the notification";
     return message;
