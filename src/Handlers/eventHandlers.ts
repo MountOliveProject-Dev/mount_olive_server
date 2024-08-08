@@ -85,6 +85,14 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             where: {
                 uniqueId: uniqueId,
             },
+            select:{
+                id:true,
+                eventNotifications: {
+                    select:{
+                        notificationId: true
+                    }
+                }
+            }
         });
         if(!findEvent){
             return h.response({message: "Event not found"}).code(404);
@@ -111,6 +119,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         const notificationTitle = "The Event titled " + event.title + " has just been updated!";
         const specialKey = event.uniqueId + NotificationType.EVENT;
         const updateNotification = await updateEventNotificationHandler(
+          findEvent.eventNotifications.notificationId,
           event.uniqueId,
           specialKey,
           notificationTitle,
@@ -201,6 +210,15 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
             where: {
                 uniqueId: uniqueId,
             },
+             select:{
+                id:true,
+                uniqueId:true,
+                eventNotifications: {
+                    select:{
+                        notificationId: true
+                    }
+                }
+            }
         });
         console.log("found the event ", findEvent);
         if(!findEvent){
@@ -211,7 +229,8 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
         const specialKey = findEvent.uniqueId + NotificationType.EVENT;
 
         const deleteNotification = await deleteEventNotificationHandler(
-          findEvent.uniqueId,
+            findEvent.eventNotifications.notificationId,
+            findEvent.uniqueId,
           specialKey
         );
         

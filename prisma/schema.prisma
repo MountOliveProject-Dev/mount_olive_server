@@ -18,60 +18,6 @@ enum MediaType {
   AUDIO
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String   @unique
-  firstName     String
-  lastName      String
-  profileId      Int @unique  
-  profile        profile? @relation(fields: [profileId], references: [id]) 
-    
-  // Relation
-  media           UserMediaEngagement[] 
-}
-model profile {
-  id       Int     @id @default(autoincrement())
-  dateOfBirth DateTime
-  gender String
-  phone String
-  avatar String
-  createdAt     String
-  updatedAt     String 
-  // Relation
-  user User?
-}
-
-
-model Event {
-  id       Int     @id @default(autoincrement())
-  uniqueId String @unique @default(cuid())
-  title    String
-  createdAt     String
-  updatedAt     String 
-  date String
-  time String
-  location String
-  venue String
-  host String
-  description String
-  thumbnail String
-
-  //
-  eventNotifications notificationEngagements[]
-}
-
-model Notification {
-  id       Int     @id @default(autoincrement())
-  title    String
-  description String
-  createdAt   String
-  updatedAt   String
-  read Boolean
-
-  //
-  notificationEngagements notificationEngagements?
-}
-
 model Media {
   id       Int     @id @default(autoincrement())
   uniqueId String @unique @default(cuid())
@@ -87,30 +33,48 @@ model Media {
   updatedAt     String
 
   // Relation
-  MediaEngagement       UserMediaEngagement[]
-  mediaNotifications notificationEngagements[]  
+  eventNotifications engagementsManager? 
+}
+model Event {
+  id       Int     @id @default(autoincrement())
+  uniqueId String @unique @default(cuid())
+  title    String
+  createdAt     String
+  updatedAt     String 
+  date String
+  time String
+  location String
+  venue String
+  host String
+  description String
+  thumbnail String
+
+  //
+  eventNotifications engagementsManager?
 }
 
-model UserMediaEngagement {
-  userId          Int
-  mediaId         Int
-  viewCount BigInt
-  likeCount BigInt
-  user            User            @relation(fields: [userId], references: [id])
-  media           Media           @relation(fields: [mediaId], references: [id])
+model Notification {
+  id       Int     @id @default(autoincrement())
+  title    String
+  description String
+  createdAt   String
+  updatedAt   String
+  read Boolean
 
-  @@id([userId, mediaId])         // Composite primary key
+  //
+  notificationEngagements engagementsManager?
 }
-model notificationEngagements{
+
+model engagementsManager {
   id       Int     @id @default(autoincrement())
   type          NotificationType
-  eventId       Int?
-  mediaId       Int?
+  eventId       String? @unique
+  mediaId       String? @unique
   specialKey    String @unique
   notificationId Int @unique
   notification  Notification  @relation(fields: [notificationId], references: [id])
-  event         Event?        @relation(fields: [eventId], references: [id])
-  media         Media?        @relation(fields: [mediaId], references: [id])
+  event         Event?        @relation(fields: [eventId], references: [uniqueId])
+  media         Media?        @relation(fields: [mediaId], references: [uniqueId])
 }
 model MediaStorageToken {
   id          Int      @id @default(autoincrement())

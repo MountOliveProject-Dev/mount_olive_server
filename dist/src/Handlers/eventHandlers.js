@@ -79,6 +79,14 @@ async function updateEventHandler(request, h) {
             where: {
                 uniqueId: uniqueId,
             },
+            select: {
+                id: true,
+                eventNotifications: {
+                    select: {
+                        notificationId: true
+                    }
+                }
+            }
         });
         if (!findEvent) {
             return h.response({ message: "Event not found" }).code(404);
@@ -104,7 +112,7 @@ async function updateEventHandler(request, h) {
         }
         const notificationTitle = "The Event titled " + event.title + " has just been updated!";
         const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
-        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
+        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
         if (!updateNotification) {
             return h.response({ message: "Failed to update the notification" }).code(400);
         }
@@ -173,6 +181,15 @@ async function deleteEventHandler(request, h) {
             where: {
                 uniqueId: uniqueId,
             },
+            select: {
+                id: true,
+                uniqueId: true,
+                eventNotifications: {
+                    select: {
+                        notificationId: true
+                    }
+                }
+            }
         });
         console.log("found the event ", findEvent);
         if (!findEvent) {
@@ -180,7 +197,7 @@ async function deleteEventHandler(request, h) {
             return h.response({ message: "Event not found" }).code(404);
         }
         const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
-        const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.uniqueId, specialKey);
+        const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
         if (!deleteNotification) {
             console.log(deleteNotification);
             return h.response({ message: "Failed to delete the notification" }).code(400);

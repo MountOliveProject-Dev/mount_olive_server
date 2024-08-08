@@ -22,92 +22,92 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
 }
 
 //list notifications by type
-export const listNotificationsByTypeHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
-    const { prisma } = request.server.app;
-    const type = request.params.type;
-    try{
-        const notifications = await executePrismaMethod(prisma, "notificationEngagements", "findMany", {
-            where: {
-                type: type
-            }
-        });
-        return h.response(notifications).code(200);
-    }catch(err){
-        console.log(err);
-        return h.response({message: "Internal Server Error" + ":failed to get the notifications"}).code(500);
-    }
-}
+// export const listNotificationsByTypeHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+//     const { prisma } = request.server.app;
+//     const type = request.params.type;
+//     try{
+//         const notifications = await executePrismaMethod(prisma, "notificationEngagements", "findMany", {
+//             where: {
+//                 type: type
+//             }
+//         });
+//         return h.response(notifications).code(200);
+//     }catch(err){
+//         console.log(err);
+//         return h.response({message: "Internal Server Error" + ":failed to get the notifications"}).code(500);
+//     }
+// }
 
-export const getNotificationHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
-    const { prisma } = request.server.app;
-    const notificationId = parseInt(request.params.id);
-    try{
-        const notification = await executePrismaMethod(prisma, "notification", "findFirst", {
-            where: {
-                id: notificationId
-            }
-        });
-        if(notification){
-            return h.response(notification).code(200);
-        }else{
-            return h.response({message: "Notification not found"}).code(404);
-        }
-    }catch(err){
-        console.log(err);
-        return h.response({message: "Internal Server Error" + ":failed to get the notification"}).code(500);
-    }
-}
+// export const getNotificationHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+//     const { prisma } = request.server.app;
+//     const notificationId = parseInt(request.params.id);
+//     try{
+//         const notification = await executePrismaMethod(prisma, "notification", "findFirst", {
+//             where: {
+//                 id: notificationId
+//             }
+//         });
+//         if(notification){
+//             return h.response(notification).code(200);
+//         }else{
+//             return h.response({message: "Notification not found"}).code(404);
+//         }
+//     }catch(err){
+//         console.log(err);
+//         return h.response({message: "Internal Server Error" + ":failed to get the notification"}).code(500);
+//     }
+// }
 
 
-export const createMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
-    const { prisma } = server.app;
-    try{
-        const notification = await executePrismaMethod(prisma, "notification", "create", {
-            data: {
-                title: title,
-                description: description,
-                read: read,
-                createdAt: getCurrentDate(),
-                updatedAt: getCurrentDate()
-            },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                read: true,
-                createdAt: true,
-                updatedAt: true
-            }
-        });
-        if(!notification){
-            const message = "Failed to create the notification";
-            return message;
-        }
+// export const createMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
+//     const { prisma } = server.app;
+//     try{
+//         const notification = await executePrismaMethod(prisma, "notification", "create", {
+//             data: {
+//                 title: title,
+//                 description: description,
+//                 read: read,
+//                 createdAt: getCurrentDate(),
+//                 updatedAt: getCurrentDate()
+//             },
+//             select: {
+//                 id: true,
+//                 title: true,
+//                 description: true,
+//                 read: true,
+//                 createdAt: true,
+//                 updatedAt: true
+//             }
+//         });
+//         if(!notification){
+//             const message = "Failed to create the notification";
+//             return message;
+//         }
 
-        const mediaNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "create", {
-            data: {
-                notificationId: notification.id,
-                type: NotificationType.MEDIA,
-                media:{
-                    connect:{
-                        id: mediaId
+//         const mediaNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "create", {
+//             data: {
+//                 notificationId: notification.id,
+//                 type: NotificationType.MEDIA,
+//                 media:{
+//                     connect:{
+//                         id: mediaId
                     
-                }
-            }
+//                 }
+//             }
         
-        }
-    });
-        if(!mediaNotificationEngagement){
-            const message = "Failed to create the notification engagement";
-            return message;
-        }
-        const message = title + "  was created successfully";
-        return message;
-    }catch(err){
-        const message = err + " :Failed to create the notification";
-        return message;
-    }
-}
+//         }
+//     });
+//         if(!mediaNotificationEngagement){
+//             const message = "Failed to create the notification engagement";
+//             return message;
+//         }
+//         const message = title + "  was created successfully";
+//         return message;
+//     }catch(err){
+//         const message = err + " :Failed to create the notification";
+//         return message;
+//     }
+// }
 
 ///
 //create event notification
@@ -126,7 +126,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
               read: read,
               createdAt: getCurrentDate(),
               updatedAt: getCurrentDate(),
-              notificationEngagements: {
+              eventNotifications: {
                 create: {
                   type: NotificationType.EVENT,
                   specialKey: specialKey,
@@ -156,7 +156,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
 }
 
 //update event notification
-export const updateEventNotificationHandler = async (eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
+export const updateEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
   try {
     const notification = await executePrismaMethod(
@@ -165,24 +165,22 @@ export const updateEventNotificationHandler = async (eventId: string,specialKey:
       "update",
       {
         where: {
-            
-          notificationEngagements: {
+          id:notificationId,
+          eventNotifications: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
             event: {
-                uniqueId: eventId
-            }
-          
+              uniqueId: eventId,
+            },
+          },
+          data: {
+            title: title,
+            description: description,
+            read: read,
+            updatedAt: getCurrentDate(),
+          },
         },
-        data: {
-          title: title,
-          description: description,
-          read: read,
-          updatedAt : getCurrentDate()
-        }
-       
       }
-    }
     );
     if (!notification) {
       const message = "Failed to update the notification";
@@ -199,7 +197,7 @@ export const updateEventNotificationHandler = async (eventId: string,specialKey:
 
 //delete event notification
 
-export const deleteEventNotificationHandler = async (eventId: string,specialKey: string) => {
+export const deleteEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string) => {
   const { prisma } = server.app;
   try {
     const notification = await executePrismaMethod(
@@ -208,6 +206,7 @@ export const deleteEventNotificationHandler = async (eventId: string,specialKey:
       "findUnique",
       {
         where: {
+          id:notificationId,
           notificationEngagements: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
