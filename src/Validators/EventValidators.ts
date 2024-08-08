@@ -3,7 +3,7 @@ import Joi from "joi";
 const eventInputValidator = Joi.object({
   id: Joi.number().alter({
     create: (schema) => schema.forbidden(),
-    update: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
   }),
   title: Joi.string().alter({
     create: (schema) => schema.required(),

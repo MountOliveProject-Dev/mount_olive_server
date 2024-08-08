@@ -8,7 +8,7 @@ const joi_1 = __importDefault(require("joi"));
 const eventInputValidator = joi_1.default.object({
     id: joi_1.default.number().alter({
         create: (schema) => schema.forbidden(),
-        update: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
     }),
     title: joi_1.default.string().alter({
         create: (schema) => schema.required(),
