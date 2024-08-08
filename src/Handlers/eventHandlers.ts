@@ -74,17 +74,67 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
     }
 }
 
+//create an update events handler
+
+export async function updateEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+    const { prisma } = request.server.app;
+    const { uniqueId, title, description, thumbnail, date, host, time, location, venue } = request.payload as EventInput;
+
+    try{
+        const findEvent = await executePrismaMethod(prisma, "event", "findUnique", {
+            where: {
+                uniqueId: uniqueId,
+            },
+        });
+        if(!findEvent){
+            return h.response({message: "Event not found"}).code(404);
+        }
+        const event = await executePrismaMethod(prisma, "event", "update", {
+            where: {
+                id: findEvent.id,
+            },
+            data: {
+                title: title,
+                description: description,
+                thumbnail: thumbnail,
+                location: location,
+                venue: venue,
+                time: time,
+                date: date,
+                host: host,
+                updatedAt: getCurrentDate(),
+            },
+        });
+        if(!event){
+            return h.response({message: "Failed to update the event"}).code(400);
+        }
+        const notificationTitle = "The Event titled " + event.title + " has just been updated!";
+        const specialKey = event.uniqueId + NotificationType.EVENT;
+        const updateNotification = await updateEventNotificationHandler(
+          event.uniqueId,
+          specialKey,
+          notificationTitle,
+          description,
+          false
+        );
+        if(!updateNotification){
+            return h.response({message: "Failed to update the notification"}).code(400);
+        }
+        return h.response(event).code(201);
+    }catch(err){
+        console.log(err);
+        return h.response({message: "Internal Server Error" + ":failed to update the event:" + uniqueId}).code(500);
+    }
+}
 // create many events
 export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
     const { events } = request.payload as ManyEventInput;
-// add the createdAt and updatedAt to events
+    // add the createdAt and updatedAt to events
     events.forEach((event) => {
         event.createdAt = getCurrentDate();
         event.updatedAt = getCurrentDate();
     });
-
-
 
     try{
         const createdEventIds: number[] = []; // Assuming IDs are strings, change to number[] if they are numbers
@@ -140,48 +190,7 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
     }
 }
 
-export async function updateEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
-    const { prisma } = server.app;
-    const { title, description, thumbnail, uniqueId, host, date, time, location, venue } = request.payload as EventInput;
 
-    try{
-        const event = await executePrismaMethod(prisma, "event", "update", {
-          where: {
-            uniqueId: uniqueId,
-          },
-          data: {
-            title: title,
-            description: description,
-            thumbnail: thumbnail,
-            date: date,
-            host: host,
-            time: time,
-            location: location,
-            venue: venue,
-            updatedAt: getCurrentDate(),
-          },
-        });
-        if(!event){
-            return h.response({message: "Failed to update the event"}).code(400);
-        }
-        const specialKey = event.uniqueId + NotificationType.EVENT;
-        const notificationTitle = "The Event titled" + event.title + "has just been posted!";
-        const updateNotification = await updateEventNotificationHandler(
-          event.uniqueId,
-          specialKey,
-          notificationTitle,
-          description,
-          false
-        );
-        if(!updateNotification){
-            return h.response({message: "Failed to update the notification"}).code(400);
-        }
-        return h.response(event).code(200);
-    }catch(err){
-        console.log(err);
-        return h.response({message: "Internal Server Error" + ":failed to update the event:" + title}).code(500);
-    }
-}
 
 export async function deleteEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
@@ -204,16 +213,24 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
           findEvent.uniqueId,
           specialKey
         );
-
+        
         if(!deleteNotification){
             return h.response({message: "Failed to delete the notification"}).code(400);
+        }else{
+            console.log("notification deleted");
         }
         
-        const event = await executePrismaMethod(prisma, "event", "delete", {
+        const eventDeletion = await executePrismaMethod(prisma, "event", "delete", {
           where: {
             id: findEvent.id,
           },
         });
+
+        if(!eventDeletion){
+            return h.response({message: "Failed to delete the event"}).code(400);
+        }else{
+            console.log("event deleted");
+        }
         const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
         return h.response().code(201).message(message);
     }catch(err){

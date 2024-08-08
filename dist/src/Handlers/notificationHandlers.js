@@ -188,40 +188,30 @@ exports.updateEventNotificationHandler = updateEventNotificationHandler;
 const deleteEventNotificationHandler = async (eventId, specialKey) => {
     const { prisma } = server_1.default.app;
     try {
-        const eventNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "findUnique", {
-            where: {
-                specialKey: specialKey,
-                type: Helpers_1.NotificationType.EVENT,
-                event: {
-                    uniqueId: eventId
-                }
-            }, select: {
-                id: true,
-                notificationId: true
-            }
-        });
-        if (!eventNotificationEngagement) {
-            const message = "Failed to get the notification engagement";
-            console.log(message);
-        }
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "delete", {
             where: {
-                id: eventNotificationEngagement.notificationId
+                notificationEngagements: {
+                    specialKey: specialKey,
+                    type: Helpers_1.NotificationType.EVENT,
+                    event: {
+                        uniqueId: eventId
+                    }
+                }
             }
         });
         if (!notification) {
             const message = "Failed to delete the notification";
             console.log(message);
         }
-        const deleteEventNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "delete", {
+        await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "delete", {
             where: {
-                id: eventNotificationEngagement.id
+                specialKey: specialKey,
+                type: Helpers_1.NotificationType.EVENT,
+                event: {
+                    uniqueId: eventId
+                }
             }
         });
-        if (!deleteEventNotificationEngagement) {
-            const message = "Failed to delete the notification engagement";
-            console.log(message);
-        }
         const message = "Notification was deleted successfully";
         return message;
     }

@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listEventsHandler = listEventsHandler;
 exports.createEventHandler = createEventHandler;
-exports.createManyEventsHandler = createManyEventsHandler;
 exports.updateEventHandler = updateEventHandler;
+exports.createManyEventsHandler = createManyEventsHandler;
 exports.deleteEventHandler = deleteEventHandler;
 exports.getEventHandler = getEventHandler;
 exports.searchEventByTitleOrUniqueIDHandler = searchEventByTitleOrUniqueIDHandler;
@@ -70,6 +70,51 @@ async function createEventHandler(request, h) {
         return h.response({ message: "Internal Server Error" + ":failed to create the event:" + title }).code(500);
     }
 }
+//create an update events handler
+async function updateEventHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { uniqueId, title, description, thumbnail, date, host, time, location, venue } = request.payload;
+    try {
+        const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
+            where: {
+                uniqueId: uniqueId,
+            },
+        });
+        if (!findEvent) {
+            return h.response({ message: "Event not found" }).code(404);
+        }
+        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
+            where: {
+                id: findEvent.id,
+            },
+            data: {
+                title: title,
+                description: description,
+                thumbnail: thumbnail,
+                location: location,
+                venue: venue,
+                time: time,
+                date: date,
+                host: host,
+                updatedAt: (0, Helpers_1.getCurrentDate)(),
+            },
+        });
+        if (!event) {
+            return h.response({ message: "Failed to update the event" }).code(400);
+        }
+        const notificationTitle = "The Event titled " + event.title + " has just been updated!";
+        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
+        if (!updateNotification) {
+            return h.response({ message: "Failed to update the notification" }).code(400);
+        }
+        return h.response(event).code(201);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to update the event:" + uniqueId }).code(500);
+    }
+}
 // create many events
 async function createManyEventsHandler(request, h) {
     const { prisma } = request.server.app;
@@ -120,42 +165,6 @@ async function createManyEventsHandler(request, h) {
         return h.response({ message: "Internal Server Error" + ":failed to create the events" }).code(500);
     }
 }
-async function updateEventHandler(request, h) {
-    const { prisma } = server_1.default.app;
-    const { title, description, thumbnail, uniqueId, host, date, time, location, venue } = request.payload;
-    try {
-        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
-            where: {
-                uniqueId: uniqueId,
-            },
-            data: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail,
-                date: date,
-                host: host,
-                time: time,
-                location: location,
-                venue: venue,
-                updatedAt: (0, Helpers_1.getCurrentDate)(),
-            },
-        });
-        if (!event) {
-            return h.response({ message: "Failed to update the event" }).code(400);
-        }
-        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
-        const notificationTitle = "The Event titled" + event.title + "has just been posted!";
-        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
-        if (!updateNotification) {
-            return h.response({ message: "Failed to update the notification" }).code(400);
-        }
-        return h.response(event).code(200);
-    }
-    catch (err) {
-        console.log(err);
-        return h.response({ message: "Internal Server Error" + ":failed to update the event:" + title }).code(500);
-    }
-}
 async function deleteEventHandler(request, h) {
     const { prisma } = request.server.app;
     const { uniqueId } = request.payload;
@@ -173,11 +182,20 @@ async function deleteEventHandler(request, h) {
         if (!deleteNotification) {
             return h.response({ message: "Failed to delete the notification" }).code(400);
         }
-        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+        else {
+            console.log("notification deleted");
+        }
+        const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
             where: {
                 id: findEvent.id,
             },
         });
+        if (!eventDeletion) {
+            return h.response({ message: "Failed to delete the event" }).code(400);
+        }
+        else {
+            console.log("event deleted");
+        }
         const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
         return h.response().code(201).message(message);
     }

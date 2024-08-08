@@ -1,11 +1,40 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listAndShareAudioFiles = listAndShareAudioFiles;
 exports.createAudioFile = createAudioFile;
+exports.listAndShareAudioFiles = listAndShareAudioFiles;
 exports.createFolder = createFolder;
+exports.deleteFolder = deleteFolder;
 exports.getAllFilesInGoogleDriveFolder = getAllFilesInGoogleDriveFolder;
 const googleapis_1 = require("googleapis");
 const Helpers_1 = require("../Helpers");
+async function createAudioFile(audioFile) {
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    if (!folderId) {
+        throw new Error("GOOGLE_DRIVE_FOLDER_ID is not defined");
+    }
+    const fileMetadata = {
+        name: audioFile.name,
+        parents: [folderId],
+    };
+    const media = {
+        mimeType: audioFile.mimeType,
+        body: audioFile.body,
+    };
+    try {
+        const response = await drive.files.create({
+            requestBody: fileMetadata,
+            media: media,
+            fields: "id",
+        });
+        console.log("File ID: ", response.data.id);
+    }
+    catch (error) {
+        console.error("Error uploading file: ", error);
+    }
+    //1U_jSHkOwMQXhZif1Ah27BF32p0JsoUcx
+}
+;
 async function listAndShareAudioFiles() {
     // Initialize the Drive API client
     const drive = googleapis_1.google.drive({
@@ -53,34 +82,6 @@ async function listAndShareAudioFiles() {
         console.error('Error listing or sharing audio files:', error);
     }
 }
-async function createAudioFile(audioFile) {
-    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    if (!folderId) {
-        throw new Error("GOOGLE_DRIVE_FOLDER_ID is not defined");
-    }
-    const fileMetadata = {
-        name: audioFile.name,
-        parents: [folderId],
-    };
-    const media = {
-        mimeType: audioFile.mimeType,
-        body: audioFile.body,
-    };
-    try {
-        const response = await drive.files.create({
-            requestBody: fileMetadata,
-            media: media,
-            fields: "id",
-        });
-        console.log("File ID: ", response.data.id);
-    }
-    catch (error) {
-        console.error("Error uploading file: ", error);
-    }
-    //1U_jSHkOwMQXhZif1Ah27BF32p0JsoUcx
-}
-;
 async function createFolder(folderName) {
     const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
     const fileMetadata = {
@@ -99,6 +100,33 @@ async function createFolder(folderName) {
     }
 }
 ;
+async function deleteFolder(folderId) {
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    try {
+        await drive.files.delete({
+            fileId: folderId,
+        });
+        console.log("Folder deleted successfully");
+    }
+    catch (error) {
+        console.error("Error deleting folder:", error);
+    }
+}
 async function getAllFilesInGoogleDriveFolder() {
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const listParams = {
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: 'files(id, name, mimeType)',
+    };
+    try {
+        const res = await drive.files.list(listParams);
+        const listResults = res.data.files || [];
+        console.log('Files in the folder:', listResults.length);
+        console.log(listResults);
+    }
+    catch (error) {
+        console.error('Error listing files:', error);
+    }
 }
 //# sourceMappingURL=googledriveHandlers.js.map

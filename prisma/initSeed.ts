@@ -133,16 +133,16 @@ async function main() {
 //const mountOlive = createFolder("Mount Olive Church");
 //console.log(mountOlive);
 
-// const audioFile = {
-//   name: "test.mp3",
-//   mimeType: "audio/mpeg",
-//   body: "C:\\Users\\aatog\\Downloads\\Music\\Rema - HEHEHE.mp3",
-// };
+const audioFile = {
+  name: "jama.mp3",
+  mimeType: "audio/mpeg",
+  body: "C:\\Users\\aatog\\Downloads\\Music\\ytmp3free.cc_trending-jama-gospel-songs-to-energize-your-day-from-ghana-best-morale-group-youtubemp3free.org.mp3",
+};
 
-// // create a pop to select audio file from my drive
+// create a pop to select audio file from my drive
 
 // createAudioFile(audioFile);
-//listAndShareAudioFiles();
+listAndShareAudioFiles();
 getAllFilesInGoogleDriveFolder();
 
 
