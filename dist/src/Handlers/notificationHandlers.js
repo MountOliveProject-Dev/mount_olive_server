@@ -132,7 +132,7 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
             const message = "Failed to create the notification";
             console.log(message);
         }
-        const message = title + "  was created successfully";
+        const message = "notification with ID " + notification.id + "  was created successfully";
         console.log(message);
         return message;
     }
@@ -169,12 +169,14 @@ const updateEventNotificationHandler = async (notificationId, eventId, specialKe
             const message = "Failed to update the notification";
             console.log(message);
         }
-        const message = title + "  was updated successfully";
-        return message;
+        const message = "notification with ID " + notification.id + " has been updated successfully";
+        const code = 200;
+        return { code, message };
     }
     catch (err) {
         const message = err + " :Failed to update the notification";
-        return message;
+        const code = 500;
+        return { code, message };
     }
 };
 exports.updateEventNotificationHandler = updateEventNotificationHandler;

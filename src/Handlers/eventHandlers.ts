@@ -126,10 +126,18 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
           description,
           false
         );
-        if(!updateNotification){
+        if (updateNotification.code== 500){
+            //delete event
+            await executePrismaMethod(prisma, "event", "delete", {
+                where: {
+                    id: findEvent.id,
+                },
+            });
             return h.response({message: "Failed to update the notification"}).code(400);
+        }else if(updateNotification.code == 200){
+            return h.response({message: "Event updated successfully!"}).code(201);
         }
-        return h.response(event).code(201);
+            
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to update the event:" + uniqueId}).code(500);

@@ -145,7 +145,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
             console.log(message);
         }
        
-        const message = title + "  was created successfully";
+        const message = "notification with ID "+ notification.id + "  was created successfully";
         console.log(message);
         return message;
     }catch(err){
@@ -165,7 +165,7 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
       "update",
       {
         where: {
-          id:notificationId,
+          id: notificationId,
           notificationEngagements: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
@@ -187,11 +187,13 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
       console.log(message);
     }
 
-    const message = title + "  was updated successfully";
-    return message;
+    const message = "notification with ID " + notification.id + " has been updated successfully";
+    const code = 200;
+    return {code,message};
   } catch (err) {
     const message = err + " :Failed to update the notification";
-    return message;
+    const code = 500;
+    return {code,message};
   }
 };
 
