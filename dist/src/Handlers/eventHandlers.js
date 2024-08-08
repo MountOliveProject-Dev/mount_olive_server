@@ -174,16 +174,20 @@ async function deleteEventHandler(request, h) {
                 uniqueId: uniqueId,
             },
         });
+        console.log("found the event ", findEvent);
         if (!findEvent) {
+            console.log("event not found");
             return h.response({ message: "Event not found" }).code(404);
         }
         const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
         const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.uniqueId, specialKey);
         if (!deleteNotification) {
+            console.log(deleteNotification);
             return h.response({ message: "Failed to delete the notification" }).code(400);
         }
         else {
             console.log("notification deleted");
+            console.log(deleteNotification);
         }
         const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
             where: {

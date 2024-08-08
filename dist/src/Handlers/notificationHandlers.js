@@ -188,7 +188,7 @@ exports.updateEventNotificationHandler = updateEventNotificationHandler;
 const deleteEventNotificationHandler = async (eventId, specialKey) => {
     const { prisma } = server_1.default.app;
     try {
-        const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "delete", {
+        const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findUnique", {
             where: {
                 notificationEngagements: {
                     specialKey: specialKey,
@@ -200,20 +200,36 @@ const deleteEventNotificationHandler = async (eventId, specialKey) => {
             }
         });
         if (!notification) {
-            const message = "Failed to delete the notification";
+            const message = "notification not found";
             console.log(message);
         }
-        await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "delete", {
+        const deleteNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "notificationEngagements", "delete", {
             where: {
                 specialKey: specialKey,
                 type: Helpers_1.NotificationType.EVENT,
+                notificationId: notification.id,
                 event: {
                     uniqueId: eventId
                 }
             }
         });
-        const message = "Notification was deleted successfully";
-        return message;
+        if (!deleteNotificationEngagement) {
+            const message = "Failed to delete the notification engagement";
+            console.log(message);
+        }
+        else {
+            const deleteNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "delete", {
+                where: {
+                    id: notification.id
+                }
+            });
+            if (!deleteNotification) {
+                const message = "Failed to delete the notification";
+                console.log(message);
+            }
+            const message = "Notification was deleted successfully";
+            return message;
+        }
     }
     catch (err) {
         const message = err + " :Failed to delete the notification";
