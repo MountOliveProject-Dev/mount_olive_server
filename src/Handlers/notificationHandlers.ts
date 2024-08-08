@@ -26,7 +26,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
 //     const { prisma } = request.server.app;
 //     const type = request.params.type;
 //     try{
-//         const notifications = await executePrismaMethod(prisma, "notificationEngagements", "findMany", {
+//         const notifications = await executePrismaMethod(prisma, "engagementsManager", "findMany", {
 //             where: {
 //                 type: type
 //             }
@@ -84,7 +84,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
 //             return message;
 //         }
 
-//         const mediaNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "create", {
+//         const mediaNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "create", {
 //             data: {
 //                 notificationId: notification.id,
 //                 type: NotificationType.MEDIA,
@@ -126,7 +126,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
               read: read,
               createdAt: getCurrentDate(),
               updatedAt: getCurrentDate(),
-              eventNotifications: {
+              notificationEngagements: {
                 create: {
                   type: NotificationType.EVENT,
                   specialKey: specialKey,
@@ -166,7 +166,7 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
       {
         where: {
           id:notificationId,
-          eventNotifications: {
+          notificationEngagements: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
             event: {
@@ -222,7 +222,7 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
       console.log(message);
     }
 
-    const deleteNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "delete", {
+    const deleteNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "delete", {
         where: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
@@ -259,54 +259,54 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
 ///
 
 
-export const updateMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
-    const { prisma } = server.app;
-    try{
-        const notification = await executePrismaMethod(prisma, "notification", "update", {
-            where: {
-                id: mediaId
-            },
-            data: {
-                title: title,
-                description: description,
-                read: read
-            },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                read: true
-            }
-        });
-        if(!notification){
-            const message = "Failed to update the notification";
-            return message;
-        }
+// export const updateMediaNotificationHandler = async (mediaId: number, title: string, description: string, read: boolean) => {
+//     const { prisma } = server.app;
+//     try{
+//         const notification = await executePrismaMethod(prisma, "notification", "update", {
+//             where: {
+//                 id: mediaId
+//             },
+//             data: {
+//                 title: title,
+//                 description: description,
+//                 read: read
+//             },
+//             select: {
+//                 id: true,
+//                 title: true,
+//                 description: true,
+//                 read: true
+//             }
+//         });
+//         if(!notification){
+//             const message = "Failed to update the notification";
+//             return message;
+//         }
 
-        const mediaNotificationEngagement = await executePrismaMethod(prisma, "notificationEngagements", "update", {
-            where: {
-                notificationId: notification.id
-            },
-            data: {
-                type: NotificationType.MEDIA,
-                media:{
-                    connect:{
-                        id: mediaId
+//         const mediaNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "update", {
+//             where: {
+//                 notificationId: notification.id
+//             },
+//             data: {
+//                 type: NotificationType.MEDIA,
+//                 media:{
+//                     connect:{
+//                         id: mediaId
                     
-                }
-            }
+//                 }
+//             }
         
-        }
-    });
-        if(!mediaNotificationEngagement){
-            const message = "Failed to update the notification engagement";
-            return message;
-        }
-        const message = title + "  was updated successfully";
-        return message;
-    }catch(err){
-        const message = err + " :Failed to update the notification";
-        return message;
-    }
-}
+//         }
+//     });
+//         if(!mediaNotificationEngagement){
+//             const message = "Failed to update the notification engagement";
+//             return message;
+//         }
+//         const message = title + "  was updated successfully";
+//         return message;
+//     }catch(err){
+//         const message = err + " :Failed to update the notification";
+//         return message;
+//     }
+// }
 
