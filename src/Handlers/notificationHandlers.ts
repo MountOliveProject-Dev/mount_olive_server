@@ -206,7 +206,7 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
       "findUnique",
       {
         where: {
-          id:notificationId,
+          id: notificationId,
           notificationEngagements: {
             specialKey: specialKey,
             type: NotificationType.EVENT,
