@@ -159,6 +159,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
 export const updateEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
   try {
+    const notificationTitle = "notification with ID " + notificationId + "  has been updated successfully";
     const notification = await executePrismaMethod(
       prisma,
       "notification",
@@ -174,7 +175,7 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
             },
           },
           data: {
-            title: title,
+            title: notificationTitle,
             description: description,
             read: read,
             updatedAt: getCurrentDate(),
@@ -186,11 +187,15 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
     if (!notification) {
       const message = " Failed to update the notification :";
       console.log(notification + message);
+      const code = 500;
+      return { code, message };
+    }else{
+      const message = "notification with ID " + notification.id + " has been updated successfully";
+      const code = 200;
+      return { code, message };
     }
 
-    const message = "notification with ID " + notification.id + " has been updated successfully";
-    const code = 200;
-    return {code,message};
+    
   } catch (err) {
     const message = err + " :Failed to update the notification";
     const code = 500;
