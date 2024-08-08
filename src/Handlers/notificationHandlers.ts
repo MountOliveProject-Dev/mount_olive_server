@@ -174,12 +174,12 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
               uniqueId: eventId,
             },
           },
-          data: {
-            title: notificationTitle,
-            description: description,
-            read: read,
-            updatedAt: getCurrentDate(),
-          },
+        },
+        data: {
+          title: notificationTitle,
+          description: description,
+          read: read,
+          updatedAt: getCurrentDate(),
         },
       }
     );

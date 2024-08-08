@@ -158,12 +158,12 @@ const updateEventNotificationHandler = async (notificationId, eventId, specialKe
                         uniqueId: eventId,
                     },
                 },
-                data: {
-                    title: notificationTitle,
-                    description: description,
-                    read: read,
-                    updatedAt: (0, Helpers_1.getCurrentDate)(),
-                },
+            },
+            data: {
+                title: notificationTitle,
+                description: description,
+                read: read,
+                updatedAt: (0, Helpers_1.getCurrentDate)(),
             },
         });
         console.log(notification);
