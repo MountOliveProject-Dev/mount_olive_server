@@ -128,8 +128,7 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
               uniqueId: uniqueId,
             },
             select: {
-              id: true,
-              eventNotifications: {
+              mediaNotifications: {
                 select: {
                   notificationId: true,
                 },

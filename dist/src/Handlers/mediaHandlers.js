@@ -100,8 +100,7 @@ async function updateVideoMediaHandler(request, h) {
                 uniqueId: uniqueId,
             },
             select: {
-                id: true,
-                eventNotifications: {
+                mediaNotifications: {
                     select: {
                         notificationId: true,
                     },
