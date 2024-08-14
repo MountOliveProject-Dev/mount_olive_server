@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mediaPlugin = void 0;
 const inert_1 = __importDefault(require("@hapi/inert"));
 const mediaHandlers_1 = require("../Handlers/mediaHandlers");
+const joi_1 = __importDefault(require("joi"));
 const MediaValidators_1 = require("../Validators/MediaValidators");
 exports.mediaPlugin = {
     name: "app/media",
@@ -84,9 +85,9 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                     validate: {
-                        payload: {
-                            uniqueId: { type: "string" },
-                        },
+                        payload: joi_1.default.object({
+                            uniqueId: joi_1.default.string().required(),
+                        }),
                         failAction: async (request, h, err) => {
                             throw err;
                         },

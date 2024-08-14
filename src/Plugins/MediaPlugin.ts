@@ -8,7 +8,7 @@ import {
   deleteVideoMediaHandler,
   //createAudioMediaHandler,
 } from "../Handlers/mediaHandlers";
-
+import Joi from "joi";
 import {
   updateMediaInputValidator,
   createMediaInputValidator,
@@ -92,9 +92,11 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: {
-              uniqueId: { type: "string" },
-            },
+            payload: 
+               Joi.object({
+              uniqueId: Joi.string().required(),
+            }),
+            
             failAction: async (request, h, err) => {
               throw err;
             },
