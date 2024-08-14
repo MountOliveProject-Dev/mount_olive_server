@@ -84,7 +84,9 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                     validate: {
-                        payload: MediaValidators_1.createMediaInputValidator,
+                        payload: {
+                            uniqueId: { type: "string" },
+                        },
                         failAction: async (request, h, err) => {
                             throw err;
                         },

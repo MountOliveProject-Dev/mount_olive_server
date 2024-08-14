@@ -92,7 +92,9 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: createMediaInputValidator,
+            payload: {
+              uniqueId: { type: "string" },
+            },
             failAction: async (request, h, err) => {
               throw err;
             },
