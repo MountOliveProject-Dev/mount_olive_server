@@ -38,7 +38,6 @@ exports.fireBaseAdmin = admin.initializeApp({
 });
 exports.auth = new googleapis_1.google.auth.GoogleAuth({
     credentials: {
-        type: process.env.GOOGLE_DRIVE_TYPE,
         project_id: process.env.GOOGLE_DRIVE_PROJECT_ID,
         private_key_id: process.env.GOOGLE_DRIVE_PRIVATE_KEY_ID,
         private_key: exports.GOOGLE_DRIVE_PRIVATE_KEY,

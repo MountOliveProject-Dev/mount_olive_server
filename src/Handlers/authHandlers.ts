@@ -22,7 +22,6 @@ export const fireBaseAdmin = admin.initializeApp({
 
 export const auth: Auth.GoogleAuth = new google.auth.GoogleAuth({
   credentials: {
-    type: process.env.GOOGLE_DRIVE_TYPE,
     project_id: process.env.GOOGLE_DRIVE_PROJECT_ID,
     private_key_id: process.env.GOOGLE_DRIVE_PRIVATE_KEY_ID,
     private_key: GOOGLE_DRIVE_PRIVATE_KEY,
