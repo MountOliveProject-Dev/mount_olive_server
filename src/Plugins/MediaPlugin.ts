@@ -1,29 +1,39 @@
 import Hapi from "@hapi/hapi";
+import Inert from '@hapi/inert';
 
-import { listAllAudioMediaHandler, listAllVideoMediaHandler } from "../Handlers/mediaHandlers";
+
+import { createAudioMediaHandler } from "../Handlers/mediaHandlers";
+import {createAudioFileValidator} from "../Validators";
+
+
 
 export const mediaPlugin = {
-    name: 'app/media',
-    dependencies: ['prisma'],
-
-    register: async function (server: Hapi.Server) {
-        server.route([
-          {
-            method: "GET",
-            path: "/api/media/get-audios",
-            handler: listAllAudioMediaHandler,
-            options: {
-              auth: false,
+  name: 'app/media',
+  dependencies: ['prisma'],
+  
+  register: async function (server: Hapi.Server) {
+    await server.register(Inert);  
+    server.route([
+      {
+        method: "POST",
+        path: "/upload-audio",
+        handler: createAudioMediaHandler,
+        options: {
+          auth: false,
+          payload: {
+            output: "stream",
+            parse: true,
+            multipart: true,
+            maxBytes: 104857600, // Limit to 100MB
+          },
+          validate: {
+            payload: createAudioFileValidator,
+            failAction: (request, h, err) => {
+              throw err;
             },
           },
-          {
-            method: "GET",
-            path: "/api/media/get-videos",
-            handler: listAllVideoMediaHandler,
-            options: {
-              auth: false,
-            },
-          },
-        ]);
-    }
+        },
+      },
+    ]);
+  }
 }

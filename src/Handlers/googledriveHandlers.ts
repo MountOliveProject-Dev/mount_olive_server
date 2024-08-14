@@ -1,42 +1,71 @@
 import {
   google, // The top level object used to access services
   drive_v3, // For every service client, there is an exported namespace
-  Auth, // Namespace for auth related types
+
 } from "googleapis";
+import fs from "fs";
+import {auth} from "../Handlers";
+import {audioMimeTypes} from "../Helpers/extras";
 
-import { auth, audioMimeTypes, GOOGLE_DRIVE_PRIVATE_KEY } from "../Helpers";
 
+async function uploadFileToResumableSession(
+  uploadUrl: string,
+  filePath: string
+) {
+  const fileStream = fs.createReadStream(filePath);
+  const fileSize = fs.statSync(filePath).size;
+
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Length": fileSize.toString(),
+      "Content-Type": "application/octet-stream",
+    },
+    body: fileStream,
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to upload file: ${res.statusText}`);
+  }
+
+  const fileData = await res.json();
+  console.log("Uploaded file data:", fileData);
+}
 
 
 export async function createAudioFile (audioFile: any) {
   const drive = google.drive({ version: "v3", auth });
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
+  const filePath = audioFile.path;
+  const fileName = audioFile.hapi.filename;
+  const mimeType = audioFile.hapi.headers["content-type"];
   if (!folderId) {
     throw new Error("GOOGLE_DRIVE_FOLDER_ID is not defined");
   }
   const fileMetadata = {
-    name: audioFile.name,
+    name: fileName,
     parents: [folderId],
-  };
-
-  const media = {
-    mimeType: audioFile.mimeType,
-    body: audioFile.body,
   };
 
   try {
     const response = await drive.files.create({
       requestBody: fileMetadata,
-      media: media,
+      media: {
+        mimeType: mimeType,
+        body: fs.createReadStream(filePath),
+      },
       fields: "id",
+      uploadType: "resumable",
     });
-
+    const uploadUrl = response.headers.location;
+    console.log("Resumable upload URL: ", uploadUrl);
+    await uploadFileToResumableSession(uploadUrl, audioFile.path);
     console.log("File ID: ", response.data.id);
+    return response.data.id;
   } catch (error) {
     console.error("Error uploading file: ", error);
   }
-  //1U_jSHkOwMQXhZif1Ah27BF32p0JsoUcx
 };
 
 export async function listAndShareAudioFiles() {

@@ -41,7 +41,16 @@ export async function createServer(): Promise<Hapi.Server> {
     console.log("Running in production mode...");
   }
 
-  await server.register([ prismaPlugin,pm2plugin,statusPlugin, eventsPlugin, notificationsPlugin, mediaPlugin]);
+  await server.register([
+    
+    prismaPlugin,
+    pm2plugin,
+    statusPlugin,
+    eventsPlugin,
+    notificationsPlugin,
+    mediaPlugin,
+    
+  ]);
 
   await server.initialize();
 
