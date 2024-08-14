@@ -222,6 +222,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
     }
 }
 
+
 //update media notification
 
 export const updateMediaNotificationHandler = async (notificationId : number, mediaId: string,specialKey: string,title: string,description: string,read: boolean) => {
@@ -269,7 +270,7 @@ export const updateMediaNotificationHandler = async (notificationId : number, me
     const code = 500;
     return {code,message};
   }
-};
+}
 
 //delete media notification
 

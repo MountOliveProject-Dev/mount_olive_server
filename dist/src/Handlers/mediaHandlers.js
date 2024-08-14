@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = void 0;
 exports.createVideoMediaHandler = createVideoMediaHandler;
+exports.updateVideoMediaHandler = updateVideoMediaHandler;
+exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
 //create video media
@@ -54,7 +56,103 @@ async function createVideoMediaHandler(request, h) {
         return h.response({ message: "Internal Server Error" + ":failed to create video media" }).code(500);
     }
 }
-// list all video media
+// update video media
+async function updateVideoMediaHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { uniqueId, title, description, thumbnail, url, duration, category } = request.payload;
+    try {
+        const findMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+            where: {
+                uniqueId: uniqueId,
+            },
+            select: {
+                id: true,
+                eventNotifications: {
+                    select: {
+                        notificationId: true,
+                    },
+                },
+            },
+        });
+        if (!findMedia) {
+            return h.response({ message: "Media not found" }).code(404);
+        }
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
+            where: {
+                id: findMedia.id,
+                uniqueId: uniqueId
+            },
+            data: {
+                title: title,
+                description: description,
+                thumbnail: thumbnail,
+                url: url,
+                duration: duration,
+                category: category,
+                updatedAt: (0, Helpers_1.getCurrentDate)()
+            }
+        });
+        if (!media) {
+            console.log("Failed to update video media");
+            return h.response({ message: "Failed to update video media" }).code(400);
+        }
+        const notificationTitle = "The Video titled " + title + " has just been updated!";
+        const specialKey = media.uniqueId + Helpers_1.NotificationType.MEDIA;
+        const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(findMedia.eventNotifications.notificationId, media.uniqueId, specialKey, notificationTitle, description, false);
+        if (!notification) {
+            console.log("Failed to update notification for video media");
+            return h.response({ message: "Failed to update notification for video media" }).code(400);
+        }
+        return h.response({ message: "The video was updated successfully" }).code(201);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to update video media" }).code(500);
+    }
+}
+// delete video media
+async function deleteVideoMediaHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { uniqueId } = request.payload;
+    try {
+        const findMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+            where: {
+                uniqueId: uniqueId,
+            },
+            select: {
+                id: true,
+                eventNotifications: {
+                    select: {
+                        notificationId: true,
+                    },
+                },
+            },
+        });
+        if (!findMedia) {
+            return h.response({ message: "Media not found" }).code(404);
+        }
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
+            where: {
+                id: findMedia.id
+            }
+        });
+        if (!media) {
+            console.log("Failed to delete video media");
+            return h.response({ message: "Failed to delete video media" }).code(400);
+        }
+        const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.EVENT;
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.eventNotifications.notificationId, findMedia.uniqueId, specialKey);
+        if (!notification) {
+            console.log("Failed to delete notification for video media");
+            return h.response({ message: "Failed to delete notification for video media" }).code(400);
+        }
+        return h.response({ message: "The video was deleted successfully" }).code(201);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to delete video media" }).code(500);
+    }
+}
 const listAllAudioMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {

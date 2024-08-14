@@ -62,12 +62,126 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
     }
 
 }
+// update video media
+
+export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+    const { prisma } = request.server.app;
+    const {uniqueId, title, description, thumbnail, url, duration, category} = request.payload as MediaInput;
+    
+    try{
+        const findMedia = await executePrismaMethod(
+          prisma,
+          "media",
+          "findUnique",
+          {
+            where: {
+              uniqueId: uniqueId,
+            },
+            select: {
+              id: true,
+              eventNotifications: {
+                select: {
+                  notificationId: true,
+                },
+              },
+            },
+          }
+        );
+        if (!findMedia) {
+          return h.response({ message: "Media not found" }).code(404);
+        }
+        const media = await executePrismaMethod(prisma, "media", "update", {
+            where: {
+                id: findMedia.id,
+                uniqueId: uniqueId
+            },
+            data: {
+                title: title,
+                description: description,
+                thumbnail: thumbnail,
+                url: url,
+                duration: duration,
+                category: category,
+                updatedAt: getCurrentDate()
+            }
+        });
+        if(!media){
+            console.log("Failed to update video media");
+            return h.response({message: "Failed to update video media"}).code(400);
+        }
 
 
-// list all video media
+        const notificationTitle = "The Video titled " + title + " has just been updated!";
+        const specialKey = media.uniqueId + NotificationType.MEDIA;
+        const notification = await updateMediaNotificationHandler(
+            findMedia.eventNotifications.notificationId,
+            media.uniqueId,
+            specialKey,
+            notificationTitle,
+            description,
+            false
+        );
+        if(!notification){
+            console.log("Failed to update notification for video media");
+            return h.response({message: "Failed to update notification for video media"}).code(400);
+        }
 
 
 
+        return h.response({message:"The video was updated successfully"}).code(201);
+    }catch(err){
+        console.log(err);
+        return h.response({message: "Internal Server Error" + ":failed to update video media"}).code(500);
+    }
+}
+
+// delete video media
+export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+    const { prisma } = request.server.app;
+    const {uniqueId} = request.payload as MediaInput;
+    try{
+        const findMedia = await executePrismaMethod(
+          prisma,
+          "media",
+          "findUnique",
+          {
+            where: {
+              uniqueId: uniqueId,
+            },
+            select: {
+              id: true,
+              eventNotifications: {
+                select: {
+                  notificationId: true,
+                },
+              },
+            },
+          }
+        );
+        if (!findMedia) {
+          return h.response({ message: "Media not found" }).code(404);
+        }
+        const media = await executePrismaMethod(prisma, "media", "delete", {
+            where: {
+                id: findMedia.id
+            }
+        });
+        if(!media){
+            console.log("Failed to delete video media");
+            return h.response({message: "Failed to delete video media"}).code(400);
+        }
+        const specialKey = findMedia.uniqueId + NotificationType.EVENT;
+        const notification = await deleteMediaNotificationHandler(findMedia.eventNotifications.notificationId, findMedia.uniqueId, specialKey);
+        if(!notification){
+            console.log("Failed to delete notification for video media");
+            return h.response({message: "Failed to delete notification for video media"}).code(400);
+        }
+        return h.response({message:"The video was deleted successfully"}).code(201);
+    }catch(err){
+        console.log(err);
+        return h.response({message: "Internal Server Error" + ":failed to delete video media"}).code(500);
+    }
+}
 export const listAllAudioMediaHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
     const { prisma } = request.server.app;
 

@@ -1,14 +1,14 @@
 import { MediaType } from "../Helpers";
 
 export interface MediaInput {
-  id: number;
-  title: String;
-  description: String;
-  thumbnail: String;
-  url: String;
+  title: string;
+  description: string;
+  thumbnail: string;
+  url: string;
   duration: number;
   type: MediaType;
-  category: String;
+  uniqueId : string;
+  category: string;
   createdAt: string;
   updatedAt: string;
 }

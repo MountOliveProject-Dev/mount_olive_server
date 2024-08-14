@@ -1,7 +1,17 @@
 import Hapi from "@hapi/hapi";
 
-import { createVideoMediaHandler, listAllAudioMediaHandler, listAllVideoMediaHandler } from "../Handlers/mediaHandlers";
+import {
+  createVideoMediaHandler,
+  listAllAudioMediaHandler,
+  listAllVideoMediaHandler,
+  updateVideoMediaHandler,
+  deleteVideoMediaHandler,
+} from "../Handlers/mediaHandlers";
 
+import {
+  updateMediaInputValidator,
+  createMediaInputValidator,
+} from "../Validators/MediaValidators";
 export const mediaPlugin = {
     name: 'app/media',
     dependencies: ['prisma'],
@@ -30,8 +40,42 @@ export const mediaPlugin = {
             handler: createVideoMediaHandler,
             options: {
               auth: false,
+              validate: {
+                payload: createMediaInputValidator,
+                failAction: async (request, h, err) => {
+                  throw err;
+                },
+              },
             },
-          }
+          },
+          {
+            method: "POST",
+            path: "/api/media/update-video",
+            handler: updateVideoMediaHandler,
+            options: {
+              auth: false,
+              validate: {
+                payload: updateMediaInputValidator,
+                failAction: async (request, h, err) => {
+                  throw err;
+                },
+              },
+            },
+          },
+          {
+            method: "POST",
+            path: "/api/media/delete-video",
+            handler: deleteVideoMediaHandler,
+            options: {
+              auth: false,
+              validate: {
+                payload: createMediaInputValidator,
+                failAction: async (request, h, err) => {
+                  throw err;
+                },
+              },
+          },
+        },
         ]);
     }
 }
