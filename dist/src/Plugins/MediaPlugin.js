@@ -23,6 +23,14 @@ exports.mediaPlugin = {
                     auth: false,
                 },
             },
+            {
+                method: "POST",
+                path: "/api/media/post-video",
+                handler: mediaHandlers_1.createVideoMediaHandler,
+                options: {
+                    auth: false,
+                },
+            }
         ]);
     }
 };

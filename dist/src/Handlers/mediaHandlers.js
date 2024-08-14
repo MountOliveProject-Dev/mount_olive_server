@@ -1,68 +1,66 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = void 0;
+exports.createVideoMediaHandler = createVideoMediaHandler;
 const Helpers_1 = require("../Helpers");
-// const CREDENTIALS_PATH = "path/to/your/credentials.json";
-// // Path to token.json for storing access and refresh tokens
-// const TOKEN_PATH = "path/to/your/token.json";
-// // Assuming you have a function to authenticate and get an auth client
-// async function getAuthenticatedClient() {
-//   // Your authentication logic here
-//   // This typically involves creating an OAuth2 client with your credentials
-//   // and obtaining an access token
-//      const credentials = JSON.parse(readFileSync(CREDENTIALS_PATH, "utf8"));
-//      const { client_secret, client_id, redirect_uris } = credentials.installed;
-//      const oAuth2Client = new google.auth.OAuth2(
-//        client_id,
-//        client_secret,
-//        redirect_uris[0]
-//      );
-//      // Check if we have previously stored a token
-//      let token;
-//      try {
-//        token = JSON.parse(readFileSync(TOKEN_PATH, "utf8"));
-//      } catch (error) {
-//        return new Error(
-//          "Token file not found. You need to generate a new token."
-//        );
-//      }
-//      oAuth2Client.setCredentials(token);
-//      return oAuth2Client;
-// }
-// export const uploadAudioToGoogleDrive = async (
-//   request: Hapi.Request,
-//   h: Hapi.ResponseToolkit
-// ) => {
-//   const file = request.payload.file; // Assuming the file is coming from the request payload
-//   const auth = await getAuthenticatedClient();
-//   const drive = google.drive({ version: "v3", auth });
-//   const fileMetadata = {
-//     name: "audio-file-name.mp3", // You can dynamically set the name based on the file details
-//     parents: ["your-folder-id"], // Optional: Specify if you want to upload to a specific folder
-//   };
-//   const media = {
-//     mimeType: "audio/mpeg", // Adjust based on your audio file type
-//     body: fs.createReadStream(path.join(__dirname, "path-to-your-audio-file")),
-//   };
-//   try {
-//     const response = await drive.files.create({
-//       requestBody: fileMetadata,
-//       media: media,
-//       fields: "id", // Specify the fields you want in the response
-//     });
-//     console.log("File ID: ", response.data.id); // Do something with the response, like sending the file ID back to the client
-//     return h.response({ fileId: response.data.id }).code(200);
-//   } catch (error) {
-//     console.error("Error uploading file: ", error);
-//     return h.response({ error: "Error uploading file" }).code(500);
-//   }
-// };
+const Helpers_2 = require("../Helpers");
+const notificationHandlers_1 = require("./notificationHandlers");
+//create video media
+async function createVideoMediaHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { title, description, thumbnail, url, duration, type, category } = request.payload;
+    try {
+        let thumbnailNew;
+        let descriptionNew;
+        if (thumbnail === undefined || thumbnail === null) {
+            thumbnailNew = " ";
+        }
+        else {
+            thumbnailNew = thumbnail;
+        }
+        if (description === undefined || description === null) {
+            descriptionNew = " ";
+        }
+        else {
+            descriptionNew = description;
+        }
+        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "create", {
+            data: {
+                title,
+                descriptionNew,
+                thumbnailNew,
+                url,
+                duration,
+                type,
+                category,
+                createdAt: (0, Helpers_2.getCurrentDate)(),
+                updatedAt: (0, Helpers_2.getCurrentDate)()
+            }
+        });
+        if (!media) {
+            console.log("Failed to create video media");
+            return h.response({ message: "Failed to create video media" }).code(400);
+        }
+        const notificationTitle = "A New Video titled " + title + " has been posted";
+        const specialKey = media.uniqueId + Helpers_1.NotificationType.MEDIA;
+        const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, descriptionNew, false);
+        if (!notification) {
+            console.log("Failed to create notification for video media");
+            return h.response({ message: "Failed to create notification for video media" }).code(400);
+        }
+        return h.response({ message: "The video was posted successfully" }).code(201);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to create video media" }).code(500);
+    }
+}
 const listAllAudioMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {
-        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
+        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "findMany", {
             where: {
-                type: Helpers_1.MediaType.AUDIO
+                type: Helpers_2.MediaType.AUDIO
             },
             orderBy: {
                 createdAt: "desc"
@@ -83,9 +81,9 @@ exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 const listAllVideoMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {
-        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
+        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "findMany", {
             where: {
-                type: Helpers_1.MediaType.VIDEO
+                type: Helpers_2.MediaType.VIDEO
             },
             orderBy: {
                 createdAt: "desc"
