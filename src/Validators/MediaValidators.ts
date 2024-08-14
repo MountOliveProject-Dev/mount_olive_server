@@ -26,10 +26,6 @@ const mediaInputValidator = Joi.object({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),
-  type: Joi.string().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
-  }),
   uniqueId: Joi.string().alter({
     create: (schema) => schema.forbidden(),
     update: (schema) => schema.required(),
