@@ -66,7 +66,7 @@ exports.createEventNotificationHandler = createEventNotificationHandler;
 const updateEventNotificationHandler = async (notificationId, eventId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
-        const notificationTitle = "Event Titled " + title + "  has been updated successfully";
+        const notificationTitle = title;
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "update", {
             where: {
                 id: notificationId,
@@ -202,7 +202,7 @@ exports.createMediaNotificationHandler = createMediaNotificationHandler;
 const updateMediaNotificationHandler = async (notificationId, mediaId, specialKey, title, description, read) => {
     const { prisma } = server_1.default.app;
     try {
-        const notificationTitle = "notification with ID " + notificationId + "  has been updated successfully";
+        const notificationTitle = title;
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "update", {
             where: {
                 id: notificationId,

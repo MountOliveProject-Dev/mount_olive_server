@@ -71,7 +71,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
 export const updateEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
   try {
-    const notificationTitle = "Event Titled " + title + "  has been updated successfully";
+    const notificationTitle = title;
     const notification = await executePrismaMethod(
       prisma,
       "notification",
@@ -228,7 +228,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
 export const updateMediaNotificationHandler = async (notificationId : number, mediaId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
   try {
-    const notificationTitle = "notification with ID " + notificationId + "  has been updated successfully";
+    const notificationTitle = title;
     const notification = await executePrismaMethod(
       prisma,
       "notification",
