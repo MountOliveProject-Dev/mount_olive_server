@@ -25,7 +25,7 @@ model Media {
   description String
   thumbnail String
   url String
-  duration BigInt
+  duration String
   type MediaType
   category String
   createdAt  String
