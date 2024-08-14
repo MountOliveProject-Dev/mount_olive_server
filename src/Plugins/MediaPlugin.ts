@@ -2,7 +2,7 @@ import Hapi from "@hapi/hapi";
 import Inert from "@hapi/inert";
 import {
   createVideoMediaHandler,
-  listAllAudioMediaHandler,
+ // listAllAudioMediaHandler,
   listAllVideoMediaHandler,
   updateVideoMediaHandler,
   deleteVideoMediaHandler,
@@ -41,14 +41,14 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       //     },
       //   },
       // },
-      {
-        method: "GET",
-        path: "/api/media/get-audios",
-        handler: listAllAudioMediaHandler,
-        options: {
-          auth: false,
-        },
-      },
+      // {
+      //   method: "GET",
+      //   path: "/api/media/get-audios",
+      //   handler: listAllAudioMediaHandler,
+      //   options: {
+      //     auth: false,
+      //   },
+      // },
       {
         method: "GET",
         path: "/api/media/get-all-posted-videos",

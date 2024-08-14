@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = void 0;
+exports.listAllVideoMediaHandler = void 0;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
@@ -187,29 +187,27 @@ async function deleteVideoMediaHandler(request, h) {
         return h.response({ message: "Internal Server Error" + ":failed to delete video media" }).code(500);
     }
 }
-const listAllAudioMediaHandler = async (request, h) => {
-    const { prisma } = request.server.app;
-    try {
-        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
-            where: {
-                type: Helpers_1.MediaType.AUDIO
-            },
-            orderBy: {
-                createdAt: "desc"
-            }
-        });
-        if (!media) {
-            console.log("No audio media found");
-            return h.response({ message: "No audio media found" }).code(404);
-        }
-        return h.response(media).code(200);
-    }
-    catch (err) {
-        console.log(err);
-        return h.response({ message: "Internal Server Error" + ":failed to get all audio media" }).code(500);
-    }
-};
-exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
+// export const listAllAudioMediaHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+//     const { prisma } = request.server.app;
+//     try{
+//         const media = await executePrismaMethod(prisma, "media", "findMany", {
+//             where: {
+//                 type: MediaType.AUDIO
+//             },
+//             orderBy: {
+//                 createdAt: "desc"
+//             }
+//         });
+//         if(!media){
+//             console.log("No audio media found");
+//             return h.response({message: "No audio media found"}).code(404);
+//         }
+//         return h.response(media).code(200);
+//     }catch(err){
+//         console.log(err);
+//         return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
+//     }
+// }
 const listAllVideoMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {

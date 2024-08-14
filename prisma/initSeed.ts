@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { NotificationType, getCurrentDate } from "../src/Helpers/";
 import {
-  getAllFirebaseUsers,
+  //getAllFirebaseUsers,
   createEventNotificationHandler,
   createFolder,
   createAudioFile,

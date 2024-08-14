@@ -33,14 +33,14 @@ exports.mediaPlugin = {
             //     },
             //   },
             // },
-            {
-                method: "GET",
-                path: "/api/media/get-audios",
-                handler: mediaHandlers_1.listAllAudioMediaHandler,
-                options: {
-                    auth: false,
-                },
-            },
+            // {
+            //   method: "GET",
+            //   path: "/api/media/get-audios",
+            //   handler: listAllAudioMediaHandler,
+            //   options: {
+            //     auth: false,
+            //   },
+            // },
             {
                 method: "GET",
                 path: "/api/media/get-all-posted-videos",

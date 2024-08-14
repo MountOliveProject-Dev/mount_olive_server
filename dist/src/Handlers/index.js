@@ -19,5 +19,5 @@ __exportStar(require("./authHandlers"), exports);
 __exportStar(require("./notificationHandlers"), exports);
 __exportStar(require("./mediaHandlers"), exports);
 __exportStar(require("./googledriveHandlers"), exports);
-__exportStar(require("./firebaseHandler"), exports);
+//export * from "./firebaseHandler";
 //# sourceMappingURL=index.js.map
