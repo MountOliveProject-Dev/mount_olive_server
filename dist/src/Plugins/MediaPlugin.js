@@ -13,26 +13,26 @@ exports.mediaPlugin = {
     register: async function (server) {
         await server.register(inert_1.default);
         server.route([
-            {
-                method: "POST",
-                path: "/upload-audio",
-                handler: mediaHandlers_1.createAudioMediaHandler,
-                options: {
-                    auth: false,
-                    payload: {
-                        output: "stream",
-                        parse: true,
-                        multipart: true,
-                        maxBytes: 104857600, // Limit to 100MB
-                    },
-                    validate: {
-                        payload: MediaValidators_1.createAudioFileValidator,
-                        failAction: (request, h, err) => {
-                            throw err;
-                        },
-                    },
-                },
-            },
+            // {
+            //   method: "POST",
+            //   path: "/upload-audio",
+            //   handler: createAudioMediaHandler,
+            //   options: {
+            //     auth: false,
+            //     payload: {
+            //       output: "stream",
+            //       parse: true,
+            //       multipart: true,
+            //       maxBytes: 104857600, // Limit to 100MB
+            //     },
+            //     validate: {
+            //       payload: createAudioFileValidator,
+            //       failAction: (request, h, err) => {
+            //         throw err;
+            //       },
+            //     },
+            //   },
+            // },
             {
                 method: "GET",
                 path: "/api/media/get-audios",
