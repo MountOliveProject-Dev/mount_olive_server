@@ -1,41 +1,8 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.auth = exports.fireBaseAdmin = exports.FIREBASE_PRIVATE_KEY = exports.GOOGLE_DRIVE_PRIVATE_KEY = void 0;
+exports.auth = exports.GOOGLE_DRIVE_PRIVATE_KEY = void 0;
 const googleapis_1 = require("googleapis");
-const admin = __importStar(require("firebase-admin"));
 exports.GOOGLE_DRIVE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCqBclF/xfl/ttV\noWmiCDf7wltvHg2BreumPmxK+ixTvhHJk0J2uUAYna03KPfeDrs1YVwC7r8FE1+C\nRva3Nh9seQIvNAicH/5s6M38WAiF6LnZNKRbbwEGXfu+Ze1iyUe1QWHrzkbKazUa\nXamCb96HI6CvMCxsd568Z1pHNZsykdSq08bJUwRY1qlvnsCObsrtzxpbrbY7Z8vH\nDJDtk3jf0NVHBspQZlPum489k1Qi3xRSFUtrcTcicCilqru+5G1X0Mtej1+u5Nc1\n7RpdbmVPVEwjd8oJ2tFdZi8d+RQ3x0jIovOp0ZOkHxMuONP/bWUjq8RVF9gvHOWY\nVJSpreVjAgMBAAECggEABzqwNYPwKT6YZvpgymdbgx6wniBRUeJ7q4skNhgbV/HW\n8GovqQ16mhRBKLd96MG2xuQ6jzDRIrrLpg7AqfWGCYcE8BOC/3r8mDzOahmyhCsZ\nrD8LuRe5hHoERWF2kI5q20T+eO9BozfOYlzWtOJAjcNz0h2rTeNgAkH4Yn28+UmM\nxb7E76Rrec049FKxFXSyOl/YpJ4FyqYt+EwVHSgQIrX8JWAxPN0Q9WfvhLwMJO4R\nH4nT564QWlUsuxIALQ5AMaHF85ybOnMqarUYQgo/8HrhFrNdQnIGovdIll83u0D9\n48ZGkeTkjrI8EHdBaZImT2OSlh6VSRB4VmLGxhjG9QKBgQDexMigxoDCGm+3/ciN\nljiC8TPsoL47WQHNw9uLDqjP+IcetUQsjnZvRTGsM0w0exyiG5KPLQvNeIo6DFAQ\nWzGM0yPV0I4aV9BfrMCP31sVrMQ/pCgq2o6fGvSLE1vEEvmWKeXWaGnAoP5O6IJc\nUKwhgJa70ue52kvZN6kCeebblQKBgQDDYrSO6pKqotvdNFE7bcYa+RiHB59DGafi\nap0rMG8HLEluCQddf64oIANZABqFJJOzeL+Lgs2wWWs3A83qs9tI27hLCVITWJJ1\nzU9lT5j8YHi6kXwDwasH0Bd1ZUK9+JTrC23WcmRBEzc6yySu78aEDM79a7Xlad9u\nPTtdMKy/FwKBgQDV+2BcT1DPImW97uD+YBXYcajW23DfwReid0gjwukVHD1umd/q\njM3nBCg6qOvCXZ+bd7DIJxT3QZpFOB6QF4j5JLd/Yt2dIEzgGii+CmaL43B/UUfk\nIhxtaI8OKII1TaTBQW2tDo7God6mHWFbG4K8i7A+qtA8DhxdgsGtxzqiIQKBgQCC\ngai3GWnz/io7u9lSh8VeeOnwL6AqkrV339yxX32Z3fQCQpef1Uv/0zpJNW+BZWge\n5dWTm0BGvcOGkMz3K0GajeCwhj5DW9MgSo3wztUSJmIdxFWAsNjLtCwnJwcIm0Tl\nJtIr/maGrQ4kAFK1YsVHqMKNtWdfIHO0T8QaQAvy6wKBgQDNX21Iic2upEV/ZiSe\nFxeyiaU44ptFRsMg0mcu/+6ekv7aD6SDnUHpsJjJ5/a0cr5VCbhnixbLzG+4V9Yn\n95JQAEz5dMBmsdiJwJNh7D1y0pso/FFckPZNUgsW7sc+Q2Jlt/z7KqnD5KKhFRgW\n5CEn1bpDgCrebZFjUzmQPzr/Cg==\n-----END PRIVATE KEY-----\n";
-exports.FIREBASE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3iphWVYzR8bmJ\n6n7jckUFzLP0uyUxvrhzbvxc5Tyt7NfxfSr9lIgTVxiS1yz7OVMegmp1EpPafPA0\na29wIe5x+MpefYEpqcCZu/G0a9dmXpG8bxIEblVPW197JrT7ByUAGFt9zEAmYYpb\nCfFw8czoq/ceiKX0Skvf6ByKGnNWub+Fu/B4CSTGv1galn/PyhUZo6B7Fy0xqMO/\nq/vNV4KpWpYvxqOgc5voCG+Nd6vj5Gx9BK4/CLvpTzSKJHzcoCSOq+XzY188VGEJ\nrFwC3xAxFiFRjAzE3gDYQb8VXw4F6KwU+dfuJc1UtHc1SVdC1+DcI61s0OEQWP7v\nNpphvAshAgMBAAECggEAAaDAW7lj9VzAOUGmM1OtteeZ500Ufzt006b/ElEBDqJv\n3i4KLNzCQe9fHW0qTfi1MU/w0O3fHGxIskd5GNlfoDG8SuqMD3NBkaSmZb9rH0AJ\ne7w9m/S824rnylOzImLcjQKqS+/GReMpl7VpAvXfzB2pNr7U9pApkPq0NPTOPxaE\n0RY8WK6VSgAHtxUjEXEjV0ikwXiLmUGP02nh4ozpNnNI5g0ZO3oxiHoyngHMGvXH\nspfr+SSPkADAjo70IMGHIyJrh9ngLwBheJ1NTgr9THcyWWXvg8oX6rMzr1aYyr99\nusYyzByO2GvTGXnzyi1SVkS5mzuP1jnub53JGtDG/QKBgQDvHIMeMNwzjzCy/lrH\nd5v7ARcD4pmidgRqP9eGHrDAj3+1XcJmGV3GhrWCd4gKBA/SEa6w8x+VPAGHZ+qu\nc/m7Ul555ZrGzw5ONScGPp7PGQL+baBittAe8GhPjxvSToQ2SBoqIbsMup1oBv9m\n7iQJm2pUeryCgHeCIxVo7CUWYwKBgQDEgUuRYuOYsNeQDBD/XzLabd5SDeHsVpfb\nPYU+kSvdPzItDQgkXB2hXmwtGwnRe1feQ/45uqg6HvpBqhXk7y/9XBShuf2uH6Pc\nKMz3rtswSL3HlzpYk1q0ckW7KWb5cO3YJRykqkldFHqMwHrVCCYuoha0gVNA5YwC\nYDI9doW9qwKBgQCK+2qnCMVlXqxyze9cE4Thf7+t7W9Zg/mK/HK8rWgVdRNJCyds\niv/73d7w56N2FuhPNSHyDk7kQk2tM9Sv9A9LN1Rcy/2L41wwTyrQsWNDgwk/c98O\noa4U3a3z2H3WXvbwSjaTGKoNewb1KWQYowDlaKWEVxbtT9inFtdh9iiUewKBgQDA\nywYEN1yLk31684u9sX4oNkE4iixNf0vwKzTOhQnfQUCOWMnTOplLmGNUAcIpR/WW\nuWj05MBmfbwUrrZabZ3M2wnW/q74pkxTFai7nU+p2MRxzVrOSoxkm/T0QxOnyfdg\n6FBo8jWWYCA4diRNXHhxqk/Se0veURiDwDOqf92JjwKBgHXh8z+nkJjPoV1d/epF\n6XYP9HzeGElc0xIN0pOmwE3tedTH97AsZvQmdef7bKysoss/63qiQoJp23PGivg5\nK4b1ssbb3EejXWiMjVpdetwLrSzyVKfL6AtDRVuzTSS0ytNlXKPyDTtHsyRwEuR1\n7hTA6CkRUWoadyDNgMniw7TA\n-----END PRIVATE KEY-----\n";
-exports.fireBaseAdmin = admin.initializeApp({
-    credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        privateKey: exports.FIREBASE_PRIVATE_KEY,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
-});
 exports.auth = new googleapis_1.google.auth.GoogleAuth({
     credentials: {
         project_id: process.env.GOOGLE_DRIVE_PROJECT_ID,
