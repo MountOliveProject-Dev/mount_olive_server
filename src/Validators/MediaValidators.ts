@@ -22,7 +22,7 @@ const mediaInputValidator = Joi.object({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),
-  duration: Joi.number().alter({
+  duration: Joi.string().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),
