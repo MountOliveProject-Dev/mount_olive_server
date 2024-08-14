@@ -42,14 +42,12 @@ export async function createServer(): Promise<Hapi.Server> {
   }
 
   await server.register([
-    
     prismaPlugin,
     pm2plugin,
     statusPlugin,
     eventsPlugin,
     notificationsPlugin,
-    mediaPlugin,
-    
+    mediaPlugin
   ]);
 
   await server.initialize();

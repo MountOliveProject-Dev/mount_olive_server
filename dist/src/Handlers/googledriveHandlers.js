@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAudioFile = createAudioFile;
 exports.listAndShareAudioFiles = listAndShareAudioFiles;
@@ -6,40 +9,65 @@ exports.createFolder = createFolder;
 exports.deleteFolder = deleteFolder;
 exports.getAllFilesInGoogleDriveFolder = getAllFilesInGoogleDriveFolder;
 const googleapis_1 = require("googleapis");
-const Helpers_1 = require("../Helpers");
+const fs_1 = __importDefault(require("fs"));
+const Handlers_1 = require("../Handlers");
+const extras_1 = require("../Helpers/extras");
+async function uploadFileToResumableSession(uploadUrl, filePath) {
+    const fileStream = fs_1.default.createReadStream(filePath);
+    const fileSize = fs_1.default.statSync(filePath).size;
+    const res = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+            "Content-Length": fileSize.toString(),
+            "Content-Type": "application/octet-stream",
+        },
+        body: fileStream,
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to upload file: ${res.statusText}`);
+    }
+    const fileData = await res.json();
+    console.log("Uploaded file data:", fileData);
+}
 async function createAudioFile(audioFile) {
-    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Handlers_1.auth });
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const filePath = audioFile.path;
+    const fileName = audioFile.hapi.filename;
+    const mimeType = audioFile.hapi.headers["content-type"];
     if (!folderId) {
         throw new Error("GOOGLE_DRIVE_FOLDER_ID is not defined");
     }
     const fileMetadata = {
-        name: audioFile.name,
+        name: fileName,
         parents: [folderId],
-    };
-    const media = {
-        mimeType: audioFile.mimeType,
-        body: audioFile.body,
     };
     try {
         const response = await drive.files.create({
             requestBody: fileMetadata,
-            media: media,
+            media: {
+                mimeType: mimeType,
+                body: fs_1.default.createReadStream(filePath),
+            },
             fields: "id",
+            uploadType: "resumable",
         });
+        const uploadUrl = response.headers.location;
+        console.log("Resumable upload URL: ", uploadUrl);
+        await uploadFileToResumableSession(uploadUrl, audioFile.path);
         console.log("File ID: ", response.data.id);
+        return response.data.id;
     }
     catch (error) {
         console.error("Error uploading file: ", error);
     }
-    //1U_jSHkOwMQXhZif1Ah27BF32p0JsoUcx
 }
 ;
 async function listAndShareAudioFiles() {
     // Initialize the Drive API client
     const drive = googleapis_1.google.drive({
         version: "v3",
-        auth: Helpers_1.auth,
+        auth: Handlers_1.auth,
     });
     // Define the folder ID and MIME types for audio files
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID; // Replace with your actual folder ID
@@ -54,7 +82,7 @@ async function listAndShareAudioFiles() {
         console.log('Audio files in the folder:', listResults.length);
         console.log(listResults);
         // Filter audio files
-        const audioFiles = listResults.filter(file => Helpers_1.audioMimeTypes.includes(file.mimeType));
+        const audioFiles = listResults.filter(file => extras_1.audioMimeTypes.includes(file.mimeType));
         // Share files and get links
         for (const file of audioFiles) {
             const fileId = file.id;
@@ -83,7 +111,7 @@ async function listAndShareAudioFiles() {
     }
 }
 async function createFolder(folderName) {
-    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Handlers_1.auth });
     const fileMetadata = {
         name: folderName,
         mimeType: "application/vnd.google-apps.folder",
@@ -101,7 +129,7 @@ async function createFolder(folderName) {
 }
 ;
 async function deleteFolder(folderId) {
-    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Handlers_1.auth });
     try {
         await drive.files.delete({
             fileId: folderId,
@@ -113,7 +141,7 @@ async function deleteFolder(folderId) {
     }
 }
 async function getAllFilesInGoogleDriveFolder() {
-    const drive = googleapis_1.google.drive({ version: "v3", auth: Helpers_1.auth });
+    const drive = googleapis_1.google.drive({ version: "v3", auth: Handlers_1.auth });
     const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     const listParams = {
         q: `'${folderId}' in parents and trashed = false`,

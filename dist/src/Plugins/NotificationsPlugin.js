@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.notificationsPlugin = void 0;
 const Handlers_1 = require("../Handlers");
 exports.notificationsPlugin = {
-    name: 'app/notifications',
-    dependencies: ['prisma'],
+    name: "app/notifications",
+    dependencies: ["prisma"],
     register: async function (server) {
         server.route({
             method: "GET",
@@ -14,6 +14,6 @@ exports.notificationsPlugin = {
                 auth: false,
             },
         });
-    }
+    },
 };
 //# sourceMappingURL=NotificationsPlugin.js.map

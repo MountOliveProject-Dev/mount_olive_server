@@ -1,6 +1,6 @@
 import * as Hapi from "@hapi/hapi";
 
-export const pm2plugin: Hapi.Plugin<undefined> = {
+export const pm2plugin: Hapi.Plugin<void> = {
   name: "hapi-graceful-pm2",
   version: "1.0.0",
   register: async function (server: Hapi.Server) {

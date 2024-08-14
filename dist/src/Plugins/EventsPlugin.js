@@ -8,8 +8,8 @@ const joi_1 = __importDefault(require("joi"));
 const Handlers_1 = require("../Handlers");
 const Validators_1 = require("../Validators");
 exports.eventsPlugin = {
-    name: 'app/events',
-    dependencies: ['prisma'],
+    name: "app/events",
+    dependencies: ["prisma"],
     register: async function (server) {
         server.route([
             {
@@ -95,6 +95,6 @@ exports.eventsPlugin = {
                 },
             },
         ]);
-    }
+    },
 };
 //# sourceMappingURL=EventsPlugin.js.map

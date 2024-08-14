@@ -11,7 +11,7 @@ declare module "@hapi/hapi" {
 }
 
 // plugin to instantiate Prisma Client
-export const prismaPlugin: Hapi.Plugin<null> = {
+export const prismaPlugin: Hapi.Plugin<void> = {
   name: "prisma",
   register: async function (server: Hapi.Server) {
     // Check if Prisma Client has been instantiated already

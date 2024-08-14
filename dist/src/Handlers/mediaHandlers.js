@@ -1,11 +1,45 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = void 0;
+exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = exports.createAudioMediaHandler = void 0;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 const Helpers_1 = require("../Helpers");
+const multer_1 = __importDefault(require("multer"));
+const Handlers_1 = require("../Handlers");
 const notificationHandlers_1 = require("./notificationHandlers");
+const upload = (0, multer_1.default)({ dest: "uploads/" });
+const createAudioMediaHandler = async (request, h) => {
+    const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+    // Multer middleware processing
+    await new Promise((resolve, reject) => {
+        uploadMiddleware(request.raw.req, request.raw.res, (err) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(null);
+        });
+    });
+    const file = request.raw.req.file;
+    if (!file) {
+        return h.response({ error: "No file uploaded" }).code(400);
+    }
+    try {
+        // Upload the file to Google Drive
+        const fileId = await (0, Handlers_1.createAudioFile)(file);
+        // Respond with the file ID from Google Drive
+        return h.response({ fileId }).code(200);
+    }
+    catch (error) {
+        return h
+            .response({ error: "Failed to upload file to Google Drive" })
+            .code(500);
+    }
+};
+exports.createAudioMediaHandler = createAudioMediaHandler;
 //create video media
 async function createVideoMediaHandler(request, h) {
     const { prisma } = request.server.app;
