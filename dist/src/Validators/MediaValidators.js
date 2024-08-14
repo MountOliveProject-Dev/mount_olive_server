@@ -18,21 +18,21 @@ const mediaInputValidator = joi_1.default.object({
         create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
     }),
-    coverPhoto: joi_1.default.string().alter({
+    thumbnail: joi_1.default.string().alter({
         create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
     }),
-    source: joi_1.default.string().alter({
+    url: joi_1.default.string().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),
-    duration: joi_1.default.number().alter({
+    duration: joi_1.default.string().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),
-    type: joi_1.default.string().alter({
-        create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+    uniqueId: joi_1.default.string().alter({
+        create: (schema) => schema.forbidden(),
+        update: (schema) => schema.required(),
     }),
     category: joi_1.default.string().alter({
         create: (schema) => schema.required(),
@@ -43,14 +43,6 @@ const mediaInputValidator = joi_1.default.object({
         update: (schema) => schema.optional(),
     }),
     updatedAt: joi_1.default.string().alter({
-        create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
-    }),
-    viewCount: joi_1.default.number().alter({
-        create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
-    }),
-    likeCount: joi_1.default.number().alter({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional(),
     }),

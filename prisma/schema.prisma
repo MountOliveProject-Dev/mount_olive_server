@@ -23,17 +23,16 @@ model Media {
   uniqueId String @unique @default(cuid())
   title    String
   description String
-  coverPhoto String
-  source String
-  host String
-  duration BigInt
+  thumbnail String
+  url String
+  duration String
   type MediaType
   category String
   createdAt  String
   updatedAt     String
 
   // Relation
-  eventNotifications engagementsManager? 
+  mediaNotifications engagementsManager? 
 }
 model Event {
   id       Int     @id @default(autoincrement())
