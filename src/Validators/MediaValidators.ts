@@ -13,12 +13,12 @@ const mediaInputValidator = Joi.object({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
-  coverPhoto: Joi.string().alter({
+  thumbnail: Joi.string().alter({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
 
-  source: Joi.string().alter({
+  url: Joi.string().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),
@@ -39,14 +39,6 @@ const mediaInputValidator = Joi.object({
     update: (schema) => schema.optional(),
   }),
   updatedAt: Joi.string().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
-  }),
-  viewCount: Joi.number().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
-  }),
-  likeCount: Joi.number().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
   }),

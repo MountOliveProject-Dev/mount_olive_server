@@ -1,6 +1,6 @@
 import Hapi from "@hapi/hapi";
 
-import { listAllAudioMediaHandler, listAllVideoMediaHandler } from "../Handlers/mediaHandlers";
+import { createVideoMediaHandler, listAllAudioMediaHandler, listAllVideoMediaHandler } from "../Handlers/mediaHandlers";
 
 export const mediaPlugin = {
     name: 'app/media',
@@ -24,6 +24,14 @@ export const mediaPlugin = {
               auth: false,
             },
           },
+          {
+            method: "POST",
+            path: "/api/media/post-video",
+            handler: createVideoMediaHandler,
+            options: {
+              auth: false,
+            },
+          }
         ]);
     }
 }
