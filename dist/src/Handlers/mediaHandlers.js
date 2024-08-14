@@ -131,7 +131,7 @@ async function updateVideoMediaHandler(request, h) {
         }
         const notificationTitle = "The Video titled " + title + " has just been updated!";
         const specialKey = media.uniqueId + Helpers_1.NotificationType.MEDIA;
-        const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(findMedia.eventNotifications.notificationId, media.uniqueId, specialKey, notificationTitle, description, false);
+        const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, media.uniqueId, specialKey, notificationTitle, description, false);
         if (!notification) {
             console.log("Failed to update notification for video media");
             return h.response({ message: "Failed to update notification for video media" }).code(400);

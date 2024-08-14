@@ -118,7 +118,8 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         if(!event){
             return h.response({message: "Failed to update the event"}).code(400);
         }
-        const notificationTitle = "The Event titled " + event.title + " has just been updated!";
+        const notificationTitle =
+          "The Event titled " + findEvent.title + " has just been updated!";
         const specialKey = event.uniqueId + NotificationType.EVENT;
         const updateNotification = await updateEventNotificationHandler(
           findEvent.eventNotifications.notificationId,

@@ -111,7 +111,7 @@ async function updateEventHandler(request, h) {
         if (!event) {
             return h.response({ message: "Failed to update the event" }).code(400);
         }
-        const notificationTitle = "The Event titled " + event.title + " has just been updated!";
+        const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
         const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
         const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
         if (updateNotification.code == 500) {

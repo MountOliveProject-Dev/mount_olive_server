@@ -163,7 +163,7 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
         const notificationTitle = "The Video titled " + title + " has just been updated!";
         const specialKey = media.uniqueId + NotificationType.MEDIA;
         const notification = await updateMediaNotificationHandler(
-            findMedia.eventNotifications.notificationId,
+            findMedia.mediaNotifications.notificationId,
             media.uniqueId,
             specialKey,
             notificationTitle,
