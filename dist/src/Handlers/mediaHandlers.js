@@ -3,12 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listAllVideoMediaHandler = exports.listAllAudioMediaHandler = void 0;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 const Helpers_1 = require("../Helpers");
-const Helpers_2 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
 //create video media
 async function createVideoMediaHandler(request, h) {
     const { prisma } = request.server.app;
-    const { title, description, thumbnail, url, duration, type, category } = request.payload;
+    const { title, description, thumbnail, url, duration, category } = request.payload;
     try {
         let thumbnailNew;
         let descriptionNew;
@@ -24,17 +23,17 @@ async function createVideoMediaHandler(request, h) {
         else {
             descriptionNew = description;
         }
-        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "create", {
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "create", {
             data: {
-                title,
-                descriptionNew,
-                thumbnailNew,
-                url,
-                duration,
-                type,
-                category,
-                createdAt: (0, Helpers_2.getCurrentDate)(),
-                updatedAt: (0, Helpers_2.getCurrentDate)()
+                title: title,
+                description: descriptionNew,
+                thumbnail: thumbnailNew,
+                url: url,
+                duration: duration,
+                type: Helpers_1.MediaType.VIDEO,
+                category: category,
+                createdAt: (0, Helpers_1.getCurrentDate)(),
+                updatedAt: (0, Helpers_1.getCurrentDate)()
             }
         });
         if (!media) {
@@ -55,12 +54,13 @@ async function createVideoMediaHandler(request, h) {
         return h.response({ message: "Internal Server Error" + ":failed to create video media" }).code(500);
     }
 }
+// list all video media
 const listAllAudioMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {
-        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "findMany", {
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
             where: {
-                type: Helpers_2.MediaType.AUDIO
+                type: Helpers_1.MediaType.AUDIO
             },
             orderBy: {
                 createdAt: "desc"
@@ -81,9 +81,9 @@ exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 const listAllVideoMediaHandler = async (request, h) => {
     const { prisma } = request.server.app;
     try {
-        const media = await (0, Helpers_2.executePrismaMethod)(prisma, "media", "findMany", {
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
             where: {
-                type: Helpers_2.MediaType.VIDEO
+                type: Helpers_1.MediaType.VIDEO
             },
             orderBy: {
                 createdAt: "desc"

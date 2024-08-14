@@ -1,6 +1,5 @@
-import Hapi from "@hapi/hapi";
-import { NotificationType } from "../Helpers"; 
-import { executePrismaMethod,MediaType,getCurrentDate } from "../Helpers";
+import Hapi from "@hapi/hapi"; 
+import { executePrismaMethod,NotificationType,MediaType,getCurrentDate } from "../Helpers";
 import { MediaInput } from "../Interfaces";
 import {createMediaNotificationHandler, updateMediaNotificationHandler,deleteMediaNotificationHandler} from "./notificationHandlers";
 
@@ -8,8 +7,9 @@ import {createMediaNotificationHandler, updateMediaNotificationHandler,deleteMed
 
 export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
-    const {title, description, thumbnail, url, duration, type, category} = request.payload as MediaInput;
+    const {title, description, thumbnail, url, duration, category} = request.payload as MediaInput;
     
+
     try{
         let thumbnailNew;
         let descriptionNew;
@@ -26,13 +26,13 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
 
         const media = await executePrismaMethod(prisma, "media", "create", {
             data: {
-                title,
-                descriptionNew,
-                thumbnailNew,
-                url,
-                duration,
-                type,
-                category,
+                title: title,
+                description: descriptionNew,
+                thumbnail: thumbnailNew,
+                url: url,
+                duration: duration,
+                type: MediaType.VIDEO,
+                category: category,
                 createdAt: getCurrentDate(),
                 updatedAt: getCurrentDate()
             }
@@ -63,6 +63,8 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
 
 }
 
+
+// list all video media
 
 
 

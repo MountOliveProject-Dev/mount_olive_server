@@ -18,7 +18,7 @@ export const mediaPlugin = {
           },
           {
             method: "GET",
-            path: "/api/media/get-videos",
+            path: "/api/media/get-all-posted-videos",
             handler: listAllVideoMediaHandler,
             options: {
               auth: false,
