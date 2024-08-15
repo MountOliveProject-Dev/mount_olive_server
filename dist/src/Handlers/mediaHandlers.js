@@ -154,7 +154,7 @@ async function deleteVideoMediaHandler(request, h) {
             },
             select: {
                 id: true,
-                eventNotifications: {
+                mediaNotifications: {
                     select: {
                         notificationId: true,
                     },
@@ -174,7 +174,7 @@ async function deleteVideoMediaHandler(request, h) {
             return h.response({ message: "Failed to delete video media" }).code(400);
         }
         const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.EVENT;
-        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.eventNotifications.notificationId, findMedia.uniqueId, specialKey);
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, findMedia.uniqueId, specialKey);
         if (!notification) {
             console.log("Failed to delete notification for video media");
             return h.response({ message: "Failed to delete notification for video media" }).code(400);

@@ -199,7 +199,7 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             },
             select: {
               id: true,
-              eventNotifications: {
+              mediaNotifications: {
                 select: {
                   notificationId: true,
                 },
@@ -220,7 +220,11 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             return h.response({message: "Failed to delete video media"}).code(400);
         }
         const specialKey = findMedia.uniqueId + NotificationType.EVENT;
-        const notification = await deleteMediaNotificationHandler(findMedia.eventNotifications.notificationId, findMedia.uniqueId, specialKey);
+        const notification = await deleteMediaNotificationHandler(
+          findMedia.mediaNotifications.notificationId,
+          findMedia.uniqueId,
+          specialKey
+        );
         if(!notification){
             console.log("Failed to delete notification for video media");
             return h.response({message: "Failed to delete notification for video media"}).code(400);
