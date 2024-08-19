@@ -250,7 +250,7 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
                 type: MediaType.VIDEO
             },
             orderBy: {
-                createdAt: "desc"
+                postedAt: "desc"
             }
 
         });

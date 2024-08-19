@@ -195,7 +195,7 @@ const listAllVideoMediaHandler = async (request, h) => {
                 type: Helpers_1.MediaType.VIDEO
             },
             orderBy: {
-                createdAt: "desc"
+                postedAt: "desc"
             }
         });
         if (!media) {
