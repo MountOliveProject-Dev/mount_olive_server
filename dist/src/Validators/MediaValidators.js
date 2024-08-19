@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createAudioFileValidator = exports.updateMediaInputValidator = exports.createMediaInputValidator = void 0;
+exports.createAudioFileValidator = exports.updateVideoMediaInputValidator = exports.createVideoMediaInputValidator = exports.updateMediaInputValidator = exports.createMediaInputValidator = void 0;
 const joi_1 = __importDefault(require("joi"));
 const mediaInputValidator = joi_1.default.object({
     title: joi_1.default.string().alter({
@@ -45,6 +45,22 @@ const mediaInputValidator = joi_1.default.object({
 });
 exports.createMediaInputValidator = mediaInputValidator.tailor("create");
 exports.updateMediaInputValidator = mediaInputValidator.tailor("update");
+const videoMediaInputValidator = joi_1.default.object({
+    url: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+    uniqueId: joi_1.default.string().alter({
+        create: (schema) => schema.forbidden(),
+        update: (schema) => schema.required(),
+    }),
+    category: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+});
+exports.createVideoMediaInputValidator = videoMediaInputValidator.tailor("create");
+exports.updateVideoMediaInputValidator = videoMediaInputValidator.tailor("update");
 const audioFileValidator = joi_1.default.object({
     audioFile: joi_1.default.object({
         hapi: joi_1.default.object({

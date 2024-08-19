@@ -2,16 +2,19 @@ import Hapi from "@hapi/hapi";
 import Inert from "@hapi/inert";
 import {
   createVideoMediaHandler,
- // listAllAudioMediaHandler,
+  // listAllAudioMediaHandler,
   listAllVideoMediaHandler,
   updateVideoMediaHandler,
   deleteVideoMediaHandler,
+ 
   //createAudioMediaHandler,
 } from "../Handlers/mediaHandlers";
 import Joi from "joi";
 import {
   updateMediaInputValidator,
   createMediaInputValidator,
+  updateVideoMediaInputValidator,
+  createVideoMediaInputValidator,
   createAudioFileValidator,
 } from "../Validators/MediaValidators";
 
@@ -64,7 +67,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: createMediaInputValidator,
+            payload: createVideoMediaInputValidator,
             failAction: async (request, h, err) => {
               throw err;
             },
@@ -78,7 +81,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: updateMediaInputValidator,
+            payload: updateVideoMediaInputValidator,
             failAction: async (request, h, err) => {
               throw err;
             },
@@ -92,11 +95,10 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: 
-               Joi.object({
+            payload: Joi.object({
               uniqueId: Joi.string().required(),
             }),
-            
+
             failAction: async (request, h, err) => {
               throw err;
             },

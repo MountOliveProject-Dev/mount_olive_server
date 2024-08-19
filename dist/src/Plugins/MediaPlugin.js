@@ -57,7 +57,7 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                     validate: {
-                        payload: MediaValidators_1.createMediaInputValidator,
+                        payload: MediaValidators_1.createVideoMediaInputValidator,
                         failAction: async (request, h, err) => {
                             throw err;
                         },
@@ -71,7 +71,7 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                     validate: {
-                        payload: MediaValidators_1.updateMediaInputValidator,
+                        payload: MediaValidators_1.updateVideoMediaInputValidator,
                         failAction: async (request, h, err) => {
                             throw err;
                         },

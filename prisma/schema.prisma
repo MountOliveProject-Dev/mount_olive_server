@@ -9,9 +9,11 @@ datasource db {
   url      = env("DATABASE_URL")
 
 }
+
 enum NotificationType {
   MEDIA
   EVENT
+  
 }
 enum MediaType {
   VIDEO
@@ -21,14 +23,13 @@ enum MediaType {
 model Media {
   id       Int     @id @default(autoincrement())
   uniqueId String @unique @default(cuid())
-  title    String
-  description String
-  thumbnail String
+  title    String?
+  description String?
   url String
-  duration String
+  duration String?
   type MediaType
   category String
-  createdAt  String
+  postedAt  String
   updatedAt     String
 
   // Relation
@@ -55,7 +56,7 @@ model Event {
 model Notification {
   id       Int     @id @default(autoincrement())
   title    String
-  description String
+  description String?
   createdAt   String
   updatedAt   String
   read Boolean

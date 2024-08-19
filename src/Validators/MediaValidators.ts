@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import Joi from "joi";
 
 const mediaInputValidator = Joi.object({
@@ -43,6 +44,23 @@ const mediaInputValidator = Joi.object({
 export const createMediaInputValidator = mediaInputValidator.tailor("create");
 export const updateMediaInputValidator = mediaInputValidator.tailor("update");
 
+const videoMediaInputValidator = Joi.object({
+  url: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+  uniqueId: Joi.string().alter({
+    create: (schema) => schema.forbidden(),
+    update: (schema) => schema.required(),
+  }),
+  category: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+});
+
+export const createVideoMediaInputValidator = videoMediaInputValidator.tailor("create");
+export const updateVideoMediaInputValidator = videoMediaInputValidator.tailor("update");
 const audioFileValidator = Joi.object({
   audioFile: Joi.object({
     hapi: Joi.object({
@@ -65,3 +83,5 @@ const audioFileValidator = Joi.object({
 });
 
 export const createAudioFileValidator = audioFileValidator.tailor("create");
+
+
