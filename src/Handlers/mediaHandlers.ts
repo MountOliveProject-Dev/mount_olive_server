@@ -251,6 +251,15 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
             },
             orderBy: {
                 postedAt: "desc"
+            },
+            select:{
+                id: true,
+                uniqueId: true,
+                category: true,
+                url: true,
+                postedAt: true,
+                updatedAt: true
+
             }
 
         });

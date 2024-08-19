@@ -196,6 +196,14 @@ const listAllVideoMediaHandler = async (request, h) => {
             },
             orderBy: {
                 postedAt: "desc"
+            },
+            select: {
+                id: true,
+                uniqueId: true,
+                category: true,
+                url: true,
+                postedAt: true,
+                updatedAt: true
             }
         });
         if (!media) {
