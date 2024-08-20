@@ -160,7 +160,7 @@ const deleteEventNotificationHandler = async (notificationId, eventId, specialKe
 };
 exports.deleteEventNotificationHandler = deleteEventNotificationHandler;
 //create media notification
-const createMediaNotificationHandler = async (mediaId, specialKey, title, description, read) => {
+const createMediaNotificationHandler = async (mediaId, specialKey, title, description, read, type) => {
     const { prisma } = server_1.default.app;
     try {
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
@@ -172,7 +172,7 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
                 updatedAt: (0, Helpers_1.getCurrentDate)(),
                 notificationEngagements: {
                     create: {
-                        type: Helpers_1.NotificationType.MEDIA,
+                        type: type,
                         specialKey: specialKey,
                         media: {
                             connect: {
@@ -199,7 +199,7 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
 };
 exports.createMediaNotificationHandler = createMediaNotificationHandler;
 //update media notification
-const updateMediaNotificationHandler = async (notificationId, mediaId, specialKey, title, description, read) => {
+const updateMediaNotificationHandler = async (notificationId, mediaId, specialKey, title, description, read, type) => {
     const { prisma } = server_1.default.app;
     try {
         const notificationTitle = title;
@@ -208,7 +208,7 @@ const updateMediaNotificationHandler = async (notificationId, mediaId, specialKe
                 id: notificationId,
                 notificationEngagements: {
                     specialKey: specialKey,
-                    type: Helpers_1.NotificationType.MEDIA,
+                    type: type,
                     media: {
                         uniqueId: mediaId,
                     },
@@ -242,7 +242,7 @@ const updateMediaNotificationHandler = async (notificationId, mediaId, specialKe
 };
 exports.updateMediaNotificationHandler = updateMediaNotificationHandler;
 //delete media notification
-const deleteMediaNotificationHandler = async (notificationId, mediaId, specialKey) => {
+const deleteMediaNotificationHandler = async (notificationId, mediaId, specialKey, type) => {
     const { prisma } = server_1.default.app;
     try {
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findUnique", {
@@ -250,7 +250,7 @@ const deleteMediaNotificationHandler = async (notificationId, mediaId, specialKe
                 id: notificationId,
                 notificationEngagements: {
                     specialKey: specialKey,
-                    type: Helpers_1.NotificationType.MEDIA,
+                    type: type,
                     media: {
                         uniqueId: mediaId
                     }
@@ -264,7 +264,7 @@ const deleteMediaNotificationHandler = async (notificationId, mediaId, specialKe
         const deleteNotificationEngagement = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "delete", {
             where: {
                 specialKey: specialKey,
-                type: Helpers_1.NotificationType.MEDIA,
+                type: type,
                 notificationId: notification.id,
                 media: {
                     uniqueId: mediaId

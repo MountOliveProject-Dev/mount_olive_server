@@ -10,11 +10,6 @@ const mediaInputValidator = Joi.object({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
-  thumbnail: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
-  }),
-
   url: Joi.string().alter({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional(),
@@ -53,8 +48,12 @@ const videoMediaInputValidator = Joi.object({
     create: (schema) => schema.forbidden(),
     update: (schema) => schema.required(),
   }),
-  category: Joi.string().alter({
+  title: Joi.string().alter({
     create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+  description: Joi.string().alter({
+    create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
 });

@@ -43,13 +43,14 @@ const upload = (0, multer_1.default)({ dest: "uploads/" });
 //create video media
 async function createVideoMediaHandler(request, h) {
     const { prisma } = request.server.app;
-    const { url, category } = request.payload;
+    const { url, title, description } = request.payload;
     try {
         const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "create", {
             data: {
                 url: url,
                 type: Helpers_1.MediaType.VIDEO,
-                category: category,
+                title: title,
+                description: description,
                 postedAt: (0, Helpers_1.getCurrentDate)(),
                 updatedAt: (0, Helpers_1.getCurrentDate)()
             }
@@ -58,10 +59,9 @@ async function createVideoMediaHandler(request, h) {
             console.log("Failed to create video media");
             return h.response({ message: "Failed to create video media" }).code(400);
         }
-        const descriptionNew = "A new video has been posted ";
-        const notificationTitle = "A New Video has been posted";
-        const specialKey = media.uniqueId + Helpers_1.NotificationType.MEDIA;
-        const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, descriptionNew, false);
+        const notificationTitle = "A New Video titled " + title + " has just been posted!";
+        const specialKey = media.uniqueId + Helpers_1.NotificationType.VIDEO;
+        const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, description, false, Helpers_1.NotificationType.VIDEO);
         if (!notification) {
             console.log("Failed to create notification for video media");
             return h.response({ message: "Failed to create notification for video media" }).code(400);
@@ -76,7 +76,7 @@ async function createVideoMediaHandler(request, h) {
 // update video media
 async function updateVideoMediaHandler(request, h) {
     const { prisma } = request.server.app;
-    const { uniqueId, url, category } = request.payload;
+    const { uniqueId, url, title, description } = request.payload;
     try {
         const findMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
             where: {
@@ -96,22 +96,22 @@ async function updateVideoMediaHandler(request, h) {
         const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
             where: {
                 id: findMedia.id,
-                uniqueId: uniqueId
+                uniqueId: uniqueId,
             },
             data: {
                 url: url,
-                category: category,
-                updatedAt: (0, Helpers_1.getCurrentDate)()
-            }
+                description: description,
+                title: title,
+                updatedAt: (0, Helpers_1.getCurrentDate)(),
+            },
         });
         if (!media) {
             console.log("Failed to update video media");
             return h.response({ message: "Failed to update video media" }).code(400);
         }
-        const description = "The video with  ID " + uniqueId + " has just been updated!";
-        const notificationTitle = "A Video has just been updated!";
-        const specialKey = media.uniqueId + Helpers_1.NotificationType.MEDIA;
-        const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, media.uniqueId, specialKey, notificationTitle, description, false);
+        const notificationTitle = "The Video titled " + title + " has just been updated!";
+        const specialKey = media.uniqueId + Helpers_1.NotificationType.VIDEO;
+        const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, media.uniqueId, specialKey, notificationTitle, description, false, Helpers_1.NotificationType.VIDEO);
         if (!notification) {
             console.log("Failed to update notification for video media");
             return h.response({ message: "Failed to update notification for video media" }).code(400);
@@ -153,8 +153,8 @@ async function deleteVideoMediaHandler(request, h) {
             console.log("Failed to delete video media");
             return h.response({ message: "Failed to delete video media" }).code(400);
         }
-        const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.MEDIA;
-        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, findMedia.uniqueId, specialKey);
+        const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.VIDEO;
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
         if (!notification) {
             console.log("Failed to delete notification for video media");
             return h.response({ message: "Failed to delete notification for video media" }).code(400);
@@ -200,7 +200,8 @@ const listAllVideoMediaHandler = async (request, h) => {
             select: {
                 id: true,
                 uniqueId: true,
-                category: true,
+                title: true,
+                description: true,
                 url: true,
                 postedAt: true,
                 updatedAt: true

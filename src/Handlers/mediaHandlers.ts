@@ -57,7 +57,7 @@ const upload = multer({ dest: "uploads/" });
 
 export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
-    const {url, category} = request.payload as MediaInput;
+    const {url, title, description} = request.payload as MediaInput;
     
 
     try{
@@ -67,7 +67,8 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             data: {
                 url: url,
                 type: MediaType.VIDEO,
-                category: category,
+                title: title,
+                description: description,
                 postedAt: getCurrentDate(),
                 updatedAt: getCurrentDate()
             }
@@ -76,15 +77,15 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             console.log("Failed to create video media");
             return h.response({message: "Failed to create video media"}).code(400);
         }
-        const descriptionNew = "A new video has been posted ";
-        const notificationTitle = "A New Video has been posted";
-        const specialKey = media.uniqueId + NotificationType.MEDIA;
+        const notificationTitle = "A New Video titled " + title + " has just been posted!";
+        const specialKey = media.uniqueId + NotificationType.VIDEO;
         const notification = await createMediaNotificationHandler(
             media.uniqueId,
             specialKey,
             notificationTitle,
-            descriptionNew,
-            false
+            description,
+            false,
+            NotificationType.VIDEO
         );
         if(!notification){
             console.log("Failed to create notification for video media");
@@ -102,7 +103,7 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
 
 export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
-    const {uniqueId, url, category} = request.payload as MediaInput;
+    const {uniqueId, url, title, description} = request.payload as MediaInput;
     
     try{
         const findMedia = await executePrismaMethod(
@@ -126,31 +127,32 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
           return h.response({ message: "Media not found" }).code(404);
         }
         const media = await executePrismaMethod(prisma, "media", "update", {
-            where: {
-                id: findMedia.id,
-                uniqueId: uniqueId
-            },
-            data: {
-                url: url,
-                category: category,
-                updatedAt: getCurrentDate()
-            }
+          where: {
+            id: findMedia.id,
+            uniqueId: uniqueId,
+          },
+          data: {
+            url: url,
+            description: description,
+            title: title,
+            updatedAt: getCurrentDate(),
+          },
         });
         if(!media){
             console.log("Failed to update video media");
             return h.response({message: "Failed to update video media"}).code(400);
         }
 
-        const description = "The video with  ID " + uniqueId + " has just been updated!";
-        const notificationTitle = "A Video has just been updated!";
-        const specialKey = media.uniqueId + NotificationType.MEDIA;
+        const notificationTitle = "The Video titled " + title + " has just been updated!";
+        const specialKey = media.uniqueId + NotificationType.VIDEO;
         const notification = await updateMediaNotificationHandler(
             findMedia.mediaNotifications.notificationId,
             media.uniqueId,
             specialKey,
             notificationTitle,
             description,
-            false
+            false,
+            NotificationType.VIDEO
         );
         if(!notification){
             console.log("Failed to update notification for video media");
@@ -201,11 +203,12 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             console.log("Failed to delete video media");
             return h.response({message: "Failed to delete video media"}).code(400);
         }
-        const specialKey = findMedia.uniqueId + NotificationType.MEDIA;
+        const specialKey = findMedia.uniqueId + NotificationType.VIDEO;
         const notification = await deleteMediaNotificationHandler(
           findMedia.mediaNotifications.notificationId,
           findMedia.uniqueId,
-          specialKey
+          specialKey,
+          NotificationType.VIDEO
         );
         if(!notification){
             console.log("Failed to delete notification for video media");
@@ -255,7 +258,8 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
             select:{
                 id: true,
                 uniqueId: true,
-                category: true,
+                title: true,
+                description: true,
                 url: true,
                 postedAt: true,
                 updatedAt: true

@@ -8,7 +8,8 @@ var MediaType;
 })(MediaType || (exports.MediaType = MediaType = {}));
 var NotificationType;
 (function (NotificationType) {
-    NotificationType["MEDIA"] = "MEDIA";
+    NotificationType["VIDEO"] = "VIDEO";
+    NotificationType["AUDIO"] = "AUDIO";
     NotificationType["EVENT"] = "EVENT";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 //# sourceMappingURL=types.js.map

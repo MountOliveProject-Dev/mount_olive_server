@@ -8,7 +8,8 @@ export enum MediaType {
 }
 
 export enum NotificationType {
-  MEDIA = "MEDIA",
+  VIDEO = "VIDEO",
+  AUDIO = "AUDIO",
   EVENT = "EVENT",
 }
 
