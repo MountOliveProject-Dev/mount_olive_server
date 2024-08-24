@@ -29,9 +29,9 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
             return h.response({message: "No notifications found"}).code(404);
         }
         const getMedia = await executePrismaMethod(prisma, "engagementsManager", "findMany", {
-            where: {
-                notificationId: notifications.id
-            },select:true 
+            orderBy: {
+              id : "asc"
+            }
         });
         if(!getMedia){
             console.log("No associated media found");

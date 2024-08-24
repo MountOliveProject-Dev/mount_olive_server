@@ -28,9 +28,9 @@ const listNotificationsHandler = async (request, h) => {
             return h.response({ message: "No notifications found" }).code(404);
         }
         const getMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findMany", {
-            where: {
-                notificationId: notifications.id
-            }, select: true
+            orderBy: {
+                id: "asc"
+            }
         });
         if (!getMedia) {
             console.log("No associated media found");
