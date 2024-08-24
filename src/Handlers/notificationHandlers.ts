@@ -90,48 +90,48 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
             } 
           }
 
-            if(getMedia[i].videoStatus === true){
-                type = NotificationType.VIDEO;
+            if (notificationMedia && getMedia[i].videoStatus === true) {
+              type = NotificationType.VIDEO;
 
-                media = {
-                  id: notificationMedia.id,
-                  uniqueId: notificationMedia.uniqueId,
-                  title:  notificationMedia.title,
-                  description: notificationMedia.description,
-                  url: notificationMedia.url,
-                  postedAt: notificationMedia.postedAt,
-                  updatedAt: notificationMedia.updatedAt,
-                }
+              media = {
+                id: notificationMedia.id,
+                uniqueId: notificationMedia.uniqueId,
+                title: notificationMedia.title,
+                description: notificationMedia.description,
+                url: notificationMedia.url,
+                postedAt: notificationMedia.postedAt,
+                updatedAt: notificationMedia.updatedAt,
+              };
             }
-            if(getMedia[i].audioStatus === true){
-                type = NotificationType.AUDIO;
-                media = {
-                  id: notificationMedia.id,
-                  uniqueId: notificationMedia.uniqueId,
-                  title:  notificationMedia.title,
-                  description: notificationMedia.description,
-                  url: notificationMedia.url,
-                  duration: notificationMedia.duration,
-                  postedAt: notificationMedia.postedAt,
-                  updatedAt: notificationMedia.updatedAt,
-                }
+            if (notificationMedia && getMedia[i].audioStatus === true) {
+              type = NotificationType.AUDIO;
+              media = {
+                id: notificationMedia.id,
+                uniqueId: notificationMedia.uniqueId,
+                title: notificationMedia.title,
+                description: notificationMedia.description,
+                url: notificationMedia.url,
+                duration: notificationMedia.duration,
+                postedAt: notificationMedia.postedAt,
+                updatedAt: notificationMedia.updatedAt,
+              };
             }
-            if(getMedia[i].eventStatus === true){
-                type = NotificationType.EVENT;
-                media = {
-                    id: notificationMedia.id,
-                    uniqueId: notificationMedia.uniqueId,
-                    title:  notificationMedia.title,
-                    createdAt: notificationMedia.createdAt,
-                    updatedAt: notificationMedia.updatedAt,
-                    date: notificationMedia.date,
-                    time: notificationMedia.time,
-                    location: notificationMedia.location,
-                    venue: notificationMedia.venue,
-                    host: notificationMedia.host,
-                    description: notificationMedia.description,
-                    thumbnail: notificationMedia.thumbnail
-                }
+            if (notificationMedia && getMedia[i].eventStatus === true) {
+              type = NotificationType.EVENT;
+              media = {
+                id: notificationMedia.id,
+                uniqueId: notificationMedia.uniqueId,
+                title: notificationMedia.title,
+                createdAt: notificationMedia.createdAt,
+                updatedAt: notificationMedia.updatedAt,
+                date: notificationMedia.date,
+                time: notificationMedia.time,
+                location: notificationMedia.location,
+                venue: notificationMedia.venue,
+                host: notificationMedia.host,
+                description: notificationMedia.description,
+                thumbnail: notificationMedia.thumbnail,
+              };
             }
           const notificationData = {
             notificationId: notifications[i].id,
