@@ -140,6 +140,7 @@ const listNotificationsHandler = async (request, h) => {
                 ...notificationData,
                 ...media,
             };
+            console.log(combinedData);
             data.push(combinedData);
         }
         return h.response(data).code(200);

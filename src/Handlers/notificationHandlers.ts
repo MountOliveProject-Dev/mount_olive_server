@@ -143,6 +143,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
             ...notificationData,
             ...media,
           };
+          console.log(combinedData);
           data.push(combinedData);
         }
         return h.response(data).code(200);
