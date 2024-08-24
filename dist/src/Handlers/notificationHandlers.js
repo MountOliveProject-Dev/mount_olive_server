@@ -30,7 +30,7 @@ const listNotificationsHandler = async (request, h) => {
         const getMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findMany", {
             where: {
                 notificationId: notifications.id
-            }
+            }, select: true
         });
         if (!getMedia) {
             console.log("No associated media found");
@@ -49,6 +49,7 @@ const listNotificationsHandler = async (request, h) => {
                     notificationMedia = getMedia[j].event;
                 }
             }
+            console.log(notificationMedia.id);
             if (getMedia[i].videoStatus === true) {
                 type = Helpers_1.NotificationType.VIDEO;
                 media = {

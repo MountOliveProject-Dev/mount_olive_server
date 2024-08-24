@@ -31,7 +31,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
         const getMedia = await executePrismaMethod(prisma, "engagementsManager", "findMany", {
             where: {
                 notificationId: notifications.id
-            }   
+            },select:true 
         });
         if(!getMedia){
             console.log("No associated media found");
@@ -50,8 +50,10 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
               notificationMedia = getMedia[j].event;
             } 
           }
+          console.log(notificationMedia.id);
             if(getMedia[i].videoStatus === true){
                 type = NotificationType.VIDEO;
+
                 media = {
                   id: notificationMedia.id,
                   uniqueId: notificationMedia.uniqueId,
