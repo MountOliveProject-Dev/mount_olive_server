@@ -64,7 +64,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
                   venue: true,
                   host: true,
                   thumbnail: true,
-                  postedAt: true,
+                  createdAt: true,
                   updatedAt: true
                 }
               }

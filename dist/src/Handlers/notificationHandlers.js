@@ -63,7 +63,7 @@ const listNotificationsHandler = async (request, h) => {
                         venue: true,
                         host: true,
                         thumbnail: true,
-                        postedAt: true,
+                        createdAt: true,
                         updatedAt: true
                     }
                 }
