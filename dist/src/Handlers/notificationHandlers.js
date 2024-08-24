@@ -101,6 +101,7 @@ const listNotificationsHandler = async (request, h) => {
                 type: type,
                 media: media
             };
+            console.log(notificationData);
             data.push(notificationData);
         }
         return h.response(data).code(200);
