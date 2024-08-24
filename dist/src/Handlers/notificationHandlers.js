@@ -30,6 +30,44 @@ const listNotificationsHandler = async (request, h) => {
         const getMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findMany", {
             orderBy: {
                 id: "asc"
+            }, select: {
+                id: true,
+                notificationId: true,
+                mediaId: true,
+                eventId: true,
+                videoStatus: true,
+                audioStatus: true,
+                eventStatus: true,
+                media: {
+                    select: {
+                        id: true,
+                        uniqueId: true,
+                        title: true,
+                        description: true,
+                        url: true,
+                        duration: true,
+                        type: true,
+                        postedAt: true,
+                        updatedAt: true
+                    }
+                },
+                event: {
+                    select: {
+                        id: true,
+                        uniqueId: true,
+                        title: true,
+                        description: true,
+                        url: true,
+                        location: true,
+                        date: true,
+                        time: true,
+                        venue: true,
+                        host: true,
+                        thumbnail: true,
+                        postedAt: true,
+                        updatedAt: true
+                    }
+                }
             }
         });
         if (!getMedia) {
