@@ -76,7 +76,6 @@ const listNotificationsHandler = async (request, h) => {
             let type = "";
             let media = {};
             const notificationId = notifications[i].id;
-            console.log(notificationId);
             let notificationMedia = {};
             for (let j = 0; j < getMedia.length; j++) {
                 if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
@@ -86,7 +85,6 @@ const listNotificationsHandler = async (request, h) => {
                     notificationMedia = getMedia[j].event;
                 }
             }
-            console.log(notificationMedia.id);
             if (getMedia[i].videoStatus === true) {
                 type = Helpers_1.NotificationType.VIDEO;
                 media = {
@@ -130,17 +128,19 @@ const listNotificationsHandler = async (request, h) => {
                 };
             }
             const notificationData = {
-                id: notifications[i].id,
-                title: notifications[i].title,
-                description: notifications[i].description,
+                notificationId: notifications[i].id,
+                notificationTitle: notifications[i].title,
+                notificationDescription: notifications[i].description,
                 read: notifications[i].read,
-                createdAt: notifications[i].createdAt,
-                updatedAt: notifications[i].updatedAt,
-                type: type,
-                media: media
+                notificationCreatedAt: notifications[i].createdAt,
+                notificationUpdatedAt: notifications[i].updatedAt,
+                type: type
             };
-            console.log(notificationData);
-            data.push(notificationData);
+            const combinedData = {
+                ...notificationData,
+                ...media,
+            };
+            data.push(combinedData);
         }
         return h.response(data).code(200);
     }
@@ -167,7 +167,7 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                         type: Helpers_1.NotificationType.EVENT,
                         eventStatus: true,
                         videoStatus: false,
-                        audiostatus: false,
+                        audioStatus: false,
                         specialKey: specialKey,
                         event: {
                             connect: {

@@ -79,7 +79,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
           let type = ""
           let media: any = {};
           const notificationId = notifications[i].id;
-          console.log(notificationId);
+
           let notificationMedia: any = {};
           for (let j = 0; j < getMedia.length; j++) {
             if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
@@ -88,7 +88,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
               notificationMedia = getMedia[j].event;
             } 
           }
-          console.log(notificationMedia.id);
+
             if(getMedia[i].videoStatus === true){
                 type = NotificationType.VIDEO;
 
@@ -131,17 +131,19 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
                 }
             }
           const notificationData = {
-            id: notifications[i].id,
-            title: notifications[i].title,
-            description: notifications[i].description,
+            notificationId: notifications[i].id,
+            notificationTitle: notifications[i].title,
+            notificationDescription: notifications[i].description,
             read: notifications[i].read,
-            createdAt: notifications[i].createdAt,
-            updatedAt: notifications[i].updatedAt,
-            type: type,
-            media: media
+            notificationCreatedAt: notifications[i].createdAt,
+            notificationUpdatedAt: notifications[i].updatedAt,
+            type: type
           }
-          console.log(notificationData);
-          data.push(notificationData);
+          const combinedData = {
+            ...notificationData,
+            ...media,
+          };
+          data.push(combinedData);
         }
         return h.response(data).code(200);
     }catch(err){
@@ -172,7 +174,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
                   type: NotificationType.EVENT,
                   eventStatus: true,
                   videoStatus: false,
-                  audiostatus: false,
+                  audioStatus: false,
                   specialKey: specialKey,
                   event: {
                     connect: {
