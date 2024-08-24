@@ -85,7 +85,7 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             notificationTitle,
             description,
             false,
-            NotificationType.VIDEO
+            NotificationType.VIDEO,
         );
         if(!notification){
             console.log("Failed to create notification for video media");

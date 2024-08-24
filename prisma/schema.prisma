@@ -69,6 +69,9 @@ model engagementsManager {
   id       Int     @id @default(autoincrement())
   type          NotificationType
   eventId       String? @unique
+  eventStatus Boolean
+  videoStatus Boolean
+  audioStatus Boolean
   mediaId       String? @unique
   specialKey    String @unique
   notificationId Int @unique

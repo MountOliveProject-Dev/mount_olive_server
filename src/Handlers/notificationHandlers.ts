@@ -1,20 +1,107 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod, NotificationType, getCurrentDate } from "../Helpers";
+import { METHODS } from "http";
 
 
 
 export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
 
     const { prisma } = request.server.app;
-
+    let data: any [] = [];
     try{
         const notifications = await executePrismaMethod(prisma, "notification", "findMany", {
             orderBy: {
                 createdAt: "desc"
+            },
+            select:{
+              id:true,
+              title:true,
+              description:true,
+              read:true,
+              createdAt:true,
+              updatedAt:true
+
             }
         });
-        return h.response(notifications).code(200);
+        if(!notifications){
+            console.log("No notifications found");
+            return h.response({message: "No notifications found"}).code(404);
+        }
+        const getMedia = await executePrismaMethod(prisma, "engagementsManager", "findMany", {
+            where: {
+                notificationId: notifications.id
+            }   
+        });
+        if(!getMedia){
+            console.log("No associated media found");
+        }
+
+        for (let i = 0; i < notifications.length; i++) {
+          let type = ""
+          let media: any = {};
+          const notificationId = notifications[i].id;
+          let notificationMedia: any = {};
+          for (let j = 0; j < getMedia.length; j++) {
+            if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
+              notificationMedia.push(getMedia[j].media);
+            }else if(getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)){
+              notificationMedia.push(getMedia[j].event); 
+            } 
+          }
+            if(getMedia[i].videoStatus === true){
+                type = NotificationType.VIDEO;
+                media = {
+                  id: notificationMedia.id,
+                  uniqueId: notificationMedia.uniqueId,
+                  title:  notificationMedia.title,
+                  description: notificationMedia.description,
+                  url: notificationMedia.url,
+                  postedAt: notificationMedia.postedAt,
+                  updatedAt: notificationMedia.updatedAt,
+                }
+            }else if(getMedia[i].audioStatus === true){
+                type = NotificationType.AUDIO;
+                media = {
+                  id: notificationMedia.id,
+                  uniqueId: notificationMedia.uniqueId,
+                  title:  notificationMedia.title,
+                  description: notificationMedia.description,
+                  url: notificationMedia.url,
+                  duration: notificationMedia.duration,
+                  postedAt: notificationMedia.postedAt,
+                  updatedAt: notificationMedia.updatedAt,
+                }
+            }else if(getMedia[i].eventStatus === true){
+                type = NotificationType.EVENT;
+                media = {
+                    id: notificationMedia.id,
+                    uniqueId: notificationMedia.uniqueId,
+                    title:  notificationMedia.title,
+                    createdAt: notificationMedia.createdAt,
+                    updatedAt: notificationMedia.updatedAt,
+                    date: notificationMedia.date,
+                    time: notificationMedia.time,
+                    location: notificationMedia.location,
+                    venue: notificationMedia.venue,
+                    host: notificationMedia.host,
+                    description: notificationMedia.description,
+                    thumbnail: notificationMedia.thumbnail
+                }
+            }
+          const notificationData = {
+            id: notifications[i].id,
+            title: notifications[i].title,
+            description: notifications[i].description,
+            read: notifications[i].read,
+            createdAt: notifications[i].createdAt,
+            updatedAt: notifications[i].updatedAt,
+            type: type,
+            media: media
+          }
+          data.push(notificationData);
+        }
+        return h.response(data).code(200);
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to get the notifications"}).code(500);
@@ -41,6 +128,9 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
               notificationEngagements: {
                 create: {
                   type: NotificationType.EVENT,
+                  eventStatus: true,
+                  videoStatus: false,
+                  audiostatus: false,
                   specialKey: specialKey,
                   event: {
                     connect: {
@@ -181,7 +271,14 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
 export const createMediaNotificationHandler = async (mediaId: string, specialKey: string,title: string, description: string, read: boolean, type: NotificationType) => {
     const { prisma } = server.app;
     try{
-
+        let videoStatus = false;
+        let eventStatus = false;
+        let audioStatus = false;
+        if(type === NotificationType.VIDEO){
+          videoStatus = true;
+        }else if(type === NotificationType.AUDIO){
+          audioStatus = true;
+        }
         const notification = await executePrismaMethod(
           prisma,
           "notification",
@@ -196,6 +293,9 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
               notificationEngagements: {
                 create: {
                   type: type,
+                  eventStatus: eventStatus,
+                  videoStatus: videoStatus,
+                  audioStatus: audioStatus,
                   specialKey: specialKey,
                   media: {
                     connect: {

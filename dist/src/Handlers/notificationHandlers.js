@@ -8,13 +8,101 @@ const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const listNotificationsHandler = async (request, h) => {
     const { prisma } = request.server.app;
+    let data = [];
     try {
         const notifications = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findMany", {
             orderBy: {
                 createdAt: "desc"
+            },
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                read: true,
+                createdAt: true,
+                updatedAt: true
             }
         });
-        return h.response(notifications).code(200);
+        if (!notifications) {
+            console.log("No notifications found");
+            return h.response({ message: "No notifications found" }).code(404);
+        }
+        const getMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findMany", {
+            where: {
+                notificationId: notifications.id
+            }
+        });
+        if (!getMedia) {
+            console.log("No associated media found");
+        }
+        for (let i = 0; i < notifications.length; i++) {
+            let type = "";
+            let media = {};
+            const notificationId = notifications[i].id;
+            let notificationMedia = {};
+            for (let j = 0; j < getMedia.length; j++) {
+                if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
+                    notificationMedia.push(getMedia[j].media);
+                }
+                else if (getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)) {
+                    notificationMedia.push(getMedia[j].event);
+                }
+            }
+            if (getMedia[i].videoStatus === true) {
+                type = Helpers_1.NotificationType.VIDEO;
+                media = {
+                    id: notificationMedia.id,
+                    uniqueId: notificationMedia.uniqueId,
+                    title: notificationMedia.title,
+                    description: notificationMedia.description,
+                    url: notificationMedia.url,
+                    postedAt: notificationMedia.postedAt,
+                    updatedAt: notificationMedia.updatedAt,
+                };
+            }
+            else if (getMedia[i].audioStatus === true) {
+                type = Helpers_1.NotificationType.AUDIO;
+                media = {
+                    id: notificationMedia.id,
+                    uniqueId: notificationMedia.uniqueId,
+                    title: notificationMedia.title,
+                    description: notificationMedia.description,
+                    url: notificationMedia.url,
+                    duration: notificationMedia.duration,
+                    postedAt: notificationMedia.postedAt,
+                    updatedAt: notificationMedia.updatedAt,
+                };
+            }
+            else if (getMedia[i].eventStatus === true) {
+                type = Helpers_1.NotificationType.EVENT;
+                media = {
+                    id: notificationMedia.id,
+                    uniqueId: notificationMedia.uniqueId,
+                    title: notificationMedia.title,
+                    createdAt: notificationMedia.createdAt,
+                    updatedAt: notificationMedia.updatedAt,
+                    date: notificationMedia.date,
+                    time: notificationMedia.time,
+                    location: notificationMedia.location,
+                    venue: notificationMedia.venue,
+                    host: notificationMedia.host,
+                    description: notificationMedia.description,
+                    thumbnail: notificationMedia.thumbnail
+                };
+            }
+            const notificationData = {
+                id: notifications[i].id,
+                title: notifications[i].title,
+                description: notifications[i].description,
+                read: notifications[i].read,
+                createdAt: notifications[i].createdAt,
+                updatedAt: notifications[i].updatedAt,
+                type: type,
+                media: media
+            };
+            data.push(notificationData);
+        }
+        return h.response(data).code(200);
     }
     catch (err) {
         console.log(err);
@@ -37,6 +125,9 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                 notificationEngagements: {
                     create: {
                         type: Helpers_1.NotificationType.EVENT,
+                        eventStatus: true,
+                        videoStatus: false,
+                        audiostatus: false,
                         specialKey: specialKey,
                         event: {
                             connect: {
@@ -163,6 +254,15 @@ exports.deleteEventNotificationHandler = deleteEventNotificationHandler;
 const createMediaNotificationHandler = async (mediaId, specialKey, title, description, read, type) => {
     const { prisma } = server_1.default.app;
     try {
+        let videoStatus = false;
+        let eventStatus = false;
+        let audioStatus = false;
+        if (type === Helpers_1.NotificationType.VIDEO) {
+            videoStatus = true;
+        }
+        else if (type === Helpers_1.NotificationType.AUDIO) {
+            audioStatus = true;
+        }
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
             data: {
                 title: title,
@@ -173,6 +273,9 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
                 notificationEngagements: {
                     create: {
                         type: type,
+                        eventStatus: eventStatus,
+                        videoStatus: videoStatus,
+                        audioStatus: audioStatus,
                         specialKey: specialKey,
                         media: {
                             connect: {
