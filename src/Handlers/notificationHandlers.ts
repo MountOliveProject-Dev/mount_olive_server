@@ -58,7 +58,6 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
                   uniqueId: true,
                   title: true,
                   description: true,
-                  url: true,
                   location: true,
                   date: true,
                   time: true,

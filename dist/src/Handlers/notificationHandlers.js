@@ -57,7 +57,6 @@ const listNotificationsHandler = async (request, h) => {
                         uniqueId: true,
                         title: true,
                         description: true,
-                        url: true,
                         location: true,
                         date: true,
                         time: true,
