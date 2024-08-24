@@ -84,7 +84,8 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
           for (let j = 0; j < getMedia.length; j++) {
             if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
               notificationMedia = getMedia[j].media;
-            }else if(getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)){
+            }
+            if(getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)){
               notificationMedia = getMedia[j].event;
             } 
           }
@@ -101,7 +102,8 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
                   postedAt: notificationMedia.postedAt,
                   updatedAt: notificationMedia.updatedAt,
                 }
-            }else if(getMedia[i].audioStatus === true){
+            }
+            if(getMedia[i].audioStatus === true){
                 type = NotificationType.AUDIO;
                 media = {
                   id: notificationMedia.id,
@@ -113,7 +115,8 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
                   postedAt: notificationMedia.postedAt,
                   updatedAt: notificationMedia.updatedAt,
                 }
-            }else if(getMedia[i].eventStatus === true){
+            }
+            if(getMedia[i].eventStatus === true){
                 type = NotificationType.EVENT;
                 media = {
                     id: notificationMedia.id,
@@ -143,7 +146,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
             ...notificationData,
             ...media,
           };
-          console.log(combinedData);
+
           data.push(combinedData);
         }
         return h.response(data).code(200);

@@ -81,7 +81,7 @@ const listNotificationsHandler = async (request, h) => {
                 if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
                     notificationMedia = getMedia[j].media;
                 }
-                else if (getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)) {
+                if (getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)) {
                     notificationMedia = getMedia[j].event;
                 }
             }
@@ -97,7 +97,7 @@ const listNotificationsHandler = async (request, h) => {
                     updatedAt: notificationMedia.updatedAt,
                 };
             }
-            else if (getMedia[i].audioStatus === true) {
+            if (getMedia[i].audioStatus === true) {
                 type = Helpers_1.NotificationType.AUDIO;
                 media = {
                     id: notificationMedia.id,
@@ -110,7 +110,7 @@ const listNotificationsHandler = async (request, h) => {
                     updatedAt: notificationMedia.updatedAt,
                 };
             }
-            else if (getMedia[i].eventStatus === true) {
+            if (getMedia[i].eventStatus === true) {
                 type = Helpers_1.NotificationType.EVENT;
                 media = {
                     id: notificationMedia.id,
@@ -140,7 +140,6 @@ const listNotificationsHandler = async (request, h) => {
                 ...notificationData,
                 ...media,
             };
-            console.log(combinedData);
             data.push(combinedData);
         }
         return h.response(data).code(200);
