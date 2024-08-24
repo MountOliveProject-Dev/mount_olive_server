@@ -41,6 +41,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
           let type = ""
           let media: any = {};
           const notificationId = notifications[i].id;
+          console.log(notificationId);
           let notificationMedia: any = {};
           for (let j = 0; j < getMedia.length; j++) {
             if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {

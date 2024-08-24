@@ -39,6 +39,7 @@ const listNotificationsHandler = async (request, h) => {
             let type = "";
             let media = {};
             const notificationId = notifications[i].id;
+            console.log(notificationId);
             let notificationMedia = {};
             for (let j = 0; j < getMedia.length; j++) {
                 if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
