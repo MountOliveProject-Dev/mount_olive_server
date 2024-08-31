@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('VIDEO', 'AUDIO', 'EVENT');
+CREATE TYPE "NotificationType" AS ENUM ('Video', 'Audio', 'Event');
 
 -- CreateEnum
-CREATE TYPE "MediaType" AS ENUM ('VIDEO', 'AUDIO');
+CREATE TYPE "MediaType" AS ENUM ('Video', 'Audio');
 
 -- CreateTable
 CREATE TABLE "Media" (
