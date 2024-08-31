@@ -77,6 +77,8 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             console.log("Failed to create video media");
             return h.response({message: "Failed to create video media"}).code(400);
         }
+        const type = NotificationType.VIDEO;
+        const read = false;
         const notificationTitle = "A New Video titled " + title + " has just been posted!";
         const specialKey = media.uniqueId + NotificationType.VIDEO;
         const notification = await createMediaNotificationHandler(
@@ -84,8 +86,8 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             specialKey,
             notificationTitle,
             description,
-            false,
-            NotificationType.VIDEO,
+            read,
+            type,
         );
         if(!notification){
             console.log("Failed to create notification for video media");

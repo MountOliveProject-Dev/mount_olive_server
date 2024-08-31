@@ -303,6 +303,7 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
         else if (type === Helpers_1.NotificationType.AUDIO) {
             audioStatus = true;
         }
+        console.log(type);
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
             data: {
                 title: title,

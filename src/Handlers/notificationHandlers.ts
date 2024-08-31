@@ -327,6 +327,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
         }else if(type === NotificationType.AUDIO){
           audioStatus = true;
         }
+        console.log(type)
         const notification = await executePrismaMethod(
           prisma,
           "notification",

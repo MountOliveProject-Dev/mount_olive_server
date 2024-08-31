@@ -59,9 +59,11 @@ async function createVideoMediaHandler(request, h) {
             console.log("Failed to create video media");
             return h.response({ message: "Failed to create video media" }).code(400);
         }
+        const type = Helpers_1.NotificationType.VIDEO;
+        const read = false;
         const notificationTitle = "A New Video titled " + title + " has just been posted!";
         const specialKey = media.uniqueId + Helpers_1.NotificationType.VIDEO;
-        const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, description, false, Helpers_1.NotificationType.VIDEO);
+        const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, description, read, type);
         if (!notification) {
             console.log("Failed to create notification for video media");
             return h.response({ message: "Failed to create notification for video media" }).code(400);
