@@ -3,14 +3,14 @@ import { File } from "multer";
 import { IncomingMessage, ServerResponse } from "http";
 
 export enum MediaType {
-  VIDEO = "VIDEO",
-  AUDIO = "AUDIO",
+  VIDEO = "Video",
+  AUDIO = "Audio",
 }
 
 export enum NotificationType {
-  VIDEO = "VIDEO",
-  AUDIO = "AUDIO",
-  EVENT = "EVENT",
+  VIDEO = "Video",
+  AUDIO = "Audio",
+  EVENT = "Event",
 }
 
 

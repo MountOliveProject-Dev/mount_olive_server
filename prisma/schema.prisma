@@ -11,14 +11,14 @@ datasource db {
 }
 
 enum NotificationType {
-  VIDEO
-  AUDIO
-  EVENT
+  Video
+  Audio
+  Event
   
 }
 enum MediaType {
-  VIDEO
-  AUDIO
+  Video
+  Audio
 }
 
 model Media {
