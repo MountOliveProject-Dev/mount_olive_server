@@ -17,6 +17,7 @@ import {
   createVideoMediaInputValidator,
   createAudioFileValidator,
 } from "../Validators/MediaValidators";
+import { getAllFilesInGoogleDriveFolder } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
   name: "app/media",
@@ -44,14 +45,14 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       //     },
       //   },
       // },
-      // {
-      //   method: "GET",
-      //   path: "/api/media/get-audios",
-      //   handler: listAllAudioMediaHandler,
-      //   options: {
-      //     auth: false,
-      //   },
-      // },
+      {
+        method: "GET",
+        path: "/api/media/get-audios",
+        handler: getAllFilesInGoogleDriveFolder,
+        options: {
+          auth: false,
+        },
+      },
       {
         method: "GET",
         path: "/api/media/get-all-posted-videos",

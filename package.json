@@ -8,6 +8,7 @@
     "start": "node ./dist/src/index.js",
     "compile": "tsc -p ./tsconfig.json",
     "seed-init": "ts-node ./prisma/initSeed.ts",
+    "seed-drive": "ts-node ./src/Handlers/tsGoogle.ts",
     "dev": "ts-node-dev --respawn ./src/index.ts",
     "db:push": "prisma db push",
     "migrate:reset": "prisma migrate reset",
@@ -38,6 +39,7 @@
     "mount_olive_server": "file:",
     "multer": "^1.4.5-lts.1",
     "prisma": "^5.13.0",
+    "ts-google-drive": "^0.0.7",
     "ts-node-dev": "^2.0.0"
   }
 }

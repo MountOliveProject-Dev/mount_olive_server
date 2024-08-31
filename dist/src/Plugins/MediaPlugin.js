@@ -8,6 +8,7 @@ const inert_1 = __importDefault(require("@hapi/inert"));
 const mediaHandlers_1 = require("../Handlers/mediaHandlers");
 const joi_1 = __importDefault(require("joi"));
 const MediaValidators_1 = require("../Validators/MediaValidators");
+const Handlers_1 = require("../Handlers");
 exports.mediaPlugin = {
     name: "app/media",
     dependencies: ["prisma"],
@@ -34,14 +35,14 @@ exports.mediaPlugin = {
             //     },
             //   },
             // },
-            // {
-            //   method: "GET",
-            //   path: "/api/media/get-audios",
-            //   handler: listAllAudioMediaHandler,
-            //   options: {
-            //     auth: false,
-            //   },
-            // },
+            {
+                method: "GET",
+                path: "/api/media/get-audios",
+                handler: Handlers_1.getAllFilesInGoogleDriveFolder,
+                options: {
+                    auth: false,
+                },
+            },
             {
                 method: "GET",
                 path: "/api/media/get-all-posted-videos",

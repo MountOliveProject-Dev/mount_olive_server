@@ -140,7 +140,7 @@ export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.Re
             read: notifications[i].read,
             notificationCreatedAt: notifications[i].createdAt,
             notificationUpdatedAt: notifications[i].updatedAt,
-            type: type
+            type: type,
           }
           const combinedData = {
             ...notificationData,

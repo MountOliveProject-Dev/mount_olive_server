@@ -134,7 +134,7 @@ const listNotificationsHandler = async (request, h) => {
                 read: notifications[i].read,
                 notificationCreatedAt: notifications[i].createdAt,
                 notificationUpdatedAt: notifications[i].updatedAt,
-                type: type
+                type: type,
             };
             const combinedData = {
                 ...notificationData,
