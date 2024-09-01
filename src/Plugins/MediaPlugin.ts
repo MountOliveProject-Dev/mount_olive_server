@@ -17,7 +17,11 @@ import {
   createVideoMediaInputValidator,
   createAudioFileValidator,
 } from "../Validators/MediaValidators";
-import { getAllFilesInGoogleDriveFolder } from "../Handlers";
+import {
+  getAllFilesInGoogleDriveFolder,
+  getFolder,
+  createFolder,
+} from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
   name: "app/media",
@@ -51,6 +55,29 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         handler: getAllFilesInGoogleDriveFolder,
         options: {
           auth: false,
+        },
+      },{
+        method: "GET",
+        path: "/api/media/get-folder/{folderId}",
+        handler: getFolder,
+        options: {
+          auth: false,
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/media/create-folder",
+        handler: createFolder,
+        options: {
+          auth: false,
+          validate: {
+            payload: Joi.object({
+              name: Joi.string().required(),
+            }),
+            failAction: async (request, h, err) => {
+              throw err;
+            },
+          },
         },
       },
       {

@@ -1,0 +1,135 @@
+import { Server, ServerRoute } from '@hapi/hapi';
+import { google } from 'googleapis';
+import { Readable } from 'stream';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+// Parse the credentials from the environment variable
+const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS || '{}');
+
+// Initialize the Google Drive API client
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ['https://www.googleapis.com/auth/drive.file'],
+});
+
+const drive = google.drive({ version: 'v3', auth });
+
+const routes: ServerRoute[] = [
+  {
+    method: 'POST',
+    path: '/folders',
+    handler: async (request, h) => {
+      const { name } = request.payload as { name: string };
+      const fileMetadata = {
+        name,
+        mimeType: 'application/vnd.google-apps.folder',
+      };
+
+      try {
+        const file = await drive.files.create({
+          requestBody: fileMetadata,
+          fields: 'id',
+        });
+        return h.response({ id: file.data.id }).code(201);
+      } catch (error) {
+        console.error('Error creating folder:', error);
+        return h.response('Error creating folder').code(500);
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/upload',
+    handler: async (request, h) => {
+      const { file, folderId } = request.payload as { file: any, folderId: string };
+      const fileMetadata = {
+        name: file.hapi.filename,
+        parents: [folderId],
+      };
+
+      const media = {
+        mimeType: file.hapi.headers['content-type'],
+        body: Readable.from(file._data),
+      };
+
+      try {
+        const response = await drive.files.create({
+          requestBody: fileMetadata,
+          media: media,
+          fields: 'id',
+        });
+        return h.response({ id: response.data.id }).code(201);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        return h.response('Error uploading file').code(500);
+      }
+    },
+  },
+  {
+    method: 'GET',
+    path: '/files/{folderId}',
+    handler: async (request, h) => {
+      const { folderId } = request.params;
+      
+      try {
+        const response = await drive.files.list({
+          q: `'${folderId}' in parents`,
+          fields: 'files(id, name, mimeType, webViewLink)',
+        });
+        return h.response(response.data.files);
+      } catch (error) {
+        console.error('Error listing files:', error);
+        return h.response('Error listing files').code(500);
+      }
+    },
+  },
+  {
+    method: 'GET',
+    path: '/share/{fileId}',
+    handler: async (request, h) => {
+      const { fileId } = request.params;
+      
+      try {
+        await drive.permissions.create({
+          fileId: fileId,
+          requestBody: {
+            role: 'reader',
+            type: 'anyone',
+          },
+        });
+
+        const file = await drive.files.get({
+          fileId: fileId,
+          fields: 'webViewLink',
+        });
+
+        return h.response({ shareableLink: file.data.webViewLink });
+      } catch (error) {
+        console.error('Error creating shareable link:', error);
+        return h.response('Error creating shareable link').code(500);
+      }
+    },
+  },
+];
+
+const init = async () => {
+  const server = new Server({
+    port: 3000,
+    host: 'localhost',
+  });
+
+  server.route(routes);
+
+  await server.start();
+  console.log('Server running on %s', server.info.uri);
+};
+
+process.on('unhandledRejection', (err) => {
+  console.log(err);
+  process.exit(1);
+});
+
+init();

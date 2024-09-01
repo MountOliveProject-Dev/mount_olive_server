@@ -42,6 +42,29 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                 },
+            }, {
+                method: "GET",
+                path: "/api/media/get-folder/{folderId}",
+                handler: Handlers_1.getFolder,
+                options: {
+                    auth: false,
+                },
+            },
+            {
+                method: "POST",
+                path: "/api/media/create-folder",
+                handler: Handlers_1.createFolder,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: joi_1.default.object({
+                            name: joi_1.default.string().required(),
+                        }),
+                        failAction: async (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
             },
             {
                 method: "GET",

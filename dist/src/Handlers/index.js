@@ -15,7 +15,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./eventHandlers"), exports);
-__exportStar(require("./authHandlers"), exports);
 __exportStar(require("./notificationHandlers"), exports);
 __exportStar(require("./mediaHandlers"), exports);
 __exportStar(require("./googledriveHandlers"), exports);

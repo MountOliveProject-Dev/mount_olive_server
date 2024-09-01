@@ -4,12 +4,20 @@ import {
 
 } from "googleapis";
 import fs from "fs";
-import {auth} from "../Handlers";
 import {audioMimeTypes} from "../Helpers/extras";
-export const GOOGLE_DRIVE_PRIVATE_KEY =
-  "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5AIp9TJFU+KWo\nNRBW05llxSCCCEA8+/jmR1ddkveZ+++VKOBfLIKu+7rI5yQzogsoyJuiW72UzmUX\n7yS4My6Iem6+hF/YXXvslPWvTRBGEHF3QLRT77apYX8pzhdwSv577xBNzuLZqza5\neGVbwZ5jmoQyKKCMtT+b0eQy8Rd0zUkNQGxKufXWXvkVHrn7a2zMxc7Zg46kYbFu\nsJcQ2Oiij09yMUfR57HDyLxzToIX12Rf0qneAb/XUgSoXVBiPaOf03xlzNfnTPRi\nEPfC4ONKv56X6WMzTlu00wKO7P2Ko32vLUOQl2yZIolU2iqmM5Es2V629zEkKTfk\nyHQAV/IrAgMBAAECggEAF5eTkZ4BjJH24if+MOxkC//jAOIXew9w8sDXSdYToD3q\nFB312v08nx7392XOjo0UGjvW6RIE76SQbMhw6NKSFRJz6/TKmjd1tbpbSGMt95li\nNuB3/po7s4b85fJjt8zAfkKC1EFVWYfFf0p0topO7gnG4PSgYME+XtsZ3Es1gA3z\n9SLZEMfXFd7p0zddeuQZjFYStzUwwQDAHnQmaNw0Uk8VcTOatqsGQbWkecppp8Uk\njAP4MsUJJD3mQJ7dcIVfjei2vvat25y8qPEsNNflqS2IT8wVomFOAZ3TmtPknx8Z\n2+7Eo5IsJpyEFgr40i2ZmOre0v4rg42+H6f4MYXoeQKBgQDymRrY4KZfSBzIC90e\nTk20UWsm1LR6F11D8tezF14yQOZG3FL8Tw43+y3kHCD4MyknQpgBz0jp/gah8A6t\npI4y3ohjbkdqMFcNhdW0xQsT8WFvXCUu+2yqe9Yrx8NJEZiM4b8C2L6m9IQduvgX\n5mZRf1L4AKvSFKPdUQyLrNL4swKBgQDDOOWQ2kv0HLV3SObrJBXJ/VGG0kFKLhtC\nbOgC3aHSp1Vy3elTJS/6/nkNoCEiehM0ZQ8H+MCWduP9g5JvmxAAvlgz8o+uH4Rj\nwN4fgT1fsjkXKZ7hyngMgYMWr2iTtlwJiT3mOSl6dyg1Zb8/8OAUFtIVXCG6YW+l\nbW1IK+EsqQKBgQCszIOEAZhf/ASMNW8d/BZ7HxdcxFt9L5E+KgacSUPONc4QoTT3\nBPSSyXYpqiONxxtEHLobZ+N+0HM2+7/ozXKAJ2QststlhuMq/a54IXY/kUqewJq3\nuVzwnl6yNosSS9dGWjHtPCeo0jgc2SWIGJO+7xtRDWFVtV/275kpEEQB4wKBgB1u\nPm2P+1NZ4KGTA/z++6nv3pKMr/sW6FUjRfboorS3NVKT0dEPEiSsqGM9eMFR1gNY\nGOQCxEXqtoRJiZH5tnfmOjXao36EkdjYAqSNP0tl+uVbCPDRLTf1bmXFG+bo3wcx\nAXvrsi0cOZuTMznYfm+I4TMHKK6IceRmkssGknPBAoGAfLcrsPiwHMjRMfD42/pt\nv05lvTRL5Fwmg3WUNjtWaiyLk35TKrhwh3mIu76E+AZD7Jtucw51bgshzXT8Wg1A\nw5nNEAQrMoIIFwuXRuWqR8mhycKt0JGfVKVXhd541Hpxmh9muYgRlwM1Yco2H7sk\nD6VGignP68dKK4FwcfVfrJA=\n-----END PRIVATE KEY-----\n";
+import Hapi from "@hapi/hapi";
 
+const credentials = JSON.parse(
+  process.env.GOOGLE_APPLICATION_CREDENTIALS || "{}"
+);
 
+// Initialize the Google Drive API client
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ["https://www.googleapis.com/auth/drive.file"],
+});
+
+const drive = google.drive({ version: 'v3', auth });
 async function uploadFileToResumableSession(
   uploadUrl: string,
   filePath: string
@@ -34,6 +42,32 @@ async function uploadFileToResumableSession(
   console.log("Uploaded file data:", fileData);
 }
 
+export async function createFolder(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+
+  const { name } = request.payload as { name: string };
+  const fileMetadata = {name,mimeType: 'application/vnd.google-apps.folder',};
+  try {
+    const file = await drive.files.create({requestBody: fileMetadata,fields: 'id',});
+    return h.response({ message: "The folder " + name + "has been created successfully!!" }).code(201);
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    return h.response('Error creating folder').code(500);
+  }
+};
+
+export async function getFolder(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { folderId } = request.params as { folderId: string };
+  try {
+    const folder = await drive.files.get({fileId: folderId,fields: 'id, name, mimeType',});
+    return h.response(folder.data).code(200);
+  } catch (error) {
+    console.error('Error getting folder:', error);
+    return h.response('Error getting folder').code(500);
+  }
+
+  
+
+}
 
 export async function createAudioFile (audioFile: any) {
   const drive = google.drive({ version: "v3", auth });
@@ -122,23 +156,23 @@ export async function listAndShareAudioFiles() {
 }
 
 
-export async function createFolder(folderName: string) {
-  const drive = google.drive({ version: "v3", auth });
-  const fileMetadata = {
-    name: folderName,
-    mimeType: "application/vnd.google-apps.folder",
-  };
+// export async function createFolder(folderName: string) {
+//   const drive = google.drive({ version: "v3", auth });
+//   const fileMetadata = {
+//     name: folderName,
+//     mimeType: "application/vnd.google-apps.folder",
+//   };
 
-  try {
-    const folder = await drive.files.create({
-      fields: "id",
-      requestBody: fileMetadata,
-    });
-    console.log("Folder ID:", folder.data.id);
-  } catch (error) {
-    console.error("Error creating folder:", error);
-  }
-};
+//   try {
+//     const folder = await drive.files.create({
+//       fields: "id",
+//       requestBody: fileMetadata,
+//     });
+//     console.log("Folder ID:", folder.data.id);
+//   } catch (error) {
+//     console.error("Error creating folder:", error);
+//   }
+// };
 
 export async function deleteFolder(folderId: string) {
   const drive = google.drive({ version: "v3", auth });
