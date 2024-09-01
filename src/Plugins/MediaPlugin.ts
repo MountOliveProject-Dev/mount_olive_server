@@ -21,6 +21,7 @@ import {
   getAllFilesInGoogleDriveFolder,
   getFolder,
   createFolder,
+  deleteFolder,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -63,7 +64,14 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
         },
+      },{
+        method: "POST",
+        path:"/api/media/delete-folder/{folderId}",
+        handler: deleteFolder,
+        options: {
+          auth: false
       },
+    },
       {
         method: "POST",
         path: "/api/media/create-folder",

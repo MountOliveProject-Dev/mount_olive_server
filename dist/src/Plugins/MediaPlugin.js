@@ -49,6 +49,13 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                 },
+            }, {
+                method: "POST",
+                path: "/api/media/delete-folder/{folderId}",
+                handler: Handlers_1.deleteFolder,
+                options: {
+                    auth: false
+                },
             },
             {
                 method: "POST",
