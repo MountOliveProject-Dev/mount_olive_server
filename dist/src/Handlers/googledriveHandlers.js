@@ -12,7 +12,20 @@ exports.getAllFilesInGoogleDriveFolder = getAllFilesInGoogleDriveFolder;
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
 const extras_1 = require("../Helpers/extras");
-const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS || "{}");
+const credentialsString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+console.log("Raw credentials string:", credentialsString);
+let credentials;
+try {
+    credentials = JSON.parse(credentialsString || "{}");
+    console.log("Parsed credentials:", credentials);
+}
+catch (error) {
+    console.error("Error parsing credentials:", error);
+}
+// Check if required fields are present
+if (!credentials.client_email) {
+    console.error("client_email is missing from the credentials");
+}
 // Initialize the Google Drive API client
 const auth = new googleapis_1.google.auth.GoogleAuth({
     credentials,
