@@ -13,6 +13,8 @@ exports.deleteFolder = deleteFolder;
 exports.getAllFilesInGoogleDriveFolder = getAllFilesInGoogleDriveFolder;
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 exports.audioMimeTypes = [
     "audio/mpeg",
     "audio/wav",

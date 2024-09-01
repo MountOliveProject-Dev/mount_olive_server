@@ -1,7 +1,8 @@
 import { google } from "googleapis";
 import fs from "fs";
 import Hapi from "@hapi/hapi";
-
+import dotenv from "dotenv";
+dotenv.config();
 export const audioMimeTypes = [
   "audio/mpeg",
   "audio/wav",
