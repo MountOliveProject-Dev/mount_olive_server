@@ -339,7 +339,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
               read: read,
               createdAt: getCurrentDate(),
               updatedAt: getCurrentDate(),
-              mediaNotifications: {
+              notificationEngagements: {
                 create: {
                   type: type,
                   eventStatus: eventStatus,
