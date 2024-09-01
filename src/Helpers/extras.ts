@@ -12,28 +12,4 @@ export const getCurrentDate = () => {
 
 //
 
-export const auth: Auth.GoogleAuth = new google.auth.GoogleAuth({
-  credentials: {
-    type: process.env.GOOGLE_DRIVE_TYPE,
-    project_id: process.env.GOOGLE_DRIVE_PROJECT_ID,
-    private_key_id: process.env.GOOGLE_DRIVE_PRIVATE_KEY_ID,
-    private_key: GOOGLE_DRIVE_PRIVATE_KEY,
-    client_email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-    client_id: process.env.GOOGLE_DRIVE_CLIENT_ID,
-  },
-  scopes: ["https://www.googleapis.com/auth/drive.file"],
-});
 
-//list all audio files in the folder
-//mimeType
-//audio/mpeg
-export const audioMimeTypes = [
-  "audio/mpeg", // .mp3
-  "audio/wav", // .wav
-  "audio/x-wav",
-  "audio/vnd.wave",
-  "audio/ogg", // .ogg
-  "audio/flac", // .flac
-  "audio/aac", // .aac
-  "audio/x-aac",
-];
