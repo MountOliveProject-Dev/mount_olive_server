@@ -89,6 +89,7 @@ export async function createFolder(
       requestBody: fileMetadata,
       fields: "id",
     });
+    console.log("Folder ID: ", file.data.id);
     return h
       .response({
         message: `The folder ${name} has been created successfully!!`,
@@ -117,6 +118,18 @@ export async function getFolder(
   }
 }
 
+export async function deleteFolder(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { folderId } = request.params as { folderId: string };
+  try {
+    await drive.files.delete({
+      fileId: folderId,
+    });
+    return h.response("Folder deleted successfully").code(200);
+  } catch (error) {
+    console.error("Error deleting folder:", error);
+    return h.response("Error deleting folder").code(500);
+  }
+}
 export async function createAudioFile(audioFile: any) {
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
@@ -188,16 +201,7 @@ export async function listAndShareAudioFiles() {
   }
 }
 
-export async function deleteFolder(folderId: string) {
-  try {
-    await drive.files.delete({
-      fileId: folderId,
-    });
-    console.log("Folder deleted successfully");
-  } catch (error) {
-    console.error("Error deleting folder:", error);
-  }
-}
+
 
 export async function getAllFilesInGoogleDriveFolder() {
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;

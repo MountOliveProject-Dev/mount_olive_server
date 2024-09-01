@@ -7,9 +7,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.audioMimeTypes = void 0;
 exports.createFolder = createFolder;
 exports.getFolder = getFolder;
+exports.deleteFolder = deleteFolder;
 exports.createAudioFile = createAudioFile;
 exports.listAndShareAudioFiles = listAndShareAudioFiles;
-exports.deleteFolder = deleteFolder;
 exports.getAllFilesInGoogleDriveFolder = getAllFilesInGoogleDriveFolder;
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
@@ -84,6 +84,7 @@ async function createFolder(request, h) {
             requestBody: fileMetadata,
             fields: "id",
         });
+        console.log("Folder ID: ", file.data.id);
         return h
             .response({
             message: `The folder ${name} has been created successfully!!`,
@@ -107,6 +108,19 @@ async function getFolder(request, h) {
     catch (error) {
         console.error("Error getting folder:", error);
         return h.response("Error getting folder").code(500);
+    }
+}
+async function deleteFolder(request, h) {
+    const { folderId } = request.params;
+    try {
+        await drive.files.delete({
+            fileId: folderId,
+        });
+        return h.response("Folder deleted successfully").code(200);
+    }
+    catch (error) {
+        console.error("Error deleting folder:", error);
+        return h.response("Error deleting folder").code(500);
     }
 }
 async function createAudioFile(audioFile) {
@@ -171,17 +185,6 @@ async function listAndShareAudioFiles() {
     }
     catch (error) {
         console.error("Error listing or sharing audio files:", error);
-    }
-}
-async function deleteFolder(folderId) {
-    try {
-        await drive.files.delete({
-            fileId: folderId,
-        });
-        console.log("Folder deleted successfully");
-    }
-    catch (error) {
-        console.error("Error deleting folder:", error);
     }
 }
 async function getAllFilesInGoogleDriveFolder() {
