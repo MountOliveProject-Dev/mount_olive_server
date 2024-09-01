@@ -5,156 +5,167 @@ import { METHODS } from "http";
 
 
 
-export const listNotificationsHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+export const listNotificationsHandler = async (
+  request: Hapi.Request,
+  h: Hapi.ResponseToolkit
+) => {
+  const { prisma } = request.server.app;
+  let data: any[] = [];
 
-    const { prisma } = request.server.app;
-    let data: any [] = [];
-    try{
-        const notifications = await executePrismaMethod(prisma, "notification", "findMany", {
-            orderBy: {
-                createdAt: "desc"
-            },
-            select:{
-              id:true,
-              title:true,
-              description:true,
-              read:true,
-              createdAt:true,
-              updatedAt:true
+  try {
+    const notifications = await executePrismaMethod(
+      prisma,
+      "notification",
+      "findMany",
+      {
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          read: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }
+    );
 
-            }
-        });
-        if(!notifications){
-            console.log("No notifications found");
-            return h.response({message: "No notifications found"}).code(404);
-        }
-        const getMedia = await executePrismaMethod(prisma, "engagementsManager", "findMany", {
-            orderBy: {
-              id : "asc"
-            }, select: {
-              id: true,
-              notificationId: true,
-              mediaId: true,
-              eventId: true,
-              videoStatus: true,
-              audioStatus: true,
-              eventStatus: true,
-              media: {
-                select: {
-                  id: true,
-                  uniqueId: true,
-                  title: true,
-                  description: true,
-                  url: true,
-                  duration: true,
-                  type: true,
-                  postedAt: true,
-                  updatedAt: true
-                }
-              },
-              event: {
-                select: {
-                  id: true,
-                  uniqueId: true,
-                  title: true,
-                  description: true,
-                  location: true,
-                  date: true,
-                  time: true,
-                  venue: true,
-                  host: true,
-                  thumbnail: true,
-                  createdAt: true,
-                  updatedAt: true
-                }
-              }
-            }
-        });
-        if(!getMedia){
-            
-            console.log("No associated media found");
-        }
-
-        for (let i = 0; i < notifications.length; i++) {
-          let type = ""
-          let media: any = {};
-          const notificationId = notifications[i].id;
-
-          let notificationMedia: any = {};
-          for (let j = 0; j < getMedia.length; j++) {
-            if (getMedia[j].notificationId === notificationId && (getMedia[j].mediaId !== null || getMedia[j].mediaId !== undefined)) {
-              notificationMedia = getMedia[j].media;
-            }
-            if(getMedia[j].notificationId === notificationId && (getMedia[j].eventId !== null || getMedia[j].eventId !== undefined)){
-              notificationMedia = getMedia[j].event;
-            } 
-          }
-
-            if (notificationMedia && getMedia[i].videoStatus === true) {
-              type = NotificationType.VIDEO;
-
-              media = {
-                id: notificationMedia.id,
-                uniqueId: notificationMedia.uniqueId,
-                title: notificationMedia.title,
-                description: notificationMedia.description,
-                url: notificationMedia.url,
-                postedAt: notificationMedia.postedAt,
-                updatedAt: notificationMedia.updatedAt,
-              };
-            }
-            if (notificationMedia && getMedia[i].audioStatus === true) {
-              type = NotificationType.AUDIO;
-              media = {
-                id: notificationMedia.id,
-                uniqueId: notificationMedia.uniqueId,
-                title: notificationMedia.title,
-                description: notificationMedia.description,
-                url: notificationMedia.url,
-                duration: notificationMedia.duration,
-                postedAt: notificationMedia.postedAt,
-                updatedAt: notificationMedia.updatedAt,
-              };
-            }
-            if (notificationMedia && getMedia[i].eventStatus === true) {
-              type = NotificationType.EVENT;
-              media = {
-                id: notificationMedia.id,
-                uniqueId: notificationMedia.uniqueId,
-                title: notificationMedia.title,
-                createdAt: notificationMedia.createdAt,
-                updatedAt: notificationMedia.updatedAt,
-                date: notificationMedia.date,
-                time: notificationMedia.time,
-                location: notificationMedia.location,
-                venue: notificationMedia.venue,
-                host: notificationMedia.host,
-                description: notificationMedia.description,
-                thumbnail: notificationMedia.thumbnail,
-              };
-            }
-          const notificationData = {
-            notificationId: notifications[i].id,
-            notificationTitle: notifications[i].title,
-            notificationDescription: notifications[i].description,
-            read: notifications[i].read,
-            notificationCreatedAt: notifications[i].createdAt,
-            notificationUpdatedAt: notifications[i].updatedAt,
-            type: type,
-          }
-          const combinedData = {
-            ...notificationData,
-            ...media,
-          };
-
-          data.push(combinedData);
-        }
-        return h.response(data).code(200);
-    }catch(err){
-        console.log(err);
-        return h.response({message: "Internal Server Error" + ":failed to get the notifications"}).code(500);
+    if (!notifications || notifications.length === 0) {
+      console.log("No notifications found");
+      return h.response({ message: "No notifications found" }).code(404);
     }
-}
+
+    const mediaItems = await executePrismaMethod(
+      prisma,
+      "engagementsManager",
+      "findMany",
+      {
+        orderBy: {
+          id: "asc",
+        },
+        select: {
+          id: true,
+          notificationId: true,
+          mediaId: true,
+          eventId: true,
+          videoStatus: true,
+          audioStatus: true,
+          eventStatus: true,
+          media: {
+            select: {
+              id: true,
+              uniqueId: true,
+              title: true,
+              description: true,
+              url: true,
+              duration: true,
+              type: true,
+              postedAt: true,
+              updatedAt: true,
+            },
+          },
+          event: {
+            select: {
+              id: true,
+              uniqueId: true,
+              title: true,
+              description: true,
+              location: true,
+              date: true,
+              time: true,
+              venue: true,
+              host: true,
+              thumbnail: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      }
+    );
+
+    if (!mediaItems) {
+      console.log("No associated media found");
+    }
+
+    for (const notification of notifications) {
+      const notificationData = {
+        notificationId: notification.id,
+        notificationTitle: notification.title,
+        notificationDescription: notification.description,
+        read: notification.read,
+        notificationCreatedAt: notification.createdAt,
+        notificationUpdatedAt: notification.updatedAt,
+        type: "",
+      };
+
+      const associatedMedia = mediaItems.find(
+        (media) => media.notificationId === notification.id
+      );
+      let media: any = {};
+
+      if (associatedMedia) {
+        if (associatedMedia.videoStatus) {
+          notificationData.type = NotificationType.VIDEO;
+          media = {
+            id: associatedMedia.media.id,
+            uniqueId: associatedMedia.media.uniqueId,
+            title: associatedMedia.media.title,
+            description: associatedMedia.media.description,
+            url: associatedMedia.media.url,
+            postedAt: associatedMedia.media.postedAt,
+            updatedAt: associatedMedia.media.updatedAt,
+          };
+        } else if (associatedMedia.audioStatus) {
+          notificationData.type = NotificationType.AUDIO;
+          media = {
+            id: associatedMedia.media.id,
+            uniqueId: associatedMedia.media.uniqueId,
+            title: associatedMedia.media.title,
+            description: associatedMedia.media.description,
+            url: associatedMedia.media.url,
+            duration: associatedMedia.media.duration,
+            postedAt: associatedMedia.media.postedAt,
+            updatedAt: associatedMedia.media.updatedAt,
+          };
+        } else if (associatedMedia.eventStatus) {
+          notificationData.type = NotificationType.EVENT;
+          media = {
+            id: associatedMedia.event.id,
+            uniqueId: associatedMedia.event.uniqueId,
+            title: associatedMedia.event.title,
+            createdAt: associatedMedia.event.createdAt,
+            updatedAt: associatedMedia.event.updatedAt,
+            date: associatedMedia.event.date,
+            time: associatedMedia.event.time,
+            location: associatedMedia.event.location,
+            venue: associatedMedia.event.venue,
+            host: associatedMedia.event.host,
+            description: associatedMedia.event.description,
+            thumbnail: associatedMedia.event.thumbnail,
+          };
+        }
+      }
+
+      data.push({
+        ...notificationData,
+        ...media,
+      });
+    }
+
+    return h.response(data).code(200);
+  } catch (err) {
+    console.log(err);
+    return h
+      .response({
+        message: "Internal Server Error: failed to get the notifications",
+      })
+      .code(500);
+  }
+};
+
 
 ///
 //create event notification
@@ -356,6 +367,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
             },
           }
         );
+        console.log(notification);
         if(notification === null || notification === undefined){
             const message = "Failed to create the notification";
             console.log(message);

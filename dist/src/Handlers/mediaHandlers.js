@@ -64,6 +64,7 @@ async function createVideoMediaHandler(request, h) {
         const notificationTitle = "A New Video titled " + title + " has just been posted!";
         const specialKey = media.uniqueId + Helpers_1.NotificationType.VIDEO;
         const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, description, read, type);
+        console.log(notification);
         if (!notification) {
             console.log("Failed to create notification for video media");
             return h.response({ message: "Failed to create notification for video media" }).code(400);
