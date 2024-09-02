@@ -19,21 +19,26 @@ enum NotificationType {
 enum MediaType {
   Video
   Audio
+  Image
 }
 
 model Media {
   id       Int     @id @default(autoincrement())
   uniqueId String @unique @default(cuid())
   title    String
-  description String
+  description String?
   url String
   duration String?
   type MediaType
   postedAt  String
   updatedAt     String
 
+  folderId Int
+
   // Relation
   mediaNotifications engagementsManager? 
+  storageFolder folder @relation(fields: [folderId], references: [id])
+
 }
 model Event {
   id       Int     @id @default(autoincrement())
@@ -79,13 +84,23 @@ model engagementsManager {
   event         Event?        @relation(fields: [eventId], references: [uniqueId])
   media         Media?        @relation(fields: [mediaId], references: [uniqueId])
 }
-model MediaStorageToken {
-  id          Int      @id @default(autoincrement())
-  accessToken String
-  refreshToken String
-  scope       String
-  tokenType   String
-  expiryDate  Int
+enum FolderType {
+  Images
+  Audios
 }
+
+model folder {
+  id Int @id @default(autoincrement())
+  folderId String @unique
+  folderType FolderType 
+  name String
+
+  // Relation
+  media Media[]
+}
+
+
+
+
 
 

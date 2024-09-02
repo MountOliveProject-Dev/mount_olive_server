@@ -21,3 +21,8 @@ export interface MulterRequest extends Request {
     res: ServerResponse<IncomingMessage>;
   };
 }
+
+export enum folderType {
+  Audios = "Audios",
+  Images = "Images"
+}

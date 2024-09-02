@@ -25,6 +25,7 @@ exports.audioMimeTypes = [
     "audio/aac",
     "audio/x-aac",
 ];
+const Helpers_1 = require("../Helpers/");
 const credentials = {
     type: "service_account",
     project_id: process.env.GOOGLE_PROJECT_ID,
@@ -74,6 +75,7 @@ async function uploadFileToResumableSession(uploadUrl, filePath) {
     console.log("Uploaded file data:", fileData);
 }
 async function createFolder(request, h) {
+    const { prisma } = request.server.app;
     const { name } = request.payload;
     const fileMetadata = {
         name,
@@ -83,6 +85,12 @@ async function createFolder(request, h) {
         const file = await drive.files.create({
             requestBody: fileMetadata,
             fields: "id",
+        });
+        const folderId = await (0, Helpers_1.executePrismaMethod)(prisma, "mediaExtra", "create", {
+            data: {
+                folderId: file.data.id,
+                googleDriveFolderId: file.data.id,
+            },
         });
         console.log("Folder ID: ", file.data.id);
         return h

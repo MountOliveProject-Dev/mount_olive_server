@@ -2,19 +2,23 @@
 CREATE TYPE "NotificationType" AS ENUM ('Video', 'Audio', 'Event');
 
 -- CreateEnum
-CREATE TYPE "MediaType" AS ENUM ('Video', 'Audio');
+CREATE TYPE "MediaType" AS ENUM ('Video', 'Audio', 'Image');
+
+-- CreateEnum
+CREATE TYPE "FolderType" AS ENUM ('Images', 'Audios');
 
 -- CreateTable
 CREATE TABLE "Media" (
     "id" SERIAL NOT NULL,
     "uniqueId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "description" TEXT,
     "url" TEXT NOT NULL,
     "duration" TEXT,
     "type" "MediaType" NOT NULL,
     "postedAt" TEXT NOT NULL,
     "updatedAt" TEXT NOT NULL,
+    "folderId" INTEGER NOT NULL,
 
     CONSTRAINT "Media_pkey" PRIMARY KEY ("id")
 );
@@ -65,15 +69,13 @@ CREATE TABLE "engagementsManager" (
 );
 
 -- CreateTable
-CREATE TABLE "MediaStorageToken" (
+CREATE TABLE "folder" (
     "id" SERIAL NOT NULL,
-    "accessToken" TEXT NOT NULL,
-    "refreshToken" TEXT NOT NULL,
-    "scope" TEXT NOT NULL,
-    "tokenType" TEXT NOT NULL,
-    "expiryDate" INTEGER NOT NULL,
+    "folderId" TEXT NOT NULL,
+    "folderType" "FolderType" NOT NULL,
+    "name" TEXT NOT NULL,
 
-    CONSTRAINT "MediaStorageToken_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "folder_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -93,6 +95,12 @@ CREATE UNIQUE INDEX "engagementsManager_specialKey_key" ON "engagementsManager"(
 
 -- CreateIndex
 CREATE UNIQUE INDEX "engagementsManager_notificationId_key" ON "engagementsManager"("notificationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "folder_folderId_key" ON "folder"("folderId");
+
+-- AddForeignKey
+ALTER TABLE "Media" ADD CONSTRAINT "Media_folderId_fkey" FOREIGN KEY ("folderId") REFERENCES "folder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "engagementsManager" ADD CONSTRAINT "engagementsManager_notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES "Notification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,14 +1,5 @@
 import Hapi from "@hapi/hapi";
 import Inert from "@hapi/inert";
-import {
-  createVideoMediaHandler,
-  // listAllAudioMediaHandler,
-  listAllVideoMediaHandler,
-  updateVideoMediaHandler,
-  deleteVideoMediaHandler,
- 
-  //createAudioMediaHandler,
-} from "../Handlers/mediaHandlers";
 import Joi from "joi";
 import {
   updateMediaInputValidator,
@@ -16,12 +7,18 @@ import {
   updateVideoMediaInputValidator,
   createVideoMediaInputValidator,
   createAudioFileValidator,
+  createFolderInputValidator,
 } from "../Validators/MediaValidators";
 import {
-  getAllFilesInGoogleDriveFolder,
-  getFolder,
   createFolder,
   deleteFolder,
+  getAllFolders,
+  createVideoMediaHandler,
+  listAllVideoMediaHandler,
+  updateVideoMediaHandler,
+  deleteVideoMediaHandler,
+  createAudioMediaHandler,
+  listAllAudioMediaHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -30,48 +27,57 @@ export const mediaPlugin: Hapi.Plugin<void> = {
   register: async function (server: Hapi.Server) {
     await server.register(Inert);
     server.route([
-      // {
-      //   method: "POST",
-      //   path: "/upload-audio",
-      //   handler: createAudioMediaHandler,
-      //   options: {
-      //     auth: false,
-      //     payload: {
-      //       output: "stream",
-      //       parse: true,
-      //       multipart: true,
-      //       maxBytes: 104857600, // Limit to 100MB
-      //     },
-      //     validate: {
-      //       payload: createAudioFileValidator,
-      //       failAction: (request, h, err) => {
-      //         throw err;
-      //       },
-      //     },
-      //   },
-      // },
+      {
+        method: "POST",
+        path: "/upload-audio",
+        handler: createAudioMediaHandler,
+        options: {
+          auth: false,
+          payload: {
+            output: "stream",
+            parse: true,
+            multipart: true,
+            maxBytes: 104857600, // Limit to 100MB
+          },
+          validate: {
+            payload: Joi.object({
+              name: Joi.string().required().label("Name"),
+              description: Joi.string().optional().label("Description"),
+              audioFile: Joi.any()
+                .required()
+                .meta({ swaggerType: "file" })
+                .label("Audio File"),
+            }),
+            failAction: (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+      },
       {
         method: "GET",
         path: "/api/media/get-audios",
-        handler: getAllFilesInGoogleDriveFolder,
+        handler: listAllAudioMediaHandler,
         options: {
           auth: false,
         },
-      },{
+      },
+      {
         method: "GET",
-        path: "/api/media/get-folder/{folderId}",
-        handler: getFolder,
+        path: "/api/media/get-all-folders",
+        handler: getAllFolders,
         options: {
           auth: false,
         },
-      },{
+      },
+      {
         method: "POST",
-        path:"/api/media/delete-folder/{folderId}",
+        path: "/api/media/delete-folder/{folderId}",
         handler: deleteFolder,
         options: {
-          auth: false
+          auth: false,
+        },
       },
-    },
       {
         method: "POST",
         path: "/api/media/create-folder",
@@ -79,11 +85,9 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
           validate: {
-            payload: Joi.object({
-              name: Joi.string().required(),
-            }),
+            payload: createFolderInputValidator,
             failAction: async (request, h, err) => {
-              throw err;
+              throw { err, h };
             },
           },
         },

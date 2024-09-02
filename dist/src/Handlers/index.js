@@ -17,6 +17,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./eventHandlers"), exports);
 __exportStar(require("./notificationHandlers"), exports);
 __exportStar(require("./mediaHandlers"), exports);
-__exportStar(require("./googledriveHandlers"), exports);
 //export * from "./firebaseHandler";
 //# sourceMappingURL=index.js.map

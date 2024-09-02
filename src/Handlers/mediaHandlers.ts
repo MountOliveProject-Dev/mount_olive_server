@@ -1,15 +1,19 @@
 import Hapi from "@hapi/hapi";
-
+import  server from "../server";
+import { google } from "googleapis";
+import fs from "fs";
+import ffmpeg from "fluent-ffmpeg";
+import dotenv from "dotenv";
 import {
   executePrismaMethod,
   MediaType,
-  MulterRequest,
   getCurrentDate,
   NotificationType,
+  folderType,
 } from "../Helpers";
+
 import multer from "multer";
-import {createAudioFile} from "../Handlers";
-import { MediaInput } from "../Interfaces";
+import { MediaInput, folderInput } from "../Interfaces";
 import {
   createMediaNotificationHandler,
   updateMediaNotificationHandler,
@@ -18,42 +22,8 @@ import {
 
 
 const upload = multer({ dest: "uploads/" });
+dotenv.config();
 
-// export const createAudioMediaHandler : Hapi.Lifecycle.Method = async (
-//   request: MulterRequest,
-//   h
-// ) => {
-//   const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
-
-//   // Multer middleware processing
-//   await new Promise((resolve, reject) => {
-//     uploadMiddleware(request.raw.req, request.raw.res, (err) => {
-//       if (err) {
-//         return reject(err);
-//       }
-//       resolve(null);
-//     });
-//   });
-
-//   const file = request.raw.req.file;
-
-//   if (!file) {
-//     return h.response({ error: "No file uploaded" }).code(400);
-//   }
-
-//   try {
-//     // Upload the file to Google Drive
-//     const fileId = await createAudioFile(file);
-//     // Respond with the file ID from Google Drive
-//     return h.response({ fileId }).code(200);
-//   } catch (error) {
-//     return h
-//       .response({ error: "Failed to upload file to Google Drive" })
-//       .code(500);
-//   }
-// };
-
-//create video media
 
 export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
@@ -223,29 +193,7 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
         return h.response({message: "Internal Server Error" + ":failed to delete video media"}).code(500);
     }
 }
-// export const listAllAudioMediaHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
-//     const { prisma } = request.server.app;
 
-//     try{
-//         const media = await executePrismaMethod(prisma, "media", "findMany", {
-//             where: {
-//                 type: MediaType.AUDIO
-//             },
-//             orderBy: {
-//                 createdAt: "desc"
-//             }
-
-//         });
-//         if(!media){
-//             console.log("No audio media found");
-//             return h.response({message: "No audio media found"}).code(404);
-//         }
-//         return h.response(media).code(200);
-//     }catch(err){
-//         console.log(err);
-//         return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
-//     }
-// }
 
 export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
     const { prisma } = request.server.app;
@@ -280,3 +228,341 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
         return h.response({message: "Internal Server Error" + ":failed to get all video media"}).code(500);
     }
 }
+
+
+/**
+ *  
+ *  create audio media in google drive
+ * 
+*/
+
+
+const credentials = {
+  type: "service_account",
+  project_id: process.env.GOOGLE_PROJECT_ID,
+  private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+  private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  client_email: process.env.GOOGLE_CLIENT_EMAIL,
+  client_id: process.env.GOOGLE_CLIENT_ID,
+  auth_uri: process.env.GOOGLE_AUTH_URI,
+  token_uri: process.env.GOOGLE_TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.GOOGLE_CLIENT_X509_CERT_URL,
+};
+if (!credentials.project_id) {
+  console.error("project_id is missing from the credentials");
+}
+if (!credentials.private_key_id) {
+  console.error("private_key_id is missing from the credentials");
+}
+
+if (!credentials.private_key) {
+  console.error("private_key is missing from the credentials");
+}
+if (!credentials.client_email) {
+  console.error("client_email is missing from the credentials");
+}
+
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ["https://www.googleapis.com/auth/drive.file"],
+});
+
+const drive = google.drive({ version: "v3", auth });
+
+
+
+export async function createFolder(request: Hapi.Request,h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
+  const {type,name} = request.payload as folderInput;
+  //check if name is it the format of folderType
+  if (type !== folderType.Audios && type !== folderType.Images) {
+    return h.response({ message: "Invalid folder type" }).code(400);
+  }
+  const fileMetadata = {
+    name:name,
+    mimeType: "application/vnd.google-apps.folder",
+  };
+  try {
+    const file = await drive.files.create({
+      requestBody: fileMetadata,
+      fields: "id",
+    });
+    if (!file) {
+      console.log("Failed to create folder");
+      return h.response({ message: "Failed to create folder" }).code(400);
+    }
+
+    const folderId = await executePrismaMethod(prisma, "folder", "create", {
+      data: {
+        folderId: file.data.id,
+        name: name,
+        folderType: type,
+      },select:true
+    });
+    
+    console.log("The folder " + name + " with Unique ID: " + folderId.folderId + " has been created successfully!!");
+
+    return h.response({message: `The folder ${name} with Unique ID: ${folderId.folderId} has been created successfully!!`}).code(201);
+    
+  } catch (error) {
+    console.error("Error creating folder:", error);
+    return h.response("Error creating folder").code(500);
+  }
+}
+
+export async function deleteFolder(
+  request: Hapi.Request,
+  h: Hapi.ResponseToolkit
+) {
+  const { prisma } = request.server.app;
+  const { folderId } = request.params as { folderId: string };
+  try {
+    const deleteFolder = await executePrismaMethod(
+      prisma,
+      "folder",
+      "delete",
+      {
+        where: {
+          folderId: folderId,
+        },
+      }
+    )
+    if (deleteFolder) {
+      const deleteFromGoogle = await drive.files.delete({
+        fileId: folderId,
+      });
+      if (!deleteFromGoogle) {
+        console.log("Failed to delete folder");
+        return h.response({ message: "Failed to delete folder" }).code(400);
+      }
+      return h.response("Folder deleted successfully").code(200);
+    } else {
+      console.log("Failed to delete folder");
+      return h.response({ message: "Failed to delete folder" }).code(400);
+    }
+    
+  } catch (error) {
+    console.error("Error deleting folder:", error);
+    return h.response("Error deleting folder").code(500);
+  }
+}
+
+export async function getAllFolders(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
+  try {
+    const folders = await executePrismaMethod(prisma, "folder", "findMany", {
+      select: {
+        folderId: true,
+        name: true,
+        folderType: true,
+      },
+    });
+    return h.response(folders).code(200);
+  } catch (error) {
+    console.error("Error getting folders:", error);
+    return h.response("Error getting folders").code(500);
+  }
+
+}
+
+
+
+
+
+interface MulterRequest extends Hapi.Request {
+  raw: {
+    req: multer.RequestWithFile;
+    res: multer.Response;
+  };
+  payload: {
+        name: string;
+        description: string;
+        audioFile: any;
+      } | any;
+}
+
+
+async function createAudioFile(
+  file,
+  name: string,
+  description: string,
+  duration: number
+) {
+  try {
+    const prisma = server.app.prisma;
+    const folderInfo = await executePrismaMethod(
+      prisma,
+      "folder",
+      "findFirst",
+      {
+        where: {
+          folderType: folderType.Audios,
+        },
+      }
+    );
+    if (description === undefined || description === null) {
+      description = "No description provided";
+    }
+    if (duration === undefined || duration === null) {
+      duration = 0;
+    }
+    if (!folderInfo) {
+      throw new Error("Audio folder not found");
+    }
+
+    if (!file) {
+      throw new Error("No file uploaded");
+    }
+    const audioName = name + "-" + Date.now();
+    const fileMetadata = {
+      name: audioName,
+      parents: [folderInfo.folderId],
+    };
+
+    const media = {
+      mimeType: file.mimetype,
+      body: fs.createReadStream(file.path),
+    };
+
+    const response = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      fields: "id",
+    });
+
+    if (!response.data.id) {
+      throw new Error("Failed to upload file to Google Drive");
+    }
+
+    // Set the file's sharing permissions to "anyone with the link"
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+
+    // Get the shareable link
+    const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+
+    console.log(
+      `The audio file ${name} with Unique ID: ${response.data.id} has been created successfully!`
+    );
+    const audio = await executePrismaMethod(prisma, "media", "create", {
+      data: {
+        type: MediaType.AUDIO,
+        title: name,
+        description: description,
+        duration: duration,
+        url: shareableLink,
+        postedAt: getCurrentDate(),
+        updatedAt: getCurrentDate(),
+        storageFolder: {
+          connect: {
+            folderId: folderInfo.folderId,
+          },
+        },
+      },
+    });
+    if (!audio) {
+      console.log("Failed to create audio media");
+      throw new Error("Failed to create audio media");
+    }
+    return shareableLink;
+  } catch (error) {
+    console.error("Error uploading file to Google Drive:", error);
+    throw error;
+  }
+}
+export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
+  request: MulterRequest,
+  h
+) => {
+  const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+
+  // Multer middleware processing
+  await new Promise((resolve, reject) => {
+    uploadMiddleware(request.raw.req, request.raw.res, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(null);
+    });
+  });
+
+  const file = request.raw.req.file;
+  const { name, description } = request.payload as {
+    name: string;
+    description: string;
+  };
+
+  if (!file) {
+    return h.response({ error: "No file uploaded" }).code(400);
+  }
+ 
+  try {
+    const filePath = file.path;
+    const duration = await new Promise<number>((resolve, reject) => {
+      ffmpeg.ffprobe(filePath, (err, metadata) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(metadata.format.duration);
+      });
+    });
+
+    // Upload the file to Google Drive
+    const fileDetails = await createAudioFile(file, name, description, duration);
+    // Respond with the file ID from Google Drive
+    return h.response(fileDetails).code(200);
+  } catch (error) {
+    // Remove the file from the 'uploads' directory
+    fs.unlink(file.path, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+      }
+    });
+    return h
+      .response({ error: "Failed to upload file to Google Drive" })
+      .code(500);
+  }
+};
+
+export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
+
+  try{
+      const media = await executePrismaMethod(prisma, "media", "findMany", {
+          where: {
+              type: MediaType.AUDIO
+          },
+          orderBy: {
+              postedAt: "desc"
+          },
+          select:{
+              id: true,
+              uniqueId: true,
+              title: true,
+              description: true,
+              url: true,
+              duration: true,
+              postedAt: true,
+              updatedAt: true
+          }
+
+      });
+      if(!media){
+          console.log("No audio media found");
+          return h.response({message: "No audio media found"}).code(404);
+      }
+      return h.response(media).code(200);
+  }catch(err){
+      console.log(err);
+      return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
+  }
+}
+
+
+

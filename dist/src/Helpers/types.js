@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotificationType = exports.MediaType = void 0;
+exports.folderType = exports.NotificationType = exports.MediaType = void 0;
 var MediaType;
 (function (MediaType) {
     MediaType["VIDEO"] = "Video";
@@ -12,4 +12,9 @@ var NotificationType;
     NotificationType["AUDIO"] = "Audio";
     NotificationType["EVENT"] = "Event";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
+var folderType;
+(function (folderType) {
+    folderType["Audios"] = "Audios";
+    folderType["Images"] = "Images";
+})(folderType || (exports.folderType = folderType = {}));
 //# sourceMappingURL=types.js.map

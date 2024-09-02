@@ -1,4 +1,4 @@
-import { MediaType } from "../Helpers";
+import { MediaType, folderType } from "../Helpers";
 
 export interface MediaInput {
   title: string;
@@ -9,4 +9,9 @@ export interface MediaInput {
   uniqueId : string;
   postedAt: string;
   updatedAt: string;
+}
+
+export interface folderInput{
+  type: folderType;
+  name: string
 }

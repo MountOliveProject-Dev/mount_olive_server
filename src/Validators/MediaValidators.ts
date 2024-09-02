@@ -1,6 +1,23 @@
 import { url } from "inspector";
-import Joi from "joi";
+import Joi, { isSchema } from "joi";
+import {folderType} from "../Helpers";
+import { createFolder } from "../Handlers";
 
+const folderInputValidator = Joi.object(
+  {
+    type: Joi.string().alter({
+      create: (schema) => schema.valid(folderType.Audios, folderType.Images).required(),
+      update: (schema) => schema.valid(folderType.Audios, folderType.Images).optional(),
+    }),
+    name: Joi.string().alter({
+      create: (schema) => schema.required(),
+      update: (schema) => schema.optional(),
+    })
+  }
+);
+
+export const createFolderInputValidator = folderInputValidator.tailor("create");
+export const updateFolderInputValidator = folderInputValidator.tailor("update");
 const mediaInputValidator = Joi.object({
   title: Joi.string().alter({
     create: (schema) => schema.required(),
@@ -62,7 +79,6 @@ export const createVideoMediaInputValidator = videoMediaInputValidator.tailor("c
 export const updateVideoMediaInputValidator = videoMediaInputValidator.tailor("update");
 const audioFileValidator = Joi.object({
   audioFile: Joi.object({
-    hapi: Joi.object({
       filename: Joi.string().required(),
       headers: Joi.object({
         "content-type": Joi.string().valid(
@@ -76,10 +92,11 @@ const audioFileValidator = Joi.object({
             "audio/x-aac"
           ).required(),
       }).required(),
-    }).required(),
-    path: Joi.string().required(),
+      path: Joi.string().required(),
   }).required(),
 });
+
+
 
 export const createAudioFileValidator = audioFileValidator.tailor("create");
 
