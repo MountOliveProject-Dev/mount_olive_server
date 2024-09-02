@@ -241,10 +241,17 @@ async function createFolder(request, h) {
                 folderId: file.data.id,
                 name: name,
                 folderType: type,
-            }, select: true
+            }
         });
-        console.log("The folder " + name + " with Unique ID: " + folderId.folderId + " has been created successfully!!");
-        return h.response({ message: `The folder ${name} with Unique ID: ${folderId.folderId} has been created successfully!!` }).code(201);
+        if (!folderId) {
+            console.log("Failed to create folder");
+        }
+        console.log("The folder " + name + " with Unique ID: " + file.data.id + " has been created successfully!!");
+        return h
+            .response({
+            message: `The folder ${name} with Unique ID: ${file.data.id} has been created successfully!!`,
+        })
+            .code(201);
     }
     catch (error) {
         console.error("Error creating folder:", error);
