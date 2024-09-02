@@ -373,6 +373,19 @@ export async function getAllFolders(request: Hapi.Request, h: Hapi.ResponseToolk
 
 }
 
+export async function getAllFoldersInGoogleDrive(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  try {
+    const folders = await drive.files.list({
+      q: "mimeType='application/vnd.google-apps.folder'",
+      fields: "files(id, name)",
+    });
+    return h.response(folders.data.files).code(200);
+  } catch (error) {
+    console.error("Error getting folders:", error);
+    return h.response("Error getting folders").code(500);
+  }
+}
+
 
 
 

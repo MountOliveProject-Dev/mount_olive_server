@@ -11,6 +11,7 @@ exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 exports.createFolder = createFolder;
 exports.deleteFolder = deleteFolder;
 exports.getAllFolders = getAllFolders;
+exports.getAllFoldersInGoogleDrive = getAllFoldersInGoogleDrive;
 exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 const server_1 = __importDefault(require("../server"));
 const googleapis_1 = require("googleapis");
@@ -298,6 +299,19 @@ async function getAllFolders(request, h) {
             },
         });
         return h.response(folders).code(200);
+    }
+    catch (error) {
+        console.error("Error getting folders:", error);
+        return h.response("Error getting folders").code(500);
+    }
+}
+async function getAllFoldersInGoogleDrive(request, h) {
+    try {
+        const folders = await drive.files.list({
+            q: "mimeType='application/vnd.google-apps.folder'",
+            fields: "files(id, name)",
+        });
+        return h.response(folders.data.files).code(200);
     }
     catch (error) {
         console.error("Error getting folders:", error);

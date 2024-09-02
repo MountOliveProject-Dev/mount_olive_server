@@ -58,6 +58,14 @@ exports.mediaPlugin = {
                 },
             },
             {
+                method: "GET",
+                path: "/api/media/folders-in-drive",
+                handler: Handlers_1.getAllFoldersInGoogleDrive,
+                options: {
+                    auth: false,
+                },
+            },
+            {
                 method: "POST",
                 path: "/api/media/delete-folder/{folderId}",
                 handler: Handlers_1.deleteFolder,

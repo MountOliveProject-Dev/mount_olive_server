@@ -19,6 +19,7 @@ import {
   deleteVideoMediaHandler,
   createAudioMediaHandler,
   listAllAudioMediaHandler,
+  getAllFoldersInGoogleDrive,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -66,6 +67,14 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         method: "GET",
         path: "/api/media/get-all-folders",
         handler: getAllFolders,
+        options: {
+          auth: false,
+        },
+      },
+      {
+        method: "GET",
+        path: "/api/media/folders-in-drive",
+        handler: getAllFoldersInGoogleDrive,
         options: {
           auth: false,
         },
