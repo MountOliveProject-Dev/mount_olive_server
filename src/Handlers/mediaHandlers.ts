@@ -354,7 +354,33 @@ export async function deleteFolder(
     return h.response("Error deleting folder").code(500);
   }
 }
+export async function deleteManyFromGoogleDrive(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 
+  try {
+    const folders = await drive.files.list({
+      q: "mimeType='application/vnd.google-apps.folder'",
+      fields: "files(id, name)",
+    });
+    if (!folders || !folders.data.files) {
+      console.log("No folders found");
+      return h.response({ message: "No folders found" }).code(404);
+    }
+    const folderIds = folders.data.files.map((folder) => folder.id).filter((id): id is string => id !== null && id !== undefined);
+    for (let i = 0; i < folderIds.length; i++) {
+      const deleteFolder = await drive.files.delete({
+        fileId: folderIds[i],
+      });
+      if (!deleteFolder) {
+        console.log("Failed to delete folder");
+        return h.response({ message: "Failed to delete the folder " }).code(400);
+      }
+    }
+    return h.response("All folders deleted successfully").code(200);
+  } catch (error) {
+    console.error("Error deleting folders:", error);
+    return h.response("Error deleting folders").code(500);
+  }
+}
 export async function getAllFolders(request: Hapi.Request, h: Hapi.ResponseToolkit) {
   const { prisma } = request.server.app;
   try {

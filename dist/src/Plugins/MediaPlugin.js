@@ -64,6 +64,13 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                 },
+            }, {
+                method: "GET",
+                path: "/api/media/delete-all-folders-in-drive",
+                handler: Handlers_1.deleteManyFromGoogleDrive,
+                options: {
+                    auth: false,
+                },
             },
             {
                 method: "POST",
