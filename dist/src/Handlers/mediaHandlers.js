@@ -424,6 +424,7 @@ async function createAudioFile(file, name, description, duration) {
 const createAudioMediaHandler = async (request, h) => {
     const { audioFile, name, description } = request.payload;
     const file = audioFile.path;
+    console.log(file, name, description, audioFile);
     try {
         const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
         // Multer middleware processing

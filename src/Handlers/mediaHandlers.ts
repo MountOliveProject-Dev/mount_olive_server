@@ -522,6 +522,7 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
 ) => {
   const { audioFile, name, description } = request.payload as AudioPayload;
   const file = audioFile.path;
+  console.log(file, name, description,audioFile);
   try {
       const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
 
