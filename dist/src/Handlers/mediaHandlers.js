@@ -370,7 +370,7 @@ async function getAllFoldersInGoogleDrive(request, h) {
         return h.response("Error getting folders").code(500);
     }
 }
-async function createAudioFile(file, name, description, duration) {
+async function createAudioFile(file, name, description, duration, mimeType, path) {
     try {
         const prisma = server_1.default.app.prisma;
         const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
@@ -378,12 +378,6 @@ async function createAudioFile(file, name, description, duration) {
                 folderType: Helpers_1.folderType.Audios,
             },
         });
-        if (description === undefined || description === null) {
-            description = "No description provided";
-        }
-        if (duration === undefined || duration === null) {
-            duration = 0;
-        }
         if (!folderInfo) {
             throw new Error("Audio folder not found");
         }
@@ -396,8 +390,8 @@ async function createAudioFile(file, name, description, duration) {
             parents: [folderInfo.folderId],
         };
         const media = {
-            mimeType: file.mimetype,
-            body: fs_1.default.createReadStream(file.path),
+            mimeType: mimeType,
+            body: fs_1.default.createReadStream(path),
         };
         const response = await drive.files.create({
             requestBody: fileMetadata,
@@ -422,8 +416,8 @@ async function createAudioFile(file, name, description, duration) {
             data: {
                 type: Helpers_1.MediaType.AUDIO,
                 title: name,
-                description: description,
-                duration: duration,
+                description: description || "No description provided",
+                duration: duration || 0,
                 url: shareableLink,
                 postedAt: (0, Helpers_1.getCurrentDate)(),
                 updatedAt: (0, Helpers_1.getCurrentDate)(),
@@ -448,6 +442,24 @@ async function createAudioFile(file, name, description, duration) {
 const createAudioMediaHandler = async (request, h) => {
     const { audioFile, name, description } = request.payload;
     try {
+        if (!audioFile) {
+            return h.response({ error: "No file uploaded" }).code(400);
+        }
+        const filename = audioFile.hapi.filename;
+        const mimeType = audioFile.hapi.headers["content-type"];
+        const uploadsDir = path.join(__dirname, "uploads");
+        if (!fs_1.default.existsSync(uploadsDir)) {
+            fs_1.default.mkdirSync(uploadsDir);
+        }
+        const filePath = path.join(uploadsDir, filename);
+        if (filePath && typeof filePath === "string") {
+            // Remove the file from the 'uploads' directory
+            fs_1.default.unlink(filePath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
+            });
+        }
         const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
         // Multer middleware processing
         await new Promise((resolve, reject) => {
@@ -459,24 +471,7 @@ const createAudioMediaHandler = async (request, h) => {
                 console.log("no error yet!");
             });
         });
-        console.log("no error yet!");
-        if (!audioFile) {
-            return h.response({ error: "No file uploaded" }).code(400);
-        }
-        const uploadsDir = path.join(__dirname, "uploads");
-        if (!fs_1.default.existsSync(uploadsDir)) {
-            fs_1.default.mkdirSync(uploadsDir);
-        }
-        const filePath = path.join(uploadsDir, audioFile.originalname);
-        fs_1.default.renameSync(audioFile.path, filePath);
-        if (filePath && typeof filePath === "string") {
-            // Remove the file from the 'uploads' directory
-            fs_1.default.unlink(filePath, (err) => {
-                if (err) {
-                    console.error("Error deleting file:", err);
-                }
-            });
-        }
+        console.log("...file done processing, about to upload to google drive");
         console.log("File written successfully to uploads folder");
         const duration = await new Promise((resolve, reject) => {
             fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {
@@ -488,13 +483,12 @@ const createAudioMediaHandler = async (request, h) => {
         });
         console.log("Duration:", duration);
         // Upload the file to Google Drive
-        const fileDetails = await createAudioFile(audioFile, name, description, duration);
+        const fileDetails = await createAudioFile(audioFile, name, description, duration, mimeType, filePath);
         console.log("File details:", fileDetails);
         // Respond with the file ID from Google Drive
         return h.response(fileDetails).code(200);
     }
     catch (error) {
-        // Remove the file from the 'uploads' directory
         return h
             .response({ error: "Failed to upload file to Google Drive" })
             .code(500);
