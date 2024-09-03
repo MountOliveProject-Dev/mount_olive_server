@@ -422,11 +422,11 @@ async function createAudioFile(file, name, description, duration) {
     }
 }
 const createAudioMediaHandler = async (request, h) => {
-    console.log(request);
     const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
-    console.log(uploadMiddleware);
     // Multer middleware processing
     await new Promise((resolve, reject) => {
+        console.log("request" + request.raw.req);
+        console.log("payload" + request.payload);
         uploadMiddleware(request.raw.req, request.raw.res, (err) => {
             if (err) {
                 return reject(err);
@@ -435,6 +435,7 @@ const createAudioMediaHandler = async (request, h) => {
         });
     });
     const file = request.raw.req.file;
+    console.log("file" + file);
     const { name, description } = request.payload;
     if (!file) {
         return h.response({ error: "No file uploaded" }).code(400);
