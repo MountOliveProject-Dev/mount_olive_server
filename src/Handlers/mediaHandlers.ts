@@ -566,11 +566,16 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     return h.response(fileDetails).code(200);
   } catch (error) {
     // Remove the file from the 'uploads' directory
-    fs.unlink(file, (err) => {
-      if (err) {
-        console.error("Error deleting file:", err);
-      }
-    });
+     if (file && typeof file === "string") {
+       // Remove the file from the 'uploads' directory
+       fs.unlink(file, (err) => {
+         if (err) {
+           console.error("Error deleting file:", err);
+         }
+       });
+     } else {
+       console.error("Invalid file path:", file);
+     }
     return h
       .response({ error: "Failed to upload file to Google Drive" })
       .code(500);

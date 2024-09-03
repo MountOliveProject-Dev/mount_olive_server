@@ -459,11 +459,17 @@ const createAudioMediaHandler = async (request, h) => {
     }
     catch (error) {
         // Remove the file from the 'uploads' directory
-        fs_1.default.unlink(file, (err) => {
-            if (err) {
-                console.error("Error deleting file:", err);
-            }
-        });
+        if (file && typeof file === "string") {
+            // Remove the file from the 'uploads' directory
+            fs_1.default.unlink(file, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
+            });
+        }
+        else {
+            console.error("Invalid file path:", file);
+        }
         return h
             .response({ error: "Failed to upload file to Google Drive" })
             .code(500);
