@@ -416,16 +416,10 @@ export async function getAllFoldersInGoogleDrive(request: Hapi.Request, h: Hapi.
 
 
 
-interface MulterRequest extends Hapi.Request {
-  raw: {
-    req: multer.RequestWithFile;
-    res: multer.Response;
-  };
-  payload: {
-        name: string;
-        description: string;
-        audioFile: any;
-      } | any;
+interface AudioPayload {
+  audioFile: any;
+  name: string;
+  description: string;
 }
 
 
@@ -523,40 +517,35 @@ async function createAudioFile(
   }
 }
 export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
-  request: MulterRequest,
+  request: Hapi.Request,
   h
 ) => {
-
-  const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
-    console.log("request", JSON.stringify(request.raw.req, null, 2));
-    console.log("payload", JSON.stringify(request.payload, null, 2));
-  // Multer middleware processing
-  await new Promise((resolve, reject) => {
-    console.log("no error yet!")
-    uploadMiddleware(request.raw.req, request.raw.res, (err) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(null);
-      console.log("no error yet!")
-    });
-  });
-
-  const file = request.raw.req.file;
-  console.log("no error yet!")
-  const { name, description } = request.payload as {
-    name: string;
-    description: string;
-  };
-
-  if (!file) {
-    return h.response({ error: "No file uploaded" }).code(400);
-  }
- 
+  const { audioFile, name, description } = request.payload as AudioPayload;
+  const file = audioFile.path;
   try {
-    const filePath = file.path;
+      const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+
+      // Multer middleware processing
+      await new Promise((resolve, reject) => {
+        console.log("no error yet!");
+        uploadMiddleware(request, h, (err) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(null);
+          console.log("no error yet!");
+        });
+      });
+
+      
+      console.log("no error yet!");
+
+      if (!audioFile) {
+        return h.response({ error: "No file uploaded" }).code(400);
+      }
+    
     const duration = await new Promise<number>((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (err, metadata) => {
+      ffmpeg.ffprobe(file, (err, metadata) => {
         if (err) {
           return reject(err);
         }
@@ -565,13 +554,18 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     });
     console.log("Duration:", duration);
     // Upload the file to Google Drive
-    const fileDetails = await createAudioFile(file, name, description, duration);
+    const fileDetails = await createAudioFile(
+      audioFile,
+      name,
+      description,
+      duration
+    );
     console.log("File details:", fileDetails);
     // Respond with the file ID from Google Drive
     return h.response(fileDetails).code(200);
   } catch (error) {
     // Remove the file from the 'uploads' directory
-    fs.unlink(file.path, (err) => {
+    fs.unlink(file, (err) => {
       if (err) {
         console.error("Error deleting file:", err);
       }

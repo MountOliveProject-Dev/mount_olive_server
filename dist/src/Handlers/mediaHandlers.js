@@ -422,30 +422,27 @@ async function createAudioFile(file, name, description, duration) {
     }
 }
 const createAudioMediaHandler = async (request, h) => {
-    const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
-    console.log("request", JSON.stringify(request.raw.req, null, 2));
-    console.log("payload", JSON.stringify(request.payload, null, 2));
-    // Multer middleware processing
-    await new Promise((resolve, reject) => {
-        console.log("no error yet!");
-        uploadMiddleware(request.raw.req, request.raw.res, (err) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(null);
-            console.log("no error yet!");
-        });
-    });
-    const file = request.raw.req.file;
-    console.log("no error yet!");
-    const { name, description } = request.payload;
-    if (!file) {
-        return h.response({ error: "No file uploaded" }).code(400);
-    }
+    const { audioFile, name, description } = request.payload;
+    const file = audioFile.path;
     try {
-        const filePath = file.path;
+        const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+        // Multer middleware processing
+        await new Promise((resolve, reject) => {
+            console.log("no error yet!");
+            uploadMiddleware(request, h, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(null);
+                console.log("no error yet!");
+            });
+        });
+        console.log("no error yet!");
+        if (!audioFile) {
+            return h.response({ error: "No file uploaded" }).code(400);
+        }
         const duration = await new Promise((resolve, reject) => {
-            fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {
+            fluent_ffmpeg_1.default.ffprobe(file, (err, metadata) => {
                 if (err) {
                     return reject(err);
                 }
@@ -454,14 +451,14 @@ const createAudioMediaHandler = async (request, h) => {
         });
         console.log("Duration:", duration);
         // Upload the file to Google Drive
-        const fileDetails = await createAudioFile(file, name, description, duration);
+        const fileDetails = await createAudioFile(audioFile, name, description, duration);
         console.log("File details:", fileDetails);
         // Respond with the file ID from Google Drive
         return h.response(fileDetails).code(200);
     }
     catch (error) {
         // Remove the file from the 'uploads' directory
-        fs_1.default.unlink(file.path, (err) => {
+        fs_1.default.unlink(file, (err) => {
             if (err) {
                 console.error("Error deleting file:", err);
             }
