@@ -549,7 +549,16 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   const { name, description } = request.payload as AudioPayload;
   console.log("...about to upload file to google drive");
   try {
-    await uploadMiddleware(request, h);
+    const startTime = Date.now();
+    const middleware = await uploadMiddleware(request, h);
+    console.log("middleware", middleware);
+    if(!middleware){
+      return h.response({ error: "Failed to upload file to Google Drive, middleware" }).code(500);
+    }
+      
+    const endTime = Date.now();
+    console.log(`uploadMiddleware completed in ${endTime - startTime}ms`);
+
     console.log("...file uploaded to server");
     const audioFile = (request.raw.req as any).file;
     console.log("Audio file:", audioFile);

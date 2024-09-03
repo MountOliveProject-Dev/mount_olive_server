@@ -38,7 +38,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
           payload: {
             output: "stream",
             parse: true,
-            timeout: 120000,
+            timeout: 3000000,
             multipart: true,
             maxBytes: 104857600000, // Limit to 100MB
           },
@@ -80,7 +80,8 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
         },
-      },{
+      },
+      {
         method: "GET",
         path: "/api/media/delete-all-folders-in-drive",
         handler: deleteManyFromGoogleDrive,

@@ -23,7 +23,7 @@ exports.mediaPlugin = {
                     payload: {
                         output: "stream",
                         parse: true,
-                        timeout: 120000,
+                        timeout: 3000000,
                         multipart: true,
                         maxBytes: 104857600000, // Limit to 100MB
                     },
@@ -65,7 +65,8 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                 },
-            }, {
+            },
+            {
                 method: "GET",
                 path: "/api/media/delete-all-folders-in-drive",
                 handler: Handlers_1.deleteManyFromGoogleDrive,
