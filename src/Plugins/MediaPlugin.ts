@@ -38,8 +38,9 @@ export const mediaPlugin: Hapi.Plugin<void> = {
           payload: {
             output: "stream",
             parse: true,
+            timeout: 120000,
             multipart: true,
-            maxBytes: 104857600, // Limit to 100MB
+            maxBytes: 104857600000, // Limit to 100MB
           },
           validate: {
             payload: Joi.object({
