@@ -17,7 +17,7 @@ exports.mediaPlugin = {
             {
                 method: "POST",
                 path: "/upload-audio",
-                handler: Handlers_1.createAudioMediaHandler,
+                handler: Handlers_1.storeAudioFileHandler,
                 options: {
                     auth: false,
                     payload: {
@@ -29,14 +29,40 @@ exports.mediaPlugin = {
                     },
                     validate: {
                         payload: joi_1.default.object({
-                            name: joi_1.default.string().required().label("Name"),
-                            description: joi_1.default.string().optional().label("Description"),
                             audioFile: joi_1.default.any()
                                 .required()
                                 .meta({ swaggerType: "file" })
                                 .label("Audio File"),
                         }),
                         failAction: (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            },
+            {
+                method: "POST",
+                path: "/api/media/create-audio-media",
+                handler: Handlers_1.pushAudioToDriveHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: MediaValidators_1.createAudioFileValidator,
+                        failAction: async (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            },
+            {
+                method: "POST",
+                path: "/api/media/update-audio",
+                handler: Handlers_1.updateVideoMediaHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: MediaValidators_1.updateAudioFileValidator,
+                        failAction: async (request, h, err) => {
                             throw err;
                         },
                     },

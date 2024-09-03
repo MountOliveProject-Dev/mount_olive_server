@@ -7,6 +7,7 @@ import {
   updateVideoMediaInputValidator,
   createVideoMediaInputValidator,
   createAudioFileValidator,
+  updateAudioFileValidator,
   createFolderInputValidator,
 } from "../Validators/MediaValidators";
 import {
@@ -17,10 +18,11 @@ import {
   listAllVideoMediaHandler,
   updateVideoMediaHandler,
   deleteVideoMediaHandler,
-  createAudioMediaHandler,
+  storeAudioFileHandler,
   listAllAudioMediaHandler,
   getAllFoldersInGoogleDrive,
   deleteManyFromGoogleDrive,
+  pushAudioToDriveHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -32,7 +34,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       {
         method: "POST",
         path: "/upload-audio",
-        handler: createAudioMediaHandler,
+        handler: storeAudioFileHandler,
         options: {
           auth: false,
           payload: {
@@ -44,14 +46,40 @@ export const mediaPlugin: Hapi.Plugin<void> = {
           },
           validate: {
             payload: Joi.object({
-              name: Joi.string().required().label("Name"),
-              description: Joi.string().optional().label("Description"),
               audioFile: Joi.any()
                 .required()
                 .meta({ swaggerType: "file" })
                 .label("Audio File"),
             }),
             failAction: (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/media/create-audio-media",
+        handler: pushAudioToDriveHandler,
+        options: {
+          auth: false,
+          validate: {
+            payload: createAudioFileValidator,
+            failAction: async (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/media/update-audio",
+        handler: updateVideoMediaHandler,
+        options: {
+          auth: false,
+          validate: {
+            payload: updateAudioFileValidator,
+            failAction: async (request, h, err) => {
               throw err;
             },
           },

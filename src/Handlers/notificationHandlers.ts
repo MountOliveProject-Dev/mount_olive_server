@@ -215,7 +215,6 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
         return message;
     }
 }
-
 //update event notification
 export const updateEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string,title: string,description: string,read: boolean) => {
   const { prisma } = server.app;
@@ -263,9 +262,7 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
     return {code,message};
   }
 };
-
 //delete event notification
-
 export const deleteEventNotificationHandler = async (notificationId : number, eventId: string,specialKey: string) => {
   const { prisma } = server.app;
   try {
@@ -325,6 +322,7 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
     return message;
   }
 };
+
 //create media notification
 
 export const createMediaNotificationHandler = async (mediaId: string, specialKey: string,title: string, description: string, read: boolean, type: NotificationType) => {
@@ -382,7 +380,6 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
         return message;
     }
 }
-
 
 //update media notification
 

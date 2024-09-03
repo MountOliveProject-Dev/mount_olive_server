@@ -33,6 +33,7 @@
     "audio-metadata": "^0.3.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
+    "get-audio-duration": "^4.0.1",
     "googleapis": "^110.0.0",
     "hapi-graceful-pm2": "^1.0.17",
     "joi": "^17.13.1",

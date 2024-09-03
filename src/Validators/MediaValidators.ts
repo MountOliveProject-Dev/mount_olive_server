@@ -78,26 +78,30 @@ const videoMediaInputValidator = Joi.object({
 export const createVideoMediaInputValidator = videoMediaInputValidator.tailor("create");
 export const updateVideoMediaInputValidator = videoMediaInputValidator.tailor("update");
 const audioFileValidator = Joi.object({
-  audioFile: Joi.object({
-      filename: Joi.string().required(),
-      headers: Joi.object({
-        "content-type": Joi.string().valid(
-            "audio/mpeg",
-            "audio/wav",
-            "audio/x-wav",
-            "audio/vnd.wave",
-            "audio/ogg",
-            "audio/flac",
-            "audio/aac",
-            "audio/x-aac"
-          ).required(),
-      }).required(),
-      path: Joi.string().required(),
-  }).required(),
+  name: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.required(),
+  }),
+  description: Joi.string().alter({
+    create: (schema) => schema.optional(),
+    update: (schema) => schema.optional(),
+  }),
+  filePath: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.required(),
+  }),
+  mimeType: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.required(),
+  }),
+  uniqueId: Joi.string().alter({
+    create: (schema) => schema.forbidden(),
+    update: (schema) => schema.required(),
+  }),
 });
 
 
-
 export const createAudioFileValidator = audioFileValidator.tailor("create");
+export const updateAudioFileValidator = audioFileValidator.tailor("update");
 
 
