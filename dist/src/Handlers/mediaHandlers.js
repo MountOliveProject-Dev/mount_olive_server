@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,6 +40,7 @@ exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 const server_1 = __importDefault(require("../server"));
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
+const path = __importStar(require("path"));
 const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const Helpers_1 = require("../Helpers");
@@ -423,8 +447,7 @@ async function createAudioFile(file, name, description, duration) {
 }
 const createAudioMediaHandler = async (request, h) => {
     const { audioFile, name, description } = request.payload;
-    const file = audioFile.path;
-    console.log(file, name, description, audioFile);
+    console.log(name, description, audioFile);
     try {
         const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
         // Multer middleware processing
@@ -442,8 +465,23 @@ const createAudioMediaHandler = async (request, h) => {
         if (!audioFile) {
             return h.response({ error: "No file uploaded" }).code(400);
         }
+        const uploadsDir = path.join(__dirname, "uploads");
+        if (!fs_1.default.existsSync(uploadsDir)) {
+            fs_1.default.mkdirSync(uploadsDir);
+        }
+        const filePath = path.join(uploadsDir, audioFile.originalname);
+        fs_1.default.renameSync(audioFile.path, filePath);
+        if (filePath && typeof filePath === "string") {
+            // Remove the file from the 'uploads' directory
+            fs_1.default.unlink(filePath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
+            });
+        }
+        console.log("File written successfully to uploads folder");
         const duration = await new Promise((resolve, reject) => {
-            fluent_ffmpeg_1.default.ffprobe(file, (err, metadata) => {
+            fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {
                 if (err) {
                     return reject(err);
                 }
@@ -459,17 +497,6 @@ const createAudioMediaHandler = async (request, h) => {
     }
     catch (error) {
         // Remove the file from the 'uploads' directory
-        if (file && typeof file === "string") {
-            // Remove the file from the 'uploads' directory
-            fs_1.default.unlink(file, (err) => {
-                if (err) {
-                    console.error("Error deleting file:", err);
-                }
-            });
-        }
-        else {
-            console.error("Invalid file path:", file);
-        }
         return h
             .response({ error: "Failed to upload file to Google Drive" })
             .code(500);

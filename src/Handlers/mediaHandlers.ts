@@ -2,6 +2,7 @@ import Hapi from "@hapi/hapi";
 import  server from "../server";
 import { google } from "googleapis";
 import fs from "fs";
+import * as path from "path";
 import ffmpeg from "fluent-ffmpeg";
 import dotenv from "dotenv";
 import {
@@ -521,9 +522,9 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   h
 ) => {
   const { audioFile, name, description } = request.payload as AudioPayload;
-  const file = audioFile.path;
-  console.log(file, name, description,audioFile);
+  console.log( name, description,audioFile);
   try {
+      
       const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
 
       // Multer middleware processing
@@ -545,8 +546,24 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
         return h.response({ error: "No file uploaded" }).code(400);
       }
     
+    const uploadsDir = path.join(__dirname, "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir);
+      }
+
+    const filePath = path.join(uploadsDir, audioFile.originalname);
+    fs.renameSync(audioFile.path, filePath);
+    if (filePath && typeof filePath === "string") {
+      // Remove the file from the 'uploads' directory
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error("Error deleting file:", err);
+        }
+      });
+    } 
+    console.log("File written successfully to uploads folder");
     const duration = await new Promise<number>((resolve, reject) => {
-      ffmpeg.ffprobe(file, (err, metadata) => {
+      ffmpeg.ffprobe(filePath, (err, metadata) => {
         if (err) {
           return reject(err);
         }
@@ -566,16 +583,7 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     return h.response(fileDetails).code(200);
   } catch (error) {
     // Remove the file from the 'uploads' directory
-     if (file && typeof file === "string") {
-       // Remove the file from the 'uploads' directory
-       fs.unlink(file, (err) => {
-         if (err) {
-           console.error("Error deleting file:", err);
-         }
-       });
-     } else {
-       console.error("Invalid file path:", file);
-     }
+     
     return h
       .response({ error: "Failed to upload file to Google Drive" })
       .code(500);
