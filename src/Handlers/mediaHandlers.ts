@@ -3,7 +3,7 @@ import  server from "../server";
 import { google } from "googleapis";
 import fs from "fs";
 import * as path from "path";
-import ffmpeg from "fluent-ffmpeg";
+import * as mm from "music-metadata";
 import dotenv from "dotenv";
 import {
   executePrismaMethod,
@@ -13,7 +13,6 @@ import {
   folderType,
 } from "../Helpers";
 
-import multer from "multer";
 import { MediaInput, folderInput } from "../Interfaces";
 import {
   createMediaNotificationHandler,
@@ -543,6 +542,9 @@ async function createAudioFile(
     throw error;
   }
 }
+
+
+
 export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
@@ -585,14 +587,9 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
 
     console.log("...file done processing, about to upload to google drive");
 
-    const duration = await new Promise<number>((resolve, reject) => {
-      ffmpeg.ffprobe(filePath, (err, metadata) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(metadata.format.duration);
-      });
-    });
+    // Use music-metadata to get the duration
+    const metadata = await mm.parseFile(filePath);
+    const duration = metadata.format.duration || 0;
     console.log("Duration:", duration);
 
     // Upload the file to Google Drive
@@ -624,6 +621,7 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
       .code(500);
   }
 };
+
 
 
 export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {

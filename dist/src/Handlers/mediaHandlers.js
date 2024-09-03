@@ -41,7 +41,7 @@ const server_1 = __importDefault(require("../server"));
 const googleapis_1 = require("googleapis");
 const fs_1 = __importDefault(require("fs"));
 const path = __importStar(require("path"));
-const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
+const mm = __importStar(require("music-metadata"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
@@ -496,14 +496,9 @@ const createAudioMediaHandler = async (request, h) => {
             });
         });
         console.log("...file done processing, about to upload to google drive");
-        const duration = await new Promise((resolve, reject) => {
-            fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(metadata.format.duration);
-            });
-        });
+        // Use music-metadata to get the duration
+        const metadata = await mm.parseFile(filePath);
+        const duration = metadata.format.duration || 0;
         console.log("Duration:", duration);
         // Upload the file to Google Drive
         const fileDetails = await createAudioFile(audioFile, name, description, duration, mimeType, filePath);
