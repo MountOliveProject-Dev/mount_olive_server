@@ -44,7 +44,6 @@ const path = __importStar(require("path"));
 const fluent_ffmpeg_1 = __importDefault(require("fluent-ffmpeg"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const Helpers_1 = require("../Helpers");
-const multer_1 = __importDefault(require("multer"));
 const notificationHandlers_1 = require("./notificationHandlers");
 dotenv_1.default.config();
 async function createVideoMediaHandler(request, h) {
@@ -241,35 +240,35 @@ const auth = new googleapis_1.google.auth.GoogleAuth({
     scopes: ["https://www.googleapis.com/auth/drive.file"],
 });
 const drive = googleapis_1.google.drive({ version: "v3", auth });
-const storage = multer_1.default.memoryStorage();
-const fileFilter = (req, file, cb) => {
-    // Validate file type
-    const allowedTypes = ["audio/mpeg", "audio/mp3"];
-    if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error("Invalid file type"), false);
-    }
-    cb(null, true);
-};
-const upload = (0, multer_1.default)({
-    storage,
-    // 1 GB file size limit
-    limits: {
-        fileSize: 1024 * 1024 * 1024,
-    },
-    fileFilter,
-}).single("audioFile");
-const uploadMiddleware = (request, h) => {
-    return new Promise((resolve, reject) => {
-        upload(request.raw.req, request.raw.res, (err) => {
-            if (err) {
-                console.error("File upload failed:", err);
-                return reject(new Error("Multer error: " + err.message));
-            }
-            console.log("File uploaded successfully!");
-            resolve(true);
-        });
-    });
-};
+// const storage = multer.memoryStorage();
+// const fileFilter = (req: any, file: any, cb: any) => {
+//   // Validate file type
+//   const allowedTypes = ["audio/mpeg", "audio/mp3"];
+//   if (!allowedTypes.includes(file.mimetype)) {
+//     return cb(new Error("Invalid file type"), false);
+//   }
+//   cb(null, true);
+// };
+// const upload = multer({
+//   storage,
+//  // 1 GB file size limit
+//   limits: {
+//     fileSize: 1024 * 1024 * 1024,
+//   },
+//   fileFilter,
+// }).single("audioFile");
+// const uploadMiddleware = (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+//   return new Promise((resolve, reject) => {
+//     upload(request.raw.req, request.raw.res, (err: any) => {
+//       if (err) {
+//         console.error("File upload failed:", err);
+//         return reject(new Error("Multer error: " + err.message));
+//       }
+//       console.log("File uploaded successfully!");
+//       resolve(true);
+//     });
+//   });
+// };
 async function createFolder(request, h) {
     const { prisma } = request.server.app;
     const { type, name } = request.payload;
@@ -468,27 +467,14 @@ async function createAudioFile(file, name, description, duration, mimeType, path
     }
 }
 const createAudioMediaHandler = async (request, h) => {
-    console.log(request);
-    console.log(request.raw.req);
-    const { name, description } = request.payload;
+    const { audioFile, name, description } = request.payload;
     console.log("...about to upload file to google drive");
     try {
-        const startTime = Date.now();
-        const middleware = await uploadMiddleware(request, h);
-        console.log("middleware", middleware);
-        if (!middleware) {
-            return h.response({ error: "Failed to upload file to Google Drive, middleware" }).code(500);
-        }
-        const endTime = Date.now();
-        console.log(`uploadMiddleware completed in ${endTime - startTime}ms`);
-        console.log("...file uploaded to server");
-        const audioFile = request.raw.req.file;
-        console.log("Audio file:", audioFile);
         if (!audioFile) {
             return h.response({ error: "No file uploaded" }).code(400);
         }
         const filename = audioFile.originalname;
-        const mimeType = audioFile.mimetype;
+        const mimeType = audioFile.hapi.headers["content-type"];
         console.log("File name:", filename);
         const uploadsDir = path.join(__dirname, "uploads");
         if (!fs_1.default.existsSync(uploadsDir)) {
@@ -496,21 +482,9 @@ const createAudioMediaHandler = async (request, h) => {
         }
         const filePath = path.join(uploadsDir, filename);
         console.log("File path:", filePath);
-        // const fileStream = fs.createWriteStream(filePath);
-        // audioFile.pipe(fileStream);
-        fs_1.default.writeFileSync(filePath, audioFile.buffer);
-        // Multer middleware processing
-        // await new Promise((resolve, reject) => {
-        //   fileStream.on("finish", resolve);
-        //   fileStream.on("error", reject);
-        //   // uploadMiddleware(request, h, (err) => {
-        //   //   if (err) {
-        //   //     return reject("multer error" + err);
-        //   //   }
-        //   //   resolve(null);
-        //   //   console.log("no error yet!");
-        //   // });
-        // });
+        const fileStream = fs_1.default.createWriteStream(filePath);
+        audioFile.pipe(fileStream);
+        console.log("...file uploaded to server");
         console.log("...file done processing, about to upload to google drive");
         const duration = await new Promise((resolve, reject) => {
             fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {

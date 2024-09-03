@@ -270,37 +270,37 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: "v3", auth });
 
-const storage = multer.memoryStorage();
-const fileFilter = (req: any, file: any, cb: any) => {
-  // Validate file type
-  const allowedTypes = ["audio/mpeg", "audio/mp3"];
-  if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new Error("Invalid file type"), false);
-  }
-  cb(null, true);
-};
+// const storage = multer.memoryStorage();
+// const fileFilter = (req: any, file: any, cb: any) => {
+//   // Validate file type
+//   const allowedTypes = ["audio/mpeg", "audio/mp3"];
+//   if (!allowedTypes.includes(file.mimetype)) {
+//     return cb(new Error("Invalid file type"), false);
+//   }
+//   cb(null, true);
+// };
 
-const upload = multer({
-  storage,
- // 1 GB file size limit
-  limits: {
-    fileSize: 1024 * 1024 * 1024,
-  },
-  fileFilter,
-}).single("audioFile");
+// const upload = multer({
+//   storage,
+//  // 1 GB file size limit
+//   limits: {
+//     fileSize: 1024 * 1024 * 1024,
+//   },
+//   fileFilter,
+// }).single("audioFile");
 
-const uploadMiddleware = (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
-  return new Promise((resolve, reject) => {
-    upload(request.raw.req, request.raw.res, (err: any) => {
-      if (err) {
-        console.error("File upload failed:", err);
-        return reject(new Error("Multer error: " + err.message));
-      }
-      console.log("File uploaded successfully!");
-      resolve(true);
-    });
-  });
-};
+// const uploadMiddleware = (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
+//   return new Promise((resolve, reject) => {
+//     upload(request.raw.req, request.raw.res, (err: any) => {
+//       if (err) {
+//         console.error("File upload failed:", err);
+//         return reject(new Error("Multer error: " + err.message));
+//       }
+//       console.log("File uploaded successfully!");
+//       resolve(true);
+//     });
+//   });
+// };
 
 export async function createFolder(request: Hapi.Request,h: Hapi.ResponseToolkit) {
   const { prisma } = request.server.app;
@@ -447,7 +447,7 @@ export async function getAllFoldersInGoogleDrive(request: Hapi.Request, h: Hapi.
 
 
 interface AudioPayload {
-  // audioFile: any;
+  audioFile: any;
   name: string;
   description: string;
 }
@@ -547,32 +547,20 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) => {
-  console.log(request)
-  console.log(request.raw.req)
-  const { name, description } = request.payload as AudioPayload;
+
+  const {audioFile, name, description } = request.payload as AudioPayload;
   console.log("...about to upload file to google drive");
   try {
-    const startTime = Date.now();
-    const middleware = await uploadMiddleware(request, h);
-    console.log("middleware", middleware);
-    if(!middleware){
-      return h.response({ error: "Failed to upload file to Google Drive, middleware" }).code(500);
-    }
-      
-    const endTime = Date.now();
-    console.log(`uploadMiddleware completed in ${endTime - startTime}ms`);
-
-    console.log("...file uploaded to server");
-    const audioFile = (request.raw.req as any).file;
-    console.log("Audio file:", audioFile);
+   
     if (!audioFile) {
       return h.response({ error: "No file uploaded" }).code(400);
     }
 
 
     const filename = audioFile.originalname;
-    const mimeType = audioFile.mimetype;
+    const mimeType = audioFile.hapi.headers["content-type"];
     console.log("File name:", filename);
+
     const uploadsDir = path.join(__dirname, "uploads");
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir);
@@ -581,22 +569,9 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
 
     const filePath = path.join(uploadsDir, filename);
     console.log("File path:", filePath);
-    // const fileStream = fs.createWriteStream(filePath);
-    // audioFile.pipe(fileStream);
-    fs.writeFileSync(filePath, audioFile.buffer);
-    // Multer middleware processing
-    // await new Promise((resolve, reject) => {
-    //   fileStream.on("finish", resolve);
-    //   fileStream.on("error", reject);
-    //   // uploadMiddleware(request, h, (err) => {
-    //   //   if (err) {
-    //   //     return reject("multer error" + err);
-    //   //   }
-    //   //   resolve(null);
-    //   //   console.log("no error yet!");
-    //   // });
-    // });
-
+    const fileStream = fs.createWriteStream(filePath);
+    audioFile.pipe(fileStream);
+    console.log("...file uploaded to server");
     console.log("...file done processing, about to upload to google drive");
 
     
