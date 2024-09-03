@@ -445,6 +445,7 @@ const createAudioMediaHandler = async (request, h) => {
         if (!audioFile) {
             return h.response({ error: "No file uploaded" }).code(400);
         }
+        const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
         const filename = audioFile.hapi.filename;
         const mimeType = audioFile.hapi.headers["content-type"];
         const uploadsDir = path.join(__dirname, "uploads");
@@ -452,24 +453,19 @@ const createAudioMediaHandler = async (request, h) => {
             fs_1.default.mkdirSync(uploadsDir);
         }
         const filePath = path.join(uploadsDir, filename);
-        if (filePath && typeof filePath === "string") {
-            // Remove the file from the 'uploads' directory
-            fs_1.default.unlink(filePath, (err) => {
-                if (err) {
-                    console.error("Error deleting file:", err);
-                }
-            });
-        }
-        const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+        const fileStream = fs_1.default.createWriteStream(filePath);
+        audioFile.pipe(fileStream);
         // Multer middleware processing
         await new Promise((resolve, reject) => {
-            uploadMiddleware(request, h, (err) => {
-                if (err) {
-                    return reject("multer error" + err);
-                }
-                resolve(null);
-                console.log("no error yet!");
-            });
+            fileStream.on("finish", resolve);
+            fileStream.on("error", reject);
+            // uploadMiddleware(request, h, (err) => {
+            //   if (err) {
+            //     return reject("multer error" + err);
+            //   }
+            //   resolve(null);
+            //   console.log("no error yet!");
+            // });
         });
         console.log("...file done processing, about to upload to google drive");
         console.log("File written successfully to uploads folder");
@@ -486,6 +482,14 @@ const createAudioMediaHandler = async (request, h) => {
         const fileDetails = await createAudioFile(audioFile, name, description, duration, mimeType, filePath);
         console.log("File details:", fileDetails);
         // Respond with the file ID from Google Drive
+        if (filePath && typeof filePath === "string") {
+            // Remove the file from the 'uploads' directory
+            fs_1.default.unlink(filePath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                }
+            });
+        }
         return h.response(fileDetails).code(200);
     }
     catch (error) {

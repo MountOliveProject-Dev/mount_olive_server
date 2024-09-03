@@ -516,50 +516,43 @@ async function createAudioFile(
 }
 export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
-  h
+  h: Hapi.ResponseToolkit
 ) => {
   const { audioFile, name, description } = request.payload as AudioPayload;
 
   try {
-       
-        if (!audioFile) {
-          return h.response({ error: "No file uploaded" }).code(400);
-        }
-        const filename = audioFile.hapi.filename;
-        const mimeType = audioFile.hapi.headers["content-type"];
+    if (!audioFile) {
+      return h.response({ error: "No file uploaded" }).code(400);
+    }
+    const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
 
-        const uploadsDir = path.join(__dirname, "uploads");
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir);
-        }
-        const filePath = path.join(uploadsDir, filename);
+    const filename = audioFile.hapi.filename;
+    const mimeType = audioFile.hapi.headers["content-type"];
 
-        if (filePath && typeof filePath === "string") {
-          // Remove the file from the 'uploads' directory
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              console.error("Error deleting file:", err);
-            }
-          });
-        } 
-      const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir);
+    }
 
-      // Multer middleware processing
-      await new Promise((resolve, reject) => {
+    const filePath = path.join(uploadsDir, filename);
+    const fileStream = fs.createWriteStream(filePath);
+    audioFile.pipe(fileStream);
 
-        uploadMiddleware(request, h, (err) => {
-          if (err) {
-            return reject("multer error"+err);
-          }
-          resolve(null);
-          console.log("no error yet!");
-        });
-      });
+    // Multer middleware processing
+    await new Promise((resolve, reject) => {
+      fileStream.on("finish", resolve);
+      fileStream.on("error", reject);
+      // uploadMiddleware(request, h, (err) => {
+      //   if (err) {
+      //     return reject("multer error" + err);
+      //   }
+      //   resolve(null);
+      //   console.log("no error yet!");
+      // });
+    });
 
-      
-      console.log("...file done processing, about to upload to google drive");
+    console.log("...file done processing, about to upload to google drive");
 
-     
     console.log("File written successfully to uploads folder");
     const duration = await new Promise<number>((resolve, reject) => {
       ffmpeg.ffprobe(filePath, (err, metadata) => {
@@ -581,8 +574,16 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     );
     console.log("File details:", fileDetails);
     // Respond with the file ID from Google Drive
+    if (filePath && typeof filePath === "string") {
+      // Remove the file from the 'uploads' directory
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error("Error deleting file:", err);
+        }
+      });
+    }
     return h.response(fileDetails).code(200);
-  } catch (error) { 
+  } catch (error) {
     return h
       .response({ error: "Failed to upload file to Google Drive" })
       .code(500);
