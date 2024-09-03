@@ -528,21 +528,22 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
 ) => {
 
   const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
-
+    console.log("request", JSON.stringify(request.raw.req, null, 2));
+    console.log("payload", JSON.stringify(request.payload, null, 2));
   // Multer middleware processing
   await new Promise((resolve, reject) => {
-    console.log("request"+request.raw.req)
-    console.log("payload"+request.payload)
+    console.log("no error yet!")
     uploadMiddleware(request.raw.req, request.raw.res, (err) => {
       if (err) {
         return reject(err);
       }
       resolve(null);
+      console.log("no error yet!")
     });
   });
 
   const file = request.raw.req.file;
-  console.log("file"+file)
+  console.log("no error yet!")
   const { name, description } = request.payload as {
     name: string;
     description: string;
@@ -562,9 +563,10 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
         resolve(metadata.format.duration);
       });
     });
-
+    console.log("Duration:", duration);
     // Upload the file to Google Drive
     const fileDetails = await createAudioFile(file, name, description, duration);
+    console.log("File details:", fileDetails);
     // Respond with the file ID from Google Drive
     return h.response(fileDetails).code(200);
   } catch (error) {
