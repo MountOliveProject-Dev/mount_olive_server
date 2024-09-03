@@ -588,9 +588,9 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     console.log("...file done processing, about to upload to google drive");
 
     // Use music-metadata to get the duration
-   const buffer = fs.readFileSync(filePath);
-   const metadata = audioMetadata.parse(buffer, mimeType);
-    const duration = metadata.format.duration || 0;
+  //  const buffer = fs.readFileSync(filePath);
+  //  const metadata = audioMetadata.parse(buffer, mimeType);
+    const duration =  0;
     console.log("Duration:", duration);
 
     // Upload the file to Google Drive
