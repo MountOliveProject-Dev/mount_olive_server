@@ -547,34 +547,44 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) => {
-
-  const {audioFile, name, description } = request.payload as AudioPayload;
+  const { audioFile, name, description } = request.payload as AudioPayload;
   console.log("...about to upload file to google drive");
+
+  if (!audioFile) {
+    return h.response({ error: "No file uploaded" }).code(400);
+  }
+
+  const filename = audioFile.hapi.filename;
+  const mimeType = audioFile.hapi.headers["content-type"];
+  console.log("File name:", filename);
+
+  const uploadsDir = path.join(__dirname, "uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+  }
+
+  const filePath = path.join(uploadsDir, filename);
+  console.log("File path:", filePath);
+
   try {
-   
-    if (!audioFile) {
-      return h.response({ error: "No file uploaded" }).code(400);
-    }
+    // Wrap file writing in a promise to wait until it's fully completed
+    await new Promise<void>((resolve, reject) => {
+      const fileStream = fs.createWriteStream(filePath);
+      audioFile.pipe(fileStream);
 
+      fileStream.on("error", (err) => {
+        console.error("Error writing file:", err);
+        reject(err);
+      });
 
-    const filename = audioFile.hapi.filename;
-    const mimeType = audioFile.hapi.headers["content-type"];
-    console.log("File name:", filename);
+      fileStream.on("finish", () => {
+        console.log("...file uploaded to server");
+        resolve();
+      });
+    });
 
-    const uploadsDir = path.join(__dirname, "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir);
-    }
-
-
-    const filePath = path.join(uploadsDir, filename);
-    console.log("File path:", filePath);
-    const fileStream = fs.createWriteStream(filePath);
-    audioFile.pipe(fileStream);
-    console.log("...file uploaded to server");
     console.log("...file done processing, about to upload to google drive");
 
-    
     const duration = await new Promise<number>((resolve, reject) => {
       ffmpeg.ffprobe(filePath, (err, metadata) => {
         if (err) {
@@ -584,6 +594,7 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
       });
     });
     console.log("Duration:", duration);
+
     // Upload the file to Google Drive
     const fileDetails = await createAudioFile(
       audioFile,
@@ -594,23 +605,26 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
       filePath
     );
     console.log("File details:", fileDetails);
-    // Respond with the file ID from Google Drive
+
+    // Remove the file from the 'uploads' directory after processing
     if (filePath && typeof filePath === "string") {
-      // Remove the file from the 'uploads' directory
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error("Error deleting file:", err);
         }
       });
     }
+
     console.log("File written successfully to uploads folder");
     return h.response(fileDetails).code(200);
   } catch (error) {
+    console.error("Error during file processing:", error);
     return h
       .response({ error: "Failed to upload file to Google Drive" })
       .code(500);
   }
 };
+
 
 export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
   const { prisma } = request.server.app;

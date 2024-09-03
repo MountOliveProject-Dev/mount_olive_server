@@ -469,22 +469,32 @@ async function createAudioFile(file, name, description, duration, mimeType, path
 const createAudioMediaHandler = async (request, h) => {
     const { audioFile, name, description } = request.payload;
     console.log("...about to upload file to google drive");
+    if (!audioFile) {
+        return h.response({ error: "No file uploaded" }).code(400);
+    }
+    const filename = audioFile.hapi.filename;
+    const mimeType = audioFile.hapi.headers["content-type"];
+    console.log("File name:", filename);
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs_1.default.existsSync(uploadsDir)) {
+        fs_1.default.mkdirSync(uploadsDir);
+    }
+    const filePath = path.join(uploadsDir, filename);
+    console.log("File path:", filePath);
     try {
-        if (!audioFile) {
-            return h.response({ error: "No file uploaded" }).code(400);
-        }
-        const filename = audioFile.hapi.filename;
-        const mimeType = audioFile.hapi.headers["content-type"];
-        console.log("File name:", filename);
-        const uploadsDir = path.join(__dirname, "uploads");
-        if (!fs_1.default.existsSync(uploadsDir)) {
-            fs_1.default.mkdirSync(uploadsDir);
-        }
-        const filePath = path.join(uploadsDir, filename);
-        console.log("File path:", filePath);
-        const fileStream = fs_1.default.createWriteStream(filePath);
-        audioFile.pipe(fileStream);
-        console.log("...file uploaded to server");
+        // Wrap file writing in a promise to wait until it's fully completed
+        await new Promise((resolve, reject) => {
+            const fileStream = fs_1.default.createWriteStream(filePath);
+            audioFile.pipe(fileStream);
+            fileStream.on("error", (err) => {
+                console.error("Error writing file:", err);
+                reject(err);
+            });
+            fileStream.on("finish", () => {
+                console.log("...file uploaded to server");
+                resolve();
+            });
+        });
         console.log("...file done processing, about to upload to google drive");
         const duration = await new Promise((resolve, reject) => {
             fluent_ffmpeg_1.default.ffprobe(filePath, (err, metadata) => {
@@ -498,9 +508,8 @@ const createAudioMediaHandler = async (request, h) => {
         // Upload the file to Google Drive
         const fileDetails = await createAudioFile(audioFile, name, description, duration, mimeType, filePath);
         console.log("File details:", fileDetails);
-        // Respond with the file ID from Google Drive
+        // Remove the file from the 'uploads' directory after processing
         if (filePath && typeof filePath === "string") {
-            // Remove the file from the 'uploads' directory
             fs_1.default.unlink(filePath, (err) => {
                 if (err) {
                     console.error("Error deleting file:", err);
@@ -511,6 +520,7 @@ const createAudioMediaHandler = async (request, h) => {
         return h.response(fileDetails).code(200);
     }
     catch (error) {
+        console.error("Error during file processing:", error);
         return h
             .response({ error: "Failed to upload file to Google Drive" })
             .code(500);
