@@ -3,7 +3,7 @@ import  server from "../server";
 import { google } from "googleapis";
 import fs from "fs";
 import * as path from "path";
-import * as mm from "music-metadata";
+import * as audioMetadata from "audio-metadata";
 import dotenv from "dotenv";
 import {
   executePrismaMethod,
@@ -588,7 +588,8 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     console.log("...file done processing, about to upload to google drive");
 
     // Use music-metadata to get the duration
-    const metadata = await mm.parseFile(filePath);
+   const buffer = fs.readFileSync(filePath);
+   const metadata = audioMetadata.parse(buffer, mimeType);
     const duration = metadata.format.duration || 0;
     console.log("Duration:", duration);
 
