@@ -262,10 +262,11 @@ const uploadMiddleware = (request, h) => {
     return new Promise((resolve, reject) => {
         upload(request.raw.req, request.raw.res, (err) => {
             if (err) {
-                return reject("Multer error: " + err.message);
+                console.error("File upload failed:", err);
+                return reject(new Error("Multer error: " + err.message));
             }
-            resolve(null);
             console.log("File uploaded successfully!");
+            resolve(true);
         });
     });
 };
@@ -467,6 +468,8 @@ async function createAudioFile(file, name, description, duration, mimeType, path
     }
 }
 const createAudioMediaHandler = async (request, h) => {
+    console.log(request);
+    console.log(request.raw.req);
     const { name, description } = request.payload;
     console.log("...about to upload file to google drive");
     try {

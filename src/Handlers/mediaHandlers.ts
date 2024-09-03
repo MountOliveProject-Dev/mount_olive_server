@@ -293,10 +293,11 @@ const uploadMiddleware = (request: Hapi.Request, h: Hapi.ResponseToolkit) => {
   return new Promise((resolve, reject) => {
     upload(request.raw.req, request.raw.res, (err: any) => {
       if (err) {
-        return reject("Multer error: " + err.message);
+        console.error("File upload failed:", err);
+        return reject(new Error("Multer error: " + err.message));
       }
-      resolve(null);
       console.log("File uploaded successfully!");
+      resolve(true);
     });
   });
 };
@@ -546,6 +547,8 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) => {
+  console.log(request)
+  console.log(request.raw.req)
   const { name, description } = request.payload as AudioPayload;
   console.log("...about to upload file to google drive");
   try {
