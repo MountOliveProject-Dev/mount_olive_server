@@ -557,7 +557,7 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
     }
 
 
-    const filename = audioFile.filename;
+    const filename = audioFile.hapi.filename;
     const mimeType = audioFile.hapi.headers["content-type"];
     console.log("File name:", filename);
 

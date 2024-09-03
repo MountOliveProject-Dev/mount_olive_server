@@ -473,7 +473,7 @@ const createAudioMediaHandler = async (request, h) => {
         if (!audioFile) {
             return h.response({ error: "No file uploaded" }).code(400);
         }
-        const filename = audioFile.filename;
+        const filename = audioFile.hapi.filename;
         const mimeType = audioFile.hapi.headers["content-type"];
         console.log("File name:", filename);
         const uploadsDir = path.join(__dirname, "uploads");
