@@ -314,6 +314,7 @@ async function getDuration(filePath) {
         const duration = await (0, get_audio_duration_1.getAudioDurationInSeconds)(filePath);
         const formattedDuration = formatDuration(duration);
         console.log(`Duration: ${formattedDuration}`);
+        return formattedDuration;
     }
     catch (error) {
         console.error("Error getting audio duration:", error);
@@ -628,17 +629,24 @@ exports.storeAudioFileHandler = storeAudioFileHandler;
 async function pushAudioToDriveHandler(request, h) {
     const { name, description, filePath, mimeType } = request.payload;
     try {
-        const durat = getDuration(filePath);
-        const duration = durat.toString();
+        // Ensure the filePath is provided and is a string
+        if (!filePath || typeof filePath !== 'string') {
+            return h.response({ error: 'Invalid file path' }).code(400);
+        }
+        let duration = '';
+        try {
+            duration = await getDuration(filePath);
+        }
+        catch (durationError) {
+            console.warn("Could not calculate duration, proceeding without it:", durationError);
+        }
         const shareableLink = await createAudioFile(name, description, duration, mimeType, filePath);
         // Remove the file from the 'uploads' directory after processing
-        if (filePath && typeof filePath === "string") {
-            fs_1.default.unlink(filePath, (err) => {
-                if (err) {
-                    console.error("Error deleting file:", err);
-                }
-            });
-        }
+        fs_1.default.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            }
+        });
         return h.response({ shareableLink }).code(200);
     }
     catch (error) {

@@ -340,11 +340,12 @@ function formatDuration(seconds: number): string {
   return formatted.trim();
 }
 
-async function getDuration(filePath: string): Promise<void> {
+async function getDuration(filePath: string): Promise<string> {
   try {
     const duration = await getAudioDurationInSeconds(filePath);
     const formattedDuration = formatDuration(duration);
     console.log(`Duration: ${formattedDuration}`);
+    return formattedDuration;
   } catch (error) {
     console.error("Error getting audio duration:", error);
     throw error;
@@ -723,10 +724,10 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
   }
 };
 //upload audio to google drive
-export async function pushAudioToDriveHandler (
+export async function pushAudioToDriveHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
-)  {
+) {
   const { name, description, filePath, mimeType } =
     request.payload as {
       name: string;
@@ -736,8 +737,17 @@ export async function pushAudioToDriveHandler (
     };
 
   try {
-    const durat = getDuration(filePath);
-    const duration = durat.toString();
+    // Ensure the filePath is provided and is a string
+    if (!filePath || typeof filePath !== 'string') {
+      return h.response({ error: 'Invalid file path' }).code(400);
+    }
+
+    let duration = '';
+    try {
+      duration = await getDuration(filePath);
+    } catch (durationError) {
+      console.warn("Could not calculate duration, proceeding without it:", durationError);
+    }
 
     const shareableLink = await createAudioFile(
       name,
@@ -748,13 +758,11 @@ export async function pushAudioToDriveHandler (
     );
 
     // Remove the file from the 'uploads' directory after processing
-    if (filePath && typeof filePath === "string") {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error("Error deleting file:", err);
-        }
-      });
-    }
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+      }
+    });
 
     return h.response({ shareableLink }).code(200);
   } catch (error) {
