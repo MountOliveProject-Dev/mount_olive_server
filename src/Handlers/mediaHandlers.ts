@@ -522,17 +522,17 @@ export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
   h
 ) => {
   const { audioFile, name, description } = request.payload as AudioPayload;
-  console.log( name, description,audioFile);
+
   try {
       
       const uploadMiddleware = upload.single("audioFile"); // 'audioFile' is the key for the file in the form data
 
       // Multer middleware processing
       await new Promise((resolve, reject) => {
-        console.log("no error yet!");
+
         uploadMiddleware(request, h, (err) => {
           if (err) {
-            return reject(err);
+            return reject("multer error"+err);
           }
           resolve(null);
           console.log("no error yet!");
