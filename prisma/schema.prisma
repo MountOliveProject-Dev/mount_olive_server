@@ -34,11 +34,11 @@ model Media {
   postedAt  String
   updatedAt     String
 
-  folderId Int
+  folderId Int?
 
   // Relation
   mediaNotifications engagementsManager? 
-  storageFolder folder @relation(fields: [folderId], references: [id])
+  storageFolder folder? @relation(fields: [folderId], references: [id])
 
 }
 model Event {
