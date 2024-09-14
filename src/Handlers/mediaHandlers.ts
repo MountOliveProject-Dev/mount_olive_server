@@ -1248,6 +1248,7 @@ export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
     return h.response({ error: "Failed to store file" }).code(500);
   }
 };
+
 //upload audio to google drive
 export async function pushAudioToDriveHandler(
   request: Hapi.Request,

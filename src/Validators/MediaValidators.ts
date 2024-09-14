@@ -92,7 +92,7 @@ const audioFileValidator = Joi.object({
   }),
   reUploadMedia: Joi.boolean().alter({
     create: (schema) => schema.forbidden(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.required(),
   }),
   mimeType: Joi.string().alter({
     create: (schema) => schema.required(),
