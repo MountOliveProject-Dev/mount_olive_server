@@ -19,7 +19,7 @@ export const listNotificationsHandler = async (
       "findMany",
       {
         orderBy: {
-          createdAt: "desc",
+          createdAt: "asc",
         },
         select: {
           id: true,

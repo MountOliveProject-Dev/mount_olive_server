@@ -80,7 +80,7 @@ export const updateVideoMediaInputValidator = videoMediaInputValidator.tailor("u
 const audioFileValidator = Joi.object({
   name: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
   }),
   description: Joi.string().alter({
     create: (schema) => schema.optional(),
@@ -108,29 +108,3 @@ const audioFileValidator = Joi.object({
 export const createAudioFileValidator = audioFileValidator.tailor("create");
 export const updateAudioFileValidator = audioFileValidator.tailor("update");
 
-
-const thumbnailValidator = Joi.object({
-  name: Joi.string().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.required(),
-  }),
-  filePath: Joi.string().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
-  }),
-  reUploadMedia: Joi.boolean().alter({
-    create: (schema) => schema.forbidden(),
-    update: (schema) => schema.optional(),
-  }),
-  mimeType: Joi.string().alter({
-    create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
-  }),
-  uniqueId: Joi.string().alter({
-    create: (schema) => schema.forbidden(),
-    update: (schema) => schema.required(),
-  }),
-});
-
-export const createThumbnailValidator = thumbnailValidator.tailor("create");
-export const updateThumbnailValidator = thumbnailValidator.tailor("update");

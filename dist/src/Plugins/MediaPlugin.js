@@ -83,7 +83,7 @@ exports.mediaPlugin = {
             {
                 method: "POST",
                 path: "/api/media/update-audio",
-                handler: Handlers_1.updateVideoMediaHandler,
+                handler: Handlers_1.updateAudioFile,
                 options: {
                     auth: false,
                     validate: {

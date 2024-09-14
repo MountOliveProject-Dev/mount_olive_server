@@ -2,14 +2,11 @@ import Hapi from "@hapi/hapi";
 import Inert from "@hapi/inert";
 import Joi from "joi";
 import {
-  updateMediaInputValidator,
-  createMediaInputValidator,
   updateVideoMediaInputValidator,
   createVideoMediaInputValidator,
   createAudioFileValidator,
   updateAudioFileValidator,
   createFolderInputValidator,
-  createThumbnailValidator,
 } from "../Validators/MediaValidators";
 import {
   createFolder,
@@ -25,7 +22,7 @@ import {
   deleteManyFromGoogleDrive,
   pushAudioToDriveHandler,
   storeThumbnailFileHandler,
-  pushThumbnailToDriveHandler,
+  updateAudioFile,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -103,7 +100,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       {
         method: "POST",
         path: "/api/media/update-audio",
-        handler: updateVideoMediaHandler,
+        handler: updateAudioFile,
         options: {
           auth: false,
           validate: {
