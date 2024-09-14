@@ -12,27 +12,27 @@ const notificationInputValidator = joi_1.default.object({
     }),
     title: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     description: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     createdAt: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     read: joi_1.default.boolean().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     userId: joi_1.default.number().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     updatedAt: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
 });
 exports.createNotificationInputValidator = notificationInputValidator.tailor("create");

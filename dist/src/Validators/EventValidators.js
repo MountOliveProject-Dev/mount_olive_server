@@ -20,51 +20,51 @@ const eventInputValidator = joi_1.default.object({
     }),
     time: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     venue: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     location: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     host: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     description: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     thumbnail: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     uploadThumbnail: joi_1.default.boolean().alter({
         create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
     }),
     name: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     mimeType: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     filePath: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     createdAt: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     updatedAt: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
 });
 exports.createEventInputValidator = eventInputValidator.tailor("create");

@@ -9,31 +9,31 @@ const Helpers_1 = require("../Helpers");
 const folderInputValidator = joi_1.default.object({
     type: joi_1.default.string().alter({
         create: (schema) => schema.valid(Helpers_1.folderType.Audios, Helpers_1.folderType.Images).required(),
-        update: (schema) => schema.valid(Helpers_1.folderType.Audios, Helpers_1.folderType.Images).optional(),
+        update: (schema) => schema.valid(Helpers_1.folderType.Audios, Helpers_1.folderType.Images).optional().allow(""),
     }),
     name: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
-    })
+        update: (schema) => schema.optional().allow(""),
+    }),
 });
 exports.createFolderInputValidator = folderInputValidator.tailor("create");
 exports.updateFolderInputValidator = folderInputValidator.tailor("update");
 const mediaInputValidator = joi_1.default.object({
     title: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     description: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     url: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     duration: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     uniqueId: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
@@ -41,15 +41,15 @@ const mediaInputValidator = joi_1.default.object({
     }),
     category: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     createdAt: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     updatedAt: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
 });
 exports.createMediaInputValidator = mediaInputValidator.tailor("create");
@@ -57,7 +57,7 @@ exports.updateMediaInputValidator = mediaInputValidator.tailor("update");
 const videoMediaInputValidator = joi_1.default.object({
     url: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     uniqueId: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
@@ -65,11 +65,11 @@ const videoMediaInputValidator = joi_1.default.object({
     }),
     title: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     description: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
 });
 exports.createVideoMediaInputValidator = videoMediaInputValidator.tailor("create");
@@ -77,15 +77,15 @@ exports.updateVideoMediaInputValidator = videoMediaInputValidator.tailor("update
 const audioFileValidator = joi_1.default.object({
     name: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     description: joi_1.default.string().alter({
-        create: (schema) => schema.optional(),
-        update: (schema) => schema.optional(),
+        create: (schema) => schema.optional().allow(""),
+        update: (schema) => schema.optional().allow(""),
     }),
     filePath: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     reUploadMedia: joi_1.default.boolean().alter({
         create: (schema) => schema.forbidden(),
@@ -93,7 +93,7 @@ const audioFileValidator = joi_1.default.object({
     }),
     mimeType: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     uniqueId: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),

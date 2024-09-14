@@ -16,54 +16,54 @@ const eventInputValidator = Joi.object({
 
   time: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
 
   venue: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
 
   location: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
 
   host: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
   description: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
   thumbnail: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
   uploadThumbnail: Joi.boolean().alter({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
   name: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
   mimeType: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
   filePath: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
   createdAt: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
   updatedAt: Joi.string().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.optional().allow(""),
+    update: (schema) => schema.optional().allow(""),
   }),
 });
 
