@@ -102,20 +102,6 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       },
       {
         method: "POST",
-        path: "/api/media/create-thumbnail",
-        handler: pushThumbnailToDriveHandler,
-        options: {
-          auth: false,
-          validate: {
-            payload: createThumbnailValidator,
-            failAction: async (request, h, err) => {
-              throw err;
-            },
-          },
-        },
-      },
-      {
-        method: "POST",
         path: "/api/media/update-audio",
         handler: updateVideoMediaHandler,
         options: {

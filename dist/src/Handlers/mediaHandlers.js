@@ -33,12 +33,13 @@ exports.deleteFolder = deleteFolder;
 exports.deleteManyFromGoogleDrive = deleteManyFromGoogleDrive;
 exports.getAllFolders = getAllFolders;
 exports.getAllFoldersInGoogleDrive = getAllFoldersInGoogleDrive;
+exports.updateThumbnailHelper = updateThumbnailHelper;
+exports.createThumbnailFile = createThumbnailFile;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 exports.pushAudioToDriveHandler = pushAudioToDriveHandler;
-exports.pushThumbnailToDriveHandler = pushThumbnailToDriveHandler;
 exports.updateAudioFile = updateAudioFile;
 const server_1 = __importDefault(require("../server"));
 const googleapis_1 = require("googleapis");
@@ -1052,29 +1053,6 @@ async function pushAudioToDriveHandler(request, h) {
     }
 }
 ;
-async function pushThumbnailToDriveHandler(request, h) {
-    const { name, filePath, mimeType } = request.payload;
-    try {
-        // Ensure the filePath is provided and is a string
-        if (!filePath || typeof filePath !== 'string') {
-            return h.response({ error: 'Invalid file path' }).code(400);
-        }
-        const shareableLink = await createThumbnailFile(name, mimeType, filePath);
-        // Remove the file from the 'uploads' directory after processing
-        fs_1.default.unlink(filePath, (err) => {
-            if (err) {
-                console.error("Error deleting file:", err);
-            }
-        });
-        return h.response({ shareableLink }).code(200);
-    }
-    catch (error) {
-        console.error("Error uploading file to Google Drive:", error);
-        return h
-            .response({ error: "Failed to upload file to Google Drive" })
-            .code(500);
-    }
-}
 //update audio
 async function updateAudioFile(request, h) {
     const prisma = request.server.app.prisma;

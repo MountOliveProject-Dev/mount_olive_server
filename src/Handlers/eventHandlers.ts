@@ -9,6 +9,9 @@ import {
   
 } from "./notificationHandlers";
 import {NotificationType } from "../Helpers"; 
+import { createThumbnailFile } from "./mediaHandlers";
+import fs from "fs";
+
 
 
 export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
@@ -34,41 +37,131 @@ export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseT
     }
 }
 
+export async function pushThumbnailToDriveHandler(name: string, filePath: string, mimeType: string) {
+    const prisma = server.app.prisma;
+
+  try {
+    // Ensure the filePath is provided and is a string
+    if (!filePath || typeof filePath !== "string") {
+      console.log("Invalid file path provided");
+      return "Invalid file path provided";
+    }
+
+    const shareableLink = await createThumbnailFile(name, mimeType, filePath);
+
+    // Remove the file from the 'uploads' directory after processing
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting file:", err);
+      }
+    });
+
+    return shareableLink;
+  } catch (error) {
+    console.error("Error uploading file to Google Drive:", error);
+    return "Error uploading thumbnail to Google Drive";
+  }
+}
+
 export async function createEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
-    const { title, description, thumbnail, date, host, time, location, venue } = request.payload as EventInput;
+    const {
+      title,
+      description,
+      date,
+      host,
+      time,
+      location,
+      venue,
+      uploadThumbnail,
+      name,
+      mimeType,
+      filePath,
+    } = request.payload as EventInput;
 
     try{
-        const event = await executePrismaMethod(prisma, "event", "create", {
-          data: {
-            title: title,
-            description: description,
-            thumbnail: thumbnail,
-            location: location,
-            venue: venue,
-            time: time,
-            date: date,
-            host: host,
-            createdAt: getCurrentDate(),
-            updatedAt: getCurrentDate(),
-          },
-        });
-        if(!event){
-            return h.response({message: "Failed to create the event"}).code(400);
+        if(uploadThumbnail === true){
+            const thumbnailLink = await pushThumbnailToDriveHandler(name,filePath,mimeType)
+                  const event = await executePrismaMethod(
+                    prisma,
+                    "event",
+                    "create",
+                    {
+                      data: {
+                        title: title,
+                        description: description,
+                        location: location,
+                        thumbnail: thumbnailLink,
+                        venue: venue,
+                        time: time,
+                        date: date,
+                        host: host,
+                        createdAt: getCurrentDate(),
+                        updatedAt: getCurrentDate(),
+                      },
+                    }
+                  );
+                  if (!event) {
+                    return h
+                      .response({ message: "Failed to create the event" })
+                      .code(400);
+                  }
+                  const notificationTitle =
+                    "A New Event titled " +
+                    event.title +
+                    " has just been posted!";
+                  const specialKey = event.uniqueId + NotificationType.EVENT;
+                  const createNotification =
+                    await createEventNotificationHandler(
+                      event.uniqueId,
+                      specialKey,
+                      notificationTitle,
+                      description,
+                      false,
+                      uploadThumbnail
+                    );
+                  if (!createNotification) {
+                    return h
+                      .response({
+                        message: "Failed to create the notification",
+                      })
+                      .code(400);
+                  }
+                  return h.response(event).code(201);
+        }else if(uploadThumbnail === false){
+            const event = await executePrismaMethod(prisma, "event", "create", {
+            data: {
+                title: title,
+                description: description,
+                location: location,
+                venue: venue,
+                time: time,
+                date: date,
+                host: host,
+                createdAt: getCurrentDate(),
+                updatedAt: getCurrentDate(),
+            },
+            });
+            if(!event){
+                return h.response({message: "Failed to create the event"}).code(400);
+            }
+            const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
+            const specialKey = event.uniqueId + NotificationType.EVENT;
+            const createNotification = await createEventNotificationHandler(
+            event.uniqueId,
+            specialKey,
+            notificationTitle,
+            description,
+            false,
+            uploadThumbnail
+            );
+            if(!createNotification){
+                return h.response({message: "Failed to create the notification"}).code(400);
+            }
+            return h.response(event).code(201);
+        }else{
+            return h.response({message: "Bad request, thumbnail status is undefined"}).code(400);
         }
-        const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
-        const specialKey = event.uniqueId + NotificationType.EVENT;
-        const createNotification = await createEventNotificationHandler(
-          event.uniqueId,
-          specialKey,
-          notificationTitle,
-          description,
-          false
-        );
-        if(!createNotification){
-            return h.response({message: "Failed to create the notification"}).code(400);
-        }
-        return h.response(event).code(201);
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to create the event:" + title}).code(500);
@@ -192,6 +285,7 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
             specialKey,
             notificationTitle,
             event.description,
+            false,
             false
           );
           if (!createNotification) {

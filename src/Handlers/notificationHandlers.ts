@@ -1,7 +1,7 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
 import { executePrismaMethod, NotificationType, getCurrentDate } from "../Helpers";
-import { METHODS } from "http";
+
 
 
 
@@ -169,7 +169,7 @@ export const listNotificationsHandler = async (
 
 ///
 //create event notification
-export const createEventNotificationHandler = async (eventId: string, specialKey: string,title: string, description: string, read: boolean) => {
+export const createEventNotificationHandler = async (eventId: string, specialKey: string,title: string, description: string, read: boolean,thumbnailStatus:boolean) => {
     const { prisma } = server.app;
     try{
 
@@ -190,6 +190,7 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
                   eventStatus: true,
                   videoStatus: false,
                   audioStatus: false,
+                  thumbnailStatus:thumbnailStatus,
                   specialKey: specialKey,
                   event: {
                     connect: {

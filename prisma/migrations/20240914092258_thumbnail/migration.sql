@@ -16,9 +16,10 @@ CREATE TABLE "Media" (
     "url" TEXT NOT NULL,
     "duration" TEXT,
     "type" "MediaType" NOT NULL,
+    "fileId" TEXT,
     "postedAt" TEXT NOT NULL,
     "updatedAt" TEXT NOT NULL,
-    "folderId" INTEGER NOT NULL,
+    "folderId" INTEGER,
 
     CONSTRAINT "Media_pkey" PRIMARY KEY ("id")
 );
@@ -36,7 +37,7 @@ CREATE TABLE "Event" (
     "venue" TEXT NOT NULL,
     "host" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "thumbnail" TEXT NOT NULL,
+    "thumbnail" TEXT,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
 );
@@ -61,6 +62,7 @@ CREATE TABLE "engagementsManager" (
     "eventStatus" BOOLEAN NOT NULL,
     "videoStatus" BOOLEAN NOT NULL,
     "audioStatus" BOOLEAN NOT NULL,
+    "thumbnailStatus" BOOLEAN NOT NULL,
     "mediaId" TEXT,
     "specialKey" TEXT NOT NULL,
     "notificationId" INTEGER NOT NULL,
@@ -100,7 +102,7 @@ CREATE UNIQUE INDEX "engagementsManager_notificationId_key" ON "engagementsManag
 CREATE UNIQUE INDEX "folder_folderId_key" ON "folder"("folderId");
 
 -- AddForeignKey
-ALTER TABLE "Media" ADD CONSTRAINT "Media_folderId_fkey" FOREIGN KEY ("folderId") REFERENCES "folder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Media" ADD CONSTRAINT "Media_folderId_fkey" FOREIGN KEY ("folderId") REFERENCES "folder"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "engagementsManager" ADD CONSTRAINT "engagementsManager_notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES "Notification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

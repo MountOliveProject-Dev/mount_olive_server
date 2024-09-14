@@ -512,7 +512,7 @@ async function updateAudioFileHelper(
     throw err;
   }
 }
-async function updateThumbnailHelper(
+export async function updateThumbnailHelper(
   uniqueId: string,
   name: string,
   mimeType: string,
@@ -718,7 +718,7 @@ async function updateThumbnailHelper(
      throw err;
    }
 }
-async function createThumbnailFile(
+export async function createThumbnailFile(
   name: string,
   mimeType: string,
   path: string){
@@ -1298,44 +1298,6 @@ export async function pushAudioToDriveHandler(
   }
 };
 
-export async function pushThumbnailToDriveHandler(
-  request: Hapi.Request,
-  h: Hapi.ResponseToolkit
-) {
-  const { name, filePath, mimeType } =
-    request.payload as {
-      name: string;
-      filePath: string;
-      mimeType: string;
-    };
-
-  try {
-    // Ensure the filePath is provided and is a string
-    if (!filePath || typeof filePath !== 'string') {
-      return h.response({ error: 'Invalid file path' }).code(400);
-    }
-
-    const shareableLink = await createThumbnailFile(
-      name,
-      mimeType,
-      filePath
-    );
-
-    // Remove the file from the 'uploads' directory after processing
-    fs.unlink(filePath, (err) => {
-      if (err) {
-        console.error("Error deleting file:", err);
-      }
-    });
-
-    return h.response({ shareableLink }).code(200);
-  } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
-    return h
-      .response({ error: "Failed to upload file to Google Drive" })
-      .code(500);
-  }
-}
 
 //update audio
 export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToolkit){

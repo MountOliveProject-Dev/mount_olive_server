@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listEventsHandler = listEventsHandler;
+exports.pushThumbnailToDriveHandler = pushThumbnailToDriveHandler;
 exports.createEventHandler = createEventHandler;
 exports.updateEventHandler = updateEventHandler;
 exports.createManyEventsHandler = createManyEventsHandler;
@@ -16,6 +17,8 @@ const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
 const Helpers_2 = require("../Helpers");
+const mediaHandlers_1 = require("./mediaHandlers");
+const fs_1 = __importDefault(require("fs"));
 async function listEventsHandler(request, h) {
     const { prisma } = server_1.default.app;
     try {
@@ -36,34 +39,95 @@ async function listEventsHandler(request, h) {
         return h.response({ message: "Internal Server Error" }).code(500);
     }
 }
+async function pushThumbnailToDriveHandler(name, filePath, mimeType) {
+    const prisma = server_1.default.app.prisma;
+    try {
+        // Ensure the filePath is provided and is a string
+        if (!filePath || typeof filePath !== "string") {
+            console.log("Invalid file path provided");
+            return "Invalid file path provided";
+        }
+        const shareableLink = await (0, mediaHandlers_1.createThumbnailFile)(name, mimeType, filePath);
+        // Remove the file from the 'uploads' directory after processing
+        fs_1.default.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            }
+        });
+        return shareableLink;
+    }
+    catch (error) {
+        console.error("Error uploading file to Google Drive:", error);
+        return "Error uploading thumbnail to Google Drive";
+    }
+}
 async function createEventHandler(request, h) {
     const { prisma } = request.server.app;
-    const { title, description, thumbnail, date, host, time, location, venue } = request.payload;
+    const { title, description, date, host, time, location, venue, uploadThumbnail, name, mimeType, filePath, } = request.payload;
     try {
-        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
-            data: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail,
-                location: location,
-                venue: venue,
-                time: time,
-                date: date,
-                host: host,
-                createdAt: (0, Helpers_1.getCurrentDate)(),
-                updatedAt: (0, Helpers_1.getCurrentDate)(),
-            },
-        });
-        if (!event) {
-            return h.response({ message: "Failed to create the event" }).code(400);
+        if (uploadThumbnail === true) {
+            const thumbnailLink = await pushThumbnailToDriveHandler(name, filePath, mimeType);
+            const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
+                data: {
+                    title: title,
+                    description: description,
+                    location: location,
+                    thumbnail: thumbnailLink,
+                    venue: venue,
+                    time: time,
+                    date: date,
+                    host: host,
+                    createdAt: (0, Helpers_1.getCurrentDate)(),
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!event) {
+                return h
+                    .response({ message: "Failed to create the event" })
+                    .code(400);
+            }
+            const notificationTitle = "A New Event titled " +
+                event.title +
+                " has just been posted!";
+            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false, uploadThumbnail);
+            if (!createNotification) {
+                return h
+                    .response({
+                    message: "Failed to create the notification",
+                })
+                    .code(400);
+            }
+            return h.response(event).code(201);
         }
-        const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
-        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
-        const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false);
-        if (!createNotification) {
-            return h.response({ message: "Failed to create the notification" }).code(400);
+        else if (uploadThumbnail === false) {
+            const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "create", {
+                data: {
+                    title: title,
+                    description: description,
+                    location: location,
+                    venue: venue,
+                    time: time,
+                    date: date,
+                    host: host,
+                    createdAt: (0, Helpers_1.getCurrentDate)(),
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!event) {
+                return h.response({ message: "Failed to create the event" }).code(400);
+            }
+            const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
+            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false, uploadThumbnail);
+            if (!createNotification) {
+                return h.response({ message: "Failed to create the notification" }).code(400);
+            }
+            return h.response(event).code(201);
         }
-        return h.response(event).code(201);
+        else {
+            return h.response({ message: "Bad request, thumbnail status is undefined" }).code(400);
+        }
     }
     catch (err) {
         console.log(err);
@@ -164,7 +228,7 @@ async function createManyEventsHandler(request, h) {
             });
             const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
             const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
-            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, event.description, false);
+            const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, event.description, false, false);
             if (!createNotification) {
                 return h
                     .response({ message: "Failed to create the notification" })

@@ -10,9 +10,13 @@ export interface EventInput {
   date: string;
   time: string;
   venue: string;
-  host : string;
+  host: string;
   updatedAt: string;
   uniqueId: string;
+  uploadThumbnail: boolean;
+  name:string;
+  mimeType:string;
+  filePath:string;
 }
 
 //create modal for to create manyevents

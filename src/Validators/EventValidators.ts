@@ -41,6 +41,22 @@ const eventInputValidator = Joi.object({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
   }),
+  uploadThumbnail: Joi.boolean().alter({
+    create: (schema) => schema.optional(),
+    update: (schema) => schema.optional(),
+  }),
+  name: Joi.string().alter({
+    create: (schema) => schema.optional(),
+    update: (schema) => schema.optional(),
+  }),
+  mimeType: Joi.string().alter({
+    create: (schema) => schema.optional(),
+    update: (schema) => schema.optional(),
+  }),
+  filePath: Joi.string().alter({
+    create: (schema) => schema.optional(),
+    update: (schema) => schema.optional(),
+  }),
   createdAt: Joi.string().alter({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),

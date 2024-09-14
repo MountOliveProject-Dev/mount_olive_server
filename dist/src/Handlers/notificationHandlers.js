@@ -148,7 +148,7 @@ const listNotificationsHandler = async (request, h) => {
 exports.listNotificationsHandler = listNotificationsHandler;
 ///
 //create event notification
-const createEventNotificationHandler = async (eventId, specialKey, title, description, read) => {
+const createEventNotificationHandler = async (eventId, specialKey, title, description, read, thumbnailStatus) => {
     const { prisma } = server_1.default.app;
     try {
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
@@ -164,6 +164,7 @@ const createEventNotificationHandler = async (eventId, specialKey, title, descri
                         eventStatus: true,
                         videoStatus: false,
                         audioStatus: false,
+                        thumbnailStatus: thumbnailStatus,
                         specialKey: specialKey,
                         event: {
                             connect: {

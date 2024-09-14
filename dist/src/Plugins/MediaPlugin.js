@@ -82,20 +82,6 @@ exports.mediaPlugin = {
             },
             {
                 method: "POST",
-                path: "/api/media/create-thumbnail",
-                handler: Handlers_1.pushThumbnailToDriveHandler,
-                options: {
-                    auth: false,
-                    validate: {
-                        payload: MediaValidators_1.createThumbnailValidator,
-                        failAction: async (request, h, err) => {
-                            throw err;
-                        },
-                    },
-                },
-            },
-            {
-                method: "POST",
                 path: "/api/media/update-audio",
                 handler: Handlers_1.updateVideoMediaHandler,
                 options: {
