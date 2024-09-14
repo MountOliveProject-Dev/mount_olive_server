@@ -12,7 +12,7 @@ const listNotificationsHandler = async (request, h) => {
     try {
         const notifications = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findMany", {
             orderBy: {
-                createdAt: "asc",
+                updatedAt: "asc",
             },
             select: {
                 id: true,
