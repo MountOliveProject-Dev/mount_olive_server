@@ -27,7 +27,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.storeAudioFileHandler = exports.listAllVideoMediaHandler = void 0;
+exports.storeThumbnailFileHandler = exports.storeAudioFileHandler = exports.listAllVideoMediaHandler = void 0;
 exports.createFolder = createFolder;
 exports.deleteFolder = deleteFolder;
 exports.deleteManyFromGoogleDrive = deleteManyFromGoogleDrive;
@@ -38,6 +38,7 @@ exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 exports.pushAudioToDriveHandler = pushAudioToDriveHandler;
+exports.pushThumbnailToDriveHandler = pushThumbnailToDriveHandler;
 exports.updateAudioFile = updateAudioFile;
 const server_1 = __importDefault(require("../server"));
 const googleapis_1 = require("googleapis");
@@ -286,6 +287,368 @@ async function createAudioFile(name, description, duration, mimeType, path) {
         console.log(notification);
         if (!notification) {
             console.log("Failed to create notification for video media");
+        }
+        return shareableLink;
+    }
+    catch (error) {
+        console.error("Error uploading file to Google Drive:", error);
+        throw error;
+    }
+}
+async function updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId, path, reUploadMedia) {
+    try {
+        const prisma = server_1.default.app.prisma;
+        const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
+            where: {
+                folderType: Helpers_1.folderType.Audios,
+            },
+        });
+        if (!folderInfo) {
+            throw new Error("Audio folder not found");
+        }
+        if (reUploadMedia === true) {
+            await drive.files.delete({
+                fileId: findAudioId,
+            });
+            const durat = getDuration(path);
+            const duration = durat.toString();
+            const audioName = name + "-" + Date.now();
+            const fileMetadata = {
+                name: audioName,
+                parents: [folderInfo.folderId],
+            };
+            const media = {
+                mimeType: mimeType,
+                body: fs_1.default.createReadStream(path),
+            };
+            const response = await drive.files.create({
+                requestBody: fileMetadata,
+                media: media,
+                fields: "id",
+            });
+            if (!response.data.id) {
+                throw new Error("Failed to upload file to Google Drive");
+            }
+            // Set the file's sharing permissions to "anyone with the link"
+            await drive.permissions.create({
+                fileId: response.data.id,
+                requestBody: {
+                    role: "reader",
+                    type: "anyone",
+                },
+            });
+            // Get the shareable link
+            const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+            console.log(`The audio file ${name} with Unique ID: ${response.data.id} has been updated successfully!`);
+            const findAudio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.AUDIO,
+                },
+            });
+            if (!findAudio) {
+                console.log("Audio not found");
+                throw new Error("Audio not found");
+            }
+            const audio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.AUDIO,
+                },
+                data: {
+                    title: name || findAudio.title,
+                    description: description || findAudio.description,
+                    duration: duration || " 0 sec",
+                    url: shareableLink,
+                    fileId: response.data.id,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!audio) {
+                console.log("Failed to update audio media");
+                throw new Error("Failed to update audio media");
+            }
+            const type = Helpers_1.NotificationType.AUDIO;
+            const read = false;
+            const notificationTitle = "The Audio titled " + findAudio.title + " has just been updated!";
+            const specialKey = audio.uniqueId + Helpers_1.NotificationType.AUDIO;
+            const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
+                where: {
+                    notificationEngagements: {
+                        specialKey: specialKey,
+                    },
+                },
+            });
+            const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(getNotification.id, findAudio.id, specialKey, notificationTitle, description || findAudio.description, read, type);
+            console.log(notification);
+            if (!notification) {
+                console.log("Failed to create notification for audio media");
+            }
+            // Remove the file from the 'uploads' directory after processing
+            if (path && typeof path === "string") {
+                fs_1.default.unlink(path, (err) => {
+                    if (err) {
+                        console.error("Error deleting file:", err);
+                    }
+                });
+            }
+            return shareableLink;
+        }
+        else if (reUploadMedia === false) {
+            const findAudio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.AUDIO,
+                },
+            });
+            if (!findAudio) {
+                console.log("Audio not found");
+                throw new Error("Audio not found");
+            }
+            const audio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.AUDIO,
+                },
+                data: {
+                    title: name || findAudio.title,
+                    description: description || findAudio.description,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!audio) {
+                console.log("Failed to update audio media");
+                throw new Error("Failed to update audio media");
+            }
+            const type = Helpers_1.NotificationType.AUDIO;
+            const read = false;
+            const notificationTitle = "The Audio titled " + findAudio.title + " has just been updated!";
+            const specialKey = audio.uniqueId + Helpers_1.NotificationType.AUDIO;
+            const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
+                where: {
+                    notificationEngagements: {
+                        specialKey: specialKey,
+                    }
+                },
+            });
+            const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(getNotification.id, findAudio.id, specialKey, notificationTitle, description || findAudio.description, read, type);
+            console.log(notification);
+            if (!notification) {
+                console.log("Failed to create notification for audio media");
+            }
+            return findAudio.url;
+        }
+    }
+    catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path, reUploadMedia) {
+    try {
+        const prisma = server_1.default.app.prisma;
+        const description = "Thumbnail for an event";
+        const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
+            where: {
+                folderType: Helpers_1.folderType.Images,
+            },
+        });
+        if (!folderInfo) {
+            throw new Error("Thumbnail folder not found");
+        }
+        if (reUploadMedia === true) {
+            await drive.files.delete({
+                fileId: thumbnailId,
+            });
+            const findThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.IMAGE,
+                },
+            });
+            if (!findThumbnail) {
+                console.log("Thumbnail not found");
+                throw new Error("Thumbnail not found");
+            }
+            const thumbnailName = name || findThumbnail.title + "-" + Date.now();
+            const fileMetadata = {
+                name: thumbnailName,
+                parents: [folderInfo.folderId],
+            };
+            const media = {
+                mimeType: mimeType,
+                body: fs_1.default.createReadStream(path),
+            };
+            const response = await drive.files.create({
+                requestBody: fileMetadata,
+                media: media,
+                fields: "id",
+            });
+            if (!response.data.id) {
+                throw new Error("Failed to upload thumbnail to Google Drive");
+            }
+            // Set the file's sharing permissions to "anyone with the link"
+            await drive.permissions.create({
+                fileId: response.data.id,
+                requestBody: {
+                    role: "reader",
+                    type: "anyone",
+                },
+            });
+            // Get the shareable link
+            const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+            console.log(`The thumbnail  ${name} with Unique ID: ${response.data.id} has been updated successfully!`);
+            const updateThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.IMAGE,
+                },
+                data: {
+                    title: name || findThumbnail.title,
+                    description: description,
+                    url: shareableLink,
+                    fileId: response.data.id,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!updateThumbnail) {
+                console.log("Failed to update thumbnail");
+                throw new Error("Failed to update thumbnail");
+            }
+            const type = Helpers_1.NotificationType.IMAGE;
+            const read = false;
+            const notificationTitle = "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
+            const specialKey = updateThumbnail.uniqueId + Helpers_1.NotificationType.IMAGE;
+            const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
+                where: {
+                    notificationEngagements: {
+                        specialKey: specialKey,
+                    },
+                },
+            });
+            const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(getNotification.id, findThumbnail.id, specialKey, notificationTitle, description, read, type);
+            console.log(notification);
+            if (!notification) {
+                console.log("Failed to create notification for thumbnail media");
+            }
+            // Remove the file from the 'uploads' directory after processing
+            if (path && typeof path === "string") {
+                fs_1.default.unlink(path, (err) => {
+                    if (err) {
+                        console.error("Error deleting file:", err);
+                    }
+                });
+            }
+            return shareableLink;
+        }
+        else if (reUploadMedia === false) {
+            const findThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.IMAGE,
+                },
+            });
+            if (!findThumbnail) {
+                console.log("thumbnail not found");
+                throw new Error("thumbnail not found");
+            }
+            const thumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
+                where: {
+                    uniqueId: uniqueId,
+                    type: Helpers_1.MediaType.IMAGE,
+                },
+                data: {
+                    title: name || findThumbnail.title,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!thumbnail) {
+                console.log("Failed to update thumbnail media");
+                throw new Error("Failed to update thumbnail media");
+            }
+            const type = Helpers_1.NotificationType.AUDIO;
+            const read = false;
+            const notificationTitle = "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
+            const specialKey = findThumbnail.uniqueId + Helpers_1.NotificationType.IMAGE;
+            const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
+                where: {
+                    notificationEngagements: {
+                        specialKey: specialKey,
+                    },
+                },
+            });
+            const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(getNotification.id, findThumbnail.id, specialKey, notificationTitle, description, read, type);
+            console.log(notification);
+            if (!notification) {
+                console.log("Failed to create notification for thumbnai");
+            }
+            return findThumbnail.url;
+        }
+    }
+    catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+async function createThumbnailFile(name, mimeType, path) {
+    try {
+        const prisma = server_1.default.app.prisma;
+        const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
+            where: {
+                folderType: Helpers_1.folderType.Images,
+            },
+        });
+        if (!folderInfo) {
+            throw new Error("Image folder not found");
+        }
+        const audioName = name + "-" + Date.now();
+        const fileMetadata = {
+            name: audioName,
+            parents: [folderInfo.folderId],
+        };
+        const media = {
+            mimeType: mimeType,
+            body: fs_1.default.createReadStream(path),
+        };
+        const response = await drive.files.create({
+            requestBody: fileMetadata,
+            media: media,
+            fields: "id",
+        });
+        if (!response.data.id) {
+            throw new Error("Failed to upload file to Google Drive");
+        }
+        // Set the file's sharing permissions to "anyone with the link"
+        await drive.permissions.create({
+            fileId: response.data.id,
+            requestBody: {
+                role: "reader",
+                type: "anyone",
+            },
+        });
+        // Get the shareable link
+        const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+        console.log(`The thumbnail ${name} with Unique ID: ${response.data.id} has been created successfully!`);
+        const description = "Thumbnail for an event";
+        const audio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "create", {
+            data: {
+                type: Helpers_1.MediaType.IMAGE,
+                title: name,
+                description: description,
+                url: shareableLink,
+                fileId: response.data.id,
+                postedAt: (0, Helpers_1.getCurrentDate)(),
+                updatedAt: (0, Helpers_1.getCurrentDate)(),
+                storageFolder: {
+                    connect: {
+                        folderId: folderInfo.folderId,
+                    },
+                },
+            },
+        });
+        if (!audio) {
+            console.log("Failed to create thumbnail media");
+            throw new Error("Failed to create thumbnail media");
         }
         return shareableLink;
     }
@@ -625,6 +988,38 @@ const storeAudioFileHandler = async (request, h) => {
     }
 };
 exports.storeAudioFileHandler = storeAudioFileHandler;
+const storeThumbnailFileHandler = async (request, h) => {
+    const { thumbnailFile } = request.payload;
+    if (!thumbnailFile) {
+        return h.response({ error: "No file uploaded" }).code(400);
+    }
+    const filename = thumbnailFile.hapi.filename;
+    const mimeType = thumbnailFile.hapi.headers["content-type"];
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs_1.default.existsSync(uploadsDir)) {
+        fs_1.default.mkdirSync(uploadsDir);
+    }
+    const filePath = path.join(uploadsDir, filename);
+    try {
+        await new Promise((resolve, reject) => {
+            const fileStream = fs_1.default.createWriteStream(filePath);
+            thumbnailFile.pipe(fileStream);
+            fileStream.on("error", (err) => {
+                console.error("Error writing file:", err);
+                reject(err);
+            });
+            fileStream.on("finish", () => {
+                resolve();
+            });
+        });
+        return h.response({ filePath, mimeType, filename }).code(200);
+    }
+    catch (error) {
+        console.error("Error during file processing:", error);
+        return h.response({ error: "Failed to store file" }).code(500);
+    }
+};
+exports.storeThumbnailFileHandler = storeThumbnailFileHandler;
 //upload audio to google drive
 async function pushAudioToDriveHandler(request, h) {
     const { name, description, filePath, mimeType } = request.payload;
@@ -657,11 +1052,35 @@ async function pushAudioToDriveHandler(request, h) {
     }
 }
 ;
+async function pushThumbnailToDriveHandler(request, h) {
+    const { name, filePath, mimeType } = request.payload;
+    try {
+        // Ensure the filePath is provided and is a string
+        if (!filePath || typeof filePath !== 'string') {
+            return h.response({ error: 'Invalid file path' }).code(400);
+        }
+        const shareableLink = await createThumbnailFile(name, mimeType, filePath);
+        // Remove the file from the 'uploads' directory after processing
+        fs_1.default.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            }
+        });
+        return h.response({ shareableLink }).code(200);
+    }
+    catch (error) {
+        console.error("Error uploading file to Google Drive:", error);
+        return h
+            .response({ error: "Failed to upload file to Google Drive" })
+            .code(500);
+    }
+}
 //update audio
 async function updateAudioFile(request, h) {
     const prisma = request.server.app.prisma;
-    const { uniqueId, name, description, filePath, mimeType } = request.payload;
+    const { uniqueId, name, description, filePath, mimeType, reUploadMedia } = request.payload;
     try {
+        let shareableLink = "";
         const findAudioId = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
             where: {
                 uniqueId: uniqueId,
@@ -675,25 +1094,7 @@ async function updateAudioFile(request, h) {
             console.log("Audio not found");
             return h.response({ message: "Audio not found" }).code(404);
         }
-        await drive.files.delete({
-            fileId: findAudioId.fileId
-        });
-        await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
-            where: {
-                id: findAudioId.id
-            }
-        });
-        const durat = getDuration(filePath);
-        const duration = durat.toString();
-        const shareableLink = await createAudioFile(name, description, duration, mimeType, filePath);
-        // Remove the file from the 'uploads' directory after processing
-        if (filePath && typeof filePath === "string") {
-            fs_1.default.unlink(filePath, (err) => {
-                if (err) {
-                    console.error("Error deleting file:", err);
-                }
-            });
-        }
+        shareableLink = await updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId.fileId, filePath, reUploadMedia);
         return h.response({ shareableLink }).code(200);
     }
     catch (error) {

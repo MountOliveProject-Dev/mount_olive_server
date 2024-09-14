@@ -293,11 +293,15 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
         let videoStatus = false;
         let eventStatus = false;
         let audioStatus = false;
+        let thumbnailStatus = false;
         if (type === Helpers_1.NotificationType.VIDEO) {
             videoStatus = true;
         }
         else if (type === Helpers_1.NotificationType.AUDIO) {
             audioStatus = true;
+        }
+        else if (type === Helpers_1.NotificationType.IMAGE) {
+            thumbnailStatus = true;
         }
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "create", {
             data: {
@@ -312,6 +316,7 @@ const createMediaNotificationHandler = async (mediaId, specialKey, title, descri
                         eventStatus: eventStatus,
                         videoStatus: videoStatus,
                         audioStatus: audioStatus,
+                        thumbnailStatus: thumbnailStatus,
                         specialKey: specialKey,
                         media: {
                             connect: {

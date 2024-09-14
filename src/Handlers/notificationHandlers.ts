@@ -331,10 +331,13 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
         let videoStatus = false;
         let eventStatus = false;
         let audioStatus = false;
+        let thumbnailStatus = false;
         if(type === NotificationType.VIDEO){
           videoStatus = true;
         }else if(type === NotificationType.AUDIO){
           audioStatus = true;
+        } else if(type === NotificationType.IMAGE){
+          thumbnailStatus = true;
         }
 
         const notification = await executePrismaMethod(
@@ -354,6 +357,7 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
                   eventStatus: eventStatus,
                   videoStatus: videoStatus,
                   audioStatus: audioStatus,
+                  thumbnailStatus: thumbnailStatus,
                   specialKey: specialKey,
                   media: {
                     connect: {

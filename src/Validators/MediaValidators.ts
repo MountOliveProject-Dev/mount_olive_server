@@ -1,7 +1,7 @@
-import { url } from "inspector";
-import Joi, { isSchema } from "joi";
+
+import Joi from "joi";
 import {folderType} from "../Helpers";
-import { createFolder } from "../Handlers";
+
 
 const folderInputValidator = Joi.object(
   {
@@ -88,11 +88,15 @@ const audioFileValidator = Joi.object({
   }),
   filePath: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+  reUploadMedia: Joi.boolean().alter({
+    create: (schema) => schema.forbidden(),
+    update: (schema) => schema.optional(),
   }),
   mimeType: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
   }),
   uniqueId: Joi.string().alter({
     create: (schema) => schema.forbidden(),
@@ -105,3 +109,28 @@ export const createAudioFileValidator = audioFileValidator.tailor("create");
 export const updateAudioFileValidator = audioFileValidator.tailor("update");
 
 
+const thumbnailValidator = Joi.object({
+  name: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.required(),
+  }),
+  filePath: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+  reUploadMedia: Joi.boolean().alter({
+    create: (schema) => schema.forbidden(),
+    update: (schema) => schema.optional(),
+  }),
+  mimeType: Joi.string().alter({
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional(),
+  }),
+  uniqueId: Joi.string().alter({
+    create: (schema) => schema.forbidden(),
+    update: (schema) => schema.required(),
+  }),
+});
+
+export const createThumbnailValidator = thumbnailValidator.tailor("create");
+export const updateThumbnailValidator = thumbnailValidator.tailor("update");

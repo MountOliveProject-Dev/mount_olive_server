@@ -42,12 +42,52 @@ exports.mediaPlugin = {
             },
             {
                 method: "POST",
+                path: "/upload-thumbnail",
+                handler: Handlers_1.storeThumbnailFileHandler,
+                options: {
+                    auth: false,
+                    payload: {
+                        output: "stream",
+                        parse: true,
+                        timeout: 3000000,
+                        multipart: true,
+                        maxBytes: 104857600000, // Limit to 100MB
+                    },
+                    validate: {
+                        payload: joi_1.default.object({
+                            thumbnail: joi_1.default.any()
+                                .required()
+                                .meta({ swaggerType: "file" })
+                                .label("Audio File"),
+                        }),
+                        failAction: (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            },
+            {
+                method: "POST",
                 path: "/api/media/create-audio-media",
                 handler: Handlers_1.pushAudioToDriveHandler,
                 options: {
                     auth: false,
                     validate: {
                         payload: MediaValidators_1.createAudioFileValidator,
+                        failAction: async (request, h, err) => {
+                            throw err;
+                        },
+                    },
+                },
+            },
+            {
+                method: "POST",
+                path: "/api/media/create-thumbnail",
+                handler: Handlers_1.pushThumbnailToDriveHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        payload: MediaValidators_1.createThumbnailValidator,
                         failAction: async (request, h, err) => {
                             throw err;
                         },

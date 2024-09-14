@@ -78,6 +78,7 @@ model engagementsManager {
   eventStatus Boolean
   videoStatus Boolean
   audioStatus Boolean
+  thumbnailStatus Boolean
   mediaId       String? @unique
   specialKey    String @unique
   notificationId Int @unique

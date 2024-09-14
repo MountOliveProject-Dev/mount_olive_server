@@ -5,11 +5,13 @@ import { IncomingMessage, ServerResponse } from "http";
 export enum MediaType {
   VIDEO = "Video",
   AUDIO = "Audio",
+  IMAGE = "Image",
 }
 
 export enum NotificationType {
   VIDEO = "Video",
   AUDIO = "Audio",
+  IMAGE ="Image",
   EVENT = "Event",
 }
 

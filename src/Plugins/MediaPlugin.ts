@@ -9,6 +9,7 @@ import {
   createAudioFileValidator,
   updateAudioFileValidator,
   createFolderInputValidator,
+  createThumbnailValidator,
 } from "../Validators/MediaValidators";
 import {
   createFolder,
@@ -23,6 +24,8 @@ import {
   getAllFoldersInGoogleDrive,
   deleteManyFromGoogleDrive,
   pushAudioToDriveHandler,
+  storeThumbnailFileHandler,
+  pushThumbnailToDriveHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -59,12 +62,52 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       },
       {
         method: "POST",
+        path: "/upload-thumbnail",
+        handler: storeThumbnailFileHandler,
+        options: {
+          auth: false,
+          payload: {
+            output: "stream",
+            parse: true,
+            timeout: 3000000,
+            multipart: true,
+            maxBytes: 104857600000, // Limit to 100MB
+          },
+          validate: {
+            payload: Joi.object({
+              thumbnail: Joi.any()
+                .required()
+                .meta({ swaggerType: "file" })
+                .label("Audio File"),
+            }),
+            failAction: (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+      },
+      {
+        method: "POST",
         path: "/api/media/create-audio-media",
         handler: pushAudioToDriveHandler,
         options: {
           auth: false,
           validate: {
             payload: createAudioFileValidator,
+            failAction: async (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+      },
+      {
+        method: "POST",
+        path: "/api/media/create-thumbnail",
+        handler: pushThumbnailToDriveHandler,
+        options: {
+          auth: false,
+          validate: {
+            payload: createThumbnailValidator,
             failAction: async (request, h, err) => {
               throw err;
             },

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAudioFileValidator = exports.createAudioFileValidator = exports.updateVideoMediaInputValidator = exports.createVideoMediaInputValidator = exports.updateMediaInputValidator = exports.createMediaInputValidator = exports.updateFolderInputValidator = exports.createFolderInputValidator = void 0;
+exports.updateThumbnailValidator = exports.createThumbnailValidator = exports.updateAudioFileValidator = exports.createAudioFileValidator = exports.updateVideoMediaInputValidator = exports.createVideoMediaInputValidator = exports.updateMediaInputValidator = exports.createMediaInputValidator = exports.updateFolderInputValidator = exports.createFolderInputValidator = void 0;
 const joi_1 = __importDefault(require("joi"));
 const Helpers_1 = require("../Helpers");
 const folderInputValidator = joi_1.default.object({
@@ -85,11 +85,15 @@ const audioFileValidator = joi_1.default.object({
     }),
     filePath: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+    reUploadMedia: joi_1.default.boolean().alter({
+        create: (schema) => schema.forbidden(),
+        update: (schema) => schema.optional(),
     }),
     mimeType: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
     }),
     uniqueId: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
@@ -98,4 +102,28 @@ const audioFileValidator = joi_1.default.object({
 });
 exports.createAudioFileValidator = audioFileValidator.tailor("create");
 exports.updateAudioFileValidator = audioFileValidator.tailor("update");
+const thumbnailValidator = joi_1.default.object({
+    name: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.required(),
+    }),
+    filePath: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+    reUploadMedia: joi_1.default.boolean().alter({
+        create: (schema) => schema.forbidden(),
+        update: (schema) => schema.optional(),
+    }),
+    mimeType: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional(),
+    }),
+    uniqueId: joi_1.default.string().alter({
+        create: (schema) => schema.forbidden(),
+        update: (schema) => schema.required(),
+    }),
+});
+exports.createThumbnailValidator = thumbnailValidator.tailor("create");
+exports.updateThumbnailValidator = thumbnailValidator.tailor("update");
 //# sourceMappingURL=MediaValidators.js.map

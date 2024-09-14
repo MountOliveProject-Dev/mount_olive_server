@@ -5,11 +5,13 @@ var MediaType;
 (function (MediaType) {
     MediaType["VIDEO"] = "Video";
     MediaType["AUDIO"] = "Audio";
+    MediaType["IMAGE"] = "Image";
 })(MediaType || (exports.MediaType = MediaType = {}));
 var NotificationType;
 (function (NotificationType) {
     NotificationType["VIDEO"] = "Video";
     NotificationType["AUDIO"] = "Audio";
+    NotificationType["IMAGE"] = "Image";
     NotificationType["EVENT"] = "Event";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 var folderType;
