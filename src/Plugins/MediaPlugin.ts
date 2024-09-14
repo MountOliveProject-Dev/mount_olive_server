@@ -75,10 +75,10 @@ export const mediaPlugin: Hapi.Plugin<void> = {
           },
           validate: {
             payload: Joi.object({
-              thumbnail: Joi.any()
+              thumbnailFile: Joi.any()
                 .required()
                 .meta({ swaggerType: "file" })
-                .label("Audio File"),
+                .label("thumbnail"),
             }),
             failAction: (request, h, err) => {
               throw err;

@@ -55,10 +55,10 @@ exports.mediaPlugin = {
                     },
                     validate: {
                         payload: joi_1.default.object({
-                            thumbnail: joi_1.default.any()
+                            thumbnailFile: joi_1.default.any()
                                 .required()
                                 .meta({ swaggerType: "file" })
-                                .label("Audio File"),
+                                .label("thumbnail"),
                         }),
                         failAction: (request, h, err) => {
                             throw err;
