@@ -95,13 +95,13 @@ exports.mediaPlugin = {
                 },
             },
             {
-                method: "DELETE",
-                path: "/api/media/delete-audio/{uniqueId}",
+                method: "POST",
+                path: "/api/media/delete-audio",
                 handler: Handlers_1.deleteAudioFileHandler,
                 options: {
                     auth: false,
                     validate: {
-                        params: joi_1.default.object({
+                        payload: joi_1.default.object({
                             uniqueId: joi_1.default.string().required(),
                         }),
                         failAction: async (request, h, err) => {
