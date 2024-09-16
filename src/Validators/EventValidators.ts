@@ -3,7 +3,7 @@ import Joi from "joi";
 const eventInputValidator = Joi.object({
   title: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
   uniqueId: Joi.string().alter({
     create: (schema) => schema.forbidden(),
@@ -11,7 +11,7 @@ const eventInputValidator = Joi.object({
   }),
   date: Joi.string().alter({
     create: (schema) => schema.required(),
-    update: (schema) => schema.optional(),
+    update: (schema) => schema.optional().allow(""),
   }),
 
   time: Joi.string().alter({
@@ -37,10 +37,7 @@ const eventInputValidator = Joi.object({
     create: (schema) => schema.required(),
     update: (schema) => schema.optional().allow(""),
   }),
-  thumbnail: Joi.string().alter({
-    create: (schema) => schema.optional().allow(""),
-    update: (schema) => schema.optional().allow(""),
-  }),
+
   uploadThumbnail: Joi.boolean().alter({
     create: (schema) => schema.optional(),
     update: (schema) => schema.optional(),
@@ -57,14 +54,7 @@ const eventInputValidator = Joi.object({
     create: (schema) => schema.optional().allow(""),
     update: (schema) => schema.optional().allow(""),
   }),
-  createdAt: Joi.string().alter({
-    create: (schema) => schema.optional().allow(""),
-    update: (schema) => schema.optional().allow(""),
-  }),
-  updatedAt: Joi.string().alter({
-    create: (schema) => schema.optional().allow(""),
-    update: (schema) => schema.optional().allow(""),
-  }),
+
 });
 
 export const createEventInputValidator = eventInputValidator.tailor("create");

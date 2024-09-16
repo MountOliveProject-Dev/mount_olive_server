@@ -30,7 +30,8 @@ model Media {
   url String
   duration String?
   type MediaType
-  fileId String?
+  fileId String? @unique
+  host String?
   postedAt  String
   updatedAt     String
 

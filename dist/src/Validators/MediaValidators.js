@@ -79,6 +79,10 @@ const audioFileValidator = joi_1.default.object({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional().allow(""),
     }),
+    host: joi_1.default.string().alter({
+        create: (schema) => schema.required(),
+        update: (schema) => schema.optional().allow(""),
+    }),
     description: joi_1.default.string().alter({
         create: (schema) => schema.optional().allow(""),
         update: (schema) => schema.optional().allow(""),

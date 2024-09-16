@@ -9,6 +9,7 @@ export interface MediaInput {
   uniqueId : string;
   postedAt: string;
   updatedAt: string;
+  host: string;
 }
 
 export interface folderInput{

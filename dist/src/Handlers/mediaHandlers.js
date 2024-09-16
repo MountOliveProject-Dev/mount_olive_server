@@ -222,7 +222,7 @@ async function getAllFoldersInGoogleDrive(request, h) {
         return h.response("Error getting folders").code(500);
     }
 }
-async function createAudioFile(name, description, duration, mimeType, path) {
+async function createAudioFile(name, description, duration, mimeType, path, host) {
     try {
         const prisma = server_1.default.app.prisma;
         const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
@@ -268,6 +268,7 @@ async function createAudioFile(name, description, duration, mimeType, path) {
                 description: description || "No description provided",
                 duration: duration || " 0 sec",
                 url: shareableLink,
+                host: host,
                 fileId: response.data.id,
                 postedAt: (0, Helpers_1.getCurrentDate)(),
                 updatedAt: (0, Helpers_1.getCurrentDate)(),
@@ -330,7 +331,7 @@ async function deleteThumbnailFromDrive(fileId) {
         throw err;
     }
 }
-async function updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId, path, reUploadMedia) {
+async function updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId, path, reUploadMedia, host) {
     try {
         const prisma = server_1.default.app.prisma;
         const folderInfo = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "findFirst", {
@@ -395,6 +396,7 @@ async function updateAudioFileHelper(uniqueId, name, description, mimeType, find
                     description: description || findAudio.description,
                     duration: duration || " 0 sec",
                     url: shareableLink,
+                    host: host || findAudio.host,
                     fileId: response.data.id,
                     updatedAt: (0, Helpers_1.getCurrentDate)(),
                 },
@@ -448,6 +450,7 @@ async function updateAudioFileHelper(uniqueId, name, description, mimeType, find
                 data: {
                     title: name || findAudio.title,
                     description: description || findAudio.description,
+                    host: host || findAudio.host,
                     updatedAt: (0, Helpers_1.getCurrentDate)(),
                 },
             });
@@ -479,7 +482,7 @@ async function updateAudioFileHelper(uniqueId, name, description, mimeType, find
         throw err;
     }
 }
-async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path, reUploadMedia) {
+async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia) {
     try {
         const prisma = server_1.default.app.prisma;
         const description = "Thumbnail for an event";
@@ -492,12 +495,9 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
             throw new Error("Thumbnail folder not found");
         }
         if (reUploadMedia === true) {
-            await drive.files.delete({
-                fileId: thumbnailId,
-            });
             const findThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
                 where: {
-                    uniqueId: uniqueId,
+                    fileId: fileId,
                     type: Helpers_1.MediaType.IMAGE,
                 },
             });
@@ -505,6 +505,9 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
                 console.log("Thumbnail not found");
                 throw new Error("Thumbnail not found");
             }
+            await drive.files.delete({
+                fileId: fileId,
+            });
             const thumbnailName = name || findThumbnail.title + "-" + Date.now();
             const fileMetadata = {
                 name: thumbnailName,
@@ -535,7 +538,8 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
             console.log(`The thumbnail  ${name} with Unique ID: ${response.data.id} has been updated successfully!`);
             const updateThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
                 where: {
-                    uniqueId: uniqueId,
+                    fileId: fileId,
+                    uniqueId: findThumbnail.uniqueId,
                     type: Helpers_1.MediaType.IMAGE,
                 },
                 data: {
@@ -553,7 +557,7 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
             const type = Helpers_1.NotificationType.IMAGE;
             const read = false;
             const notificationTitle = "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
-            const specialKey = updateThumbnail.uniqueId + Helpers_1.NotificationType.IMAGE;
+            const specialKey = findThumbnail.uniqueId + Helpers_1.NotificationType.IMAGE;
             const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
                 where: {
                     notificationEngagements: {
@@ -579,7 +583,7 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
         else if (reUploadMedia === false) {
             const findThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
                 where: {
-                    uniqueId: uniqueId,
+                    fileId: fileId,
                     type: Helpers_1.MediaType.IMAGE,
                 },
             });
@@ -589,7 +593,8 @@ async function updateThumbnailHelper(uniqueId, name, mimeType, thumbnailId, path
             }
             const thumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
                 where: {
-                    uniqueId: uniqueId,
+                    fileId: fileId,
+                    uniqueId: findThumbnail.uniqueId,
                     type: Helpers_1.MediaType.IMAGE,
                 },
                 data: {
@@ -1008,6 +1013,7 @@ async function listAllAudioMediaHandler(request, h) {
                 description: true,
                 url: true,
                 duration: true,
+                host: true,
                 postedAt: true,
                 updatedAt: true
             }
@@ -1079,7 +1085,7 @@ async function deleteAudioFileHandler(request, h) {
 }
 //upload audio to google drive
 async function pushAudioToDriveHandler(request, h) {
-    const { name, description, filePath, mimeType } = request.payload;
+    const { name, description, filePath, mimeType, host } = request.payload;
     try {
         // Ensure the filePath is provided and is a string
         if (!filePath || typeof filePath !== 'string') {
@@ -1092,7 +1098,7 @@ async function pushAudioToDriveHandler(request, h) {
         catch (durationError) {
             console.warn("Could not calculate duration, proceeding without it:", durationError);
         }
-        const shareableLink = await createAudioFile(name, description, duration, mimeType, filePath);
+        const shareableLink = await createAudioFile(name, description, duration, mimeType, filePath, host);
         // Remove the file from the 'uploads' directory after processing
         fs_1.default.unlink(filePath, (err) => {
             if (err) {
@@ -1112,7 +1118,7 @@ async function pushAudioToDriveHandler(request, h) {
 //update audio
 async function updateAudioFile(request, h) {
     const prisma = request.server.app.prisma;
-    const { uniqueId, name, description, filePath, mimeType, reUploadMedia } = request.payload;
+    const { uniqueId, name, description, filePath, mimeType, reUploadMedia, host } = request.payload;
     try {
         let shareableLink = "";
         const findAudioId = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
@@ -1128,7 +1134,7 @@ async function updateAudioFile(request, h) {
             console.log("Audio not found");
             return h.response({ message: "Audio not found" }).code(404);
         }
-        shareableLink = await updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId.fileId, filePath, reUploadMedia);
+        shareableLink = await updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId.fileId, filePath, reUploadMedia, host);
         return h.response({ shareableLink }).code(200);
     }
     catch (error) {

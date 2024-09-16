@@ -222,7 +222,8 @@ async function createAudioFile(
   description: string,
   duration: string,
   mimeType: string,
-  path: string
+  path: string,
+  host:string
 ) {
   try {
     const prisma = server.app.prisma;
@@ -281,6 +282,7 @@ async function createAudioFile(
         description: description || "No description provided",
         duration: duration || " 0 sec",
         url: shareableLink,
+        host:host,
         fileId: response.data.id,
         postedAt: getCurrentDate(),
         updatedAt: getCurrentDate(),
@@ -360,6 +362,7 @@ async function updateAudioFileHelper(
   findAudioId: string,
   path: string,
   reUploadMedia: boolean,
+  host:string
 ){
   try{
     const prisma = server.app.prisma;
@@ -438,6 +441,7 @@ async function updateAudioFileHelper(
           description: description || findAudio.description,
           duration: duration || " 0 sec",
           url: shareableLink,
+          host: host || findAudio.host,
           fileId: response.data.id,
           updatedAt: getCurrentDate(),
         },
@@ -504,6 +508,7 @@ async function updateAudioFileHelper(
         data: {
           title: name || findAudio.title,
           description: description || findAudio.description,
+          host: host || findAudio.host,
           updatedAt: getCurrentDate(),
           },
         
@@ -546,10 +551,9 @@ async function updateAudioFileHelper(
   }
 }
 export async function updateThumbnailHelper(
-  uniqueId: string,
+  fileId: string,
   name: string,
   mimeType: string,
-  thumbnailId: string,
   path: string,
   reUploadMedia: boolean,
 ){
@@ -570,9 +574,7 @@ export async function updateThumbnailHelper(
        throw new Error("Thumbnail folder not found");
      }
      if (reUploadMedia === true) {
-       await drive.files.delete({
-         fileId: thumbnailId,
-       });
+      
        
         const findThumbnail = await executePrismaMethod(
           prisma,
@@ -580,7 +582,7 @@ export async function updateThumbnailHelper(
           "findUnique",
           {
             where: {
-              uniqueId: uniqueId,
+              fileId: fileId,
               type: MediaType.IMAGE,
             },
           }
@@ -589,6 +591,9 @@ export async function updateThumbnailHelper(
           console.log("Thumbnail not found");
           throw new Error("Thumbnail not found");
         }
+         await drive.files.delete({
+           fileId: fileId,
+         });
        const thumbnailName = name || findThumbnail.title + "-" + Date.now();
        const fileMetadata = {
          name: thumbnailName,
@@ -627,7 +632,8 @@ export async function updateThumbnailHelper(
          "update",
          {
            where: {
-             uniqueId: uniqueId,
+             fileId: fileId,
+             uniqueId: findThumbnail.uniqueId,
              type: MediaType.IMAGE,
            },
            data: {
@@ -647,7 +653,7 @@ export async function updateThumbnailHelper(
        const read = false;
        const notificationTitle =
          "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
-       const specialKey = updateThumbnail.uniqueId + NotificationType.IMAGE;
+       const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
        const getNotification = await executePrismaMethod(
          prisma,
          "notification",
@@ -689,7 +695,7 @@ export async function updateThumbnailHelper(
          "findUnique",
          {
            where: {
-             uniqueId: uniqueId,
+             fileId: fileId,
              type: MediaType.IMAGE,
            },
          }
@@ -700,7 +706,8 @@ export async function updateThumbnailHelper(
        }
        const thumbnail = await executePrismaMethod(prisma, "media", "update", {
          where: {
-           uniqueId: uniqueId,
+           fileId: fileId,
+           uniqueId: findThumbnail.uniqueId,
            type: MediaType.IMAGE,
          },
          data: {
@@ -1230,6 +1237,7 @@ export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.Re
               description: true,
               url: true,
               duration: true,
+              host: true,
               postedAt: true,
               updatedAt: true
           }
@@ -1309,12 +1317,13 @@ export async function pushAudioToDriveHandler(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
 ) {
-  const { name, description, filePath, mimeType } =
+  const { name, description, filePath, mimeType,host } =
     request.payload as {
       name: string;
       description: string;
       filePath: string;
       mimeType: string;
+      host:string;
     };
 
   try {
@@ -1335,7 +1344,8 @@ export async function pushAudioToDriveHandler(
       description,
       duration,
       mimeType,
-      filePath
+      filePath,
+      host
     );
 
     // Remove the file from the 'uploads' directory after processing
@@ -1356,7 +1366,7 @@ export async function pushAudioToDriveHandler(
 //update audio
 export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToolkit){
   const prisma = request.server.app.prisma;
-   const { uniqueId, name, description, filePath, mimeType, reUploadMedia } =
+   const { uniqueId, name, description, filePath, mimeType, reUploadMedia,host } =
      request.payload as {
        name: string;
        description: string;
@@ -1364,6 +1374,7 @@ export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToo
        mimeType: string;
        uniqueId: string;
        reUploadMedia: boolean;
+       host:string;
      };
     try {
       let shareableLink : string = "";
@@ -1392,6 +1403,7 @@ export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToo
         findAudioId.fileId,
         filePath,
         reUploadMedia,
+        host
       );
       return h.response({ shareableLink }).code(200);
     } catch (error) {

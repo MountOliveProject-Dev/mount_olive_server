@@ -8,7 +8,7 @@ const joi_1 = __importDefault(require("joi"));
 const eventInputValidator = joi_1.default.object({
     title: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     uniqueId: joi_1.default.string().alter({
         create: (schema) => schema.forbidden(),
@@ -16,7 +16,7 @@ const eventInputValidator = joi_1.default.object({
     }),
     date: joi_1.default.string().alter({
         create: (schema) => schema.required(),
-        update: (schema) => schema.optional(),
+        update: (schema) => schema.optional().allow(""),
     }),
     time: joi_1.default.string().alter({
         create: (schema) => schema.required(),
@@ -38,10 +38,6 @@ const eventInputValidator = joi_1.default.object({
         create: (schema) => schema.required(),
         update: (schema) => schema.optional().allow(""),
     }),
-    thumbnail: joi_1.default.string().alter({
-        create: (schema) => schema.optional().allow(""),
-        update: (schema) => schema.optional().allow(""),
-    }),
     uploadThumbnail: joi_1.default.boolean().alter({
         create: (schema) => schema.optional(),
         update: (schema) => schema.optional(),
@@ -55,14 +51,6 @@ const eventInputValidator = joi_1.default.object({
         update: (schema) => schema.optional().allow(""),
     }),
     filePath: joi_1.default.string().alter({
-        create: (schema) => schema.optional().allow(""),
-        update: (schema) => schema.optional().allow(""),
-    }),
-    createdAt: joi_1.default.string().alter({
-        create: (schema) => schema.optional().allow(""),
-        update: (schema) => schema.optional().allow(""),
-    }),
-    updatedAt: joi_1.default.string().alter({
         create: (schema) => schema.optional().allow(""),
         update: (schema) => schema.optional().allow(""),
     }),

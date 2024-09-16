@@ -138,7 +138,8 @@ async function createEventHandler(request, h) {
 //create an update events handler
 async function updateEventHandler(request, h) {
     const { prisma } = request.server.app;
-    const { uniqueId, title, description, thumbnail, date, host, time, location, venue } = request.payload;
+    const { uniqueId, title, description, date, host, time, location, venue, uploadThumbnail, name, mimeType, filePath, } = request.payload;
+    let thumbnailLink = null;
     try {
         const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {
@@ -156,36 +157,77 @@ async function updateEventHandler(request, h) {
         if (!findEvent) {
             return h.response({ message: "Event not found" }).code(404);
         }
-        const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
-            where: {
-                id: findEvent.id,
-                uniqueId: uniqueId,
-            },
-            data: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail,
-                location: location,
-                venue: venue,
-                time: time,
-                date: date,
-                host: host,
-                updatedAt: (0, Helpers_1.getCurrentDate)(),
-            },
-        });
-        if (!event) {
-            return h.response({ message: "Failed to update the event" }).code(400);
+        if (uploadThumbnail === true && filePath !== null && mimeType !== null && name !== null) {
+            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
+            if (!thumbnailLink) {
+                return h.response({ message: "Couldn't update thumbnail, please try again " }).code(400);
+            }
+            const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
+                where: {
+                    id: findEvent.id,
+                    uniqueId: uniqueId,
+                },
+                data: {
+                    title: title || findEvent.title,
+                    description: description || findEvent.description,
+                    thumbnail: thumbnailLink || findEvent.thumbnail,
+                    location: location || findEvent.location,
+                    venue: venue || findEvent.venue,
+                    time: time || findEvent.time,
+                    date: date || findEvent.date,
+                    host: host || findEvent.host,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!event) {
+                return h.response({ message: "Failed to update the event" }).code(400);
+            }
+            const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
+            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
+            if (updateNotification.code == 500) {
+                console.log(updateNotification.message);
+                console.log("event deleted");
+                return h.response({ message: "Failed to update the event" }).code(400);
+            }
+            else if (updateNotification.code == 200) {
+                return h.response({ message: "Event updated successfully!" }).code(201);
+            }
         }
-        const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
-        const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
-        const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
-        if (updateNotification.code == 500) {
-            console.log(updateNotification.message);
-            console.log("event deleted");
-            return h.response({ message: "Failed to update the event" }).code(400);
+        else if (uploadThumbnail === false && filePath === null && mimeType === null && name === null) {
+            const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
+                where: {
+                    id: findEvent.id,
+                    uniqueId: uniqueId,
+                },
+                data: {
+                    title: title || findEvent.title,
+                    description: description || findEvent.description,
+                    location: location || findEvent.location,
+                    venue: venue || findEvent.venue,
+                    time: time || findEvent.time,
+                    date: date || findEvent.date,
+                    host: host || findEvent.host,
+                    updatedAt: (0, Helpers_1.getCurrentDate)(),
+                },
+            });
+            if (!event) {
+                return h.response({ message: "Failed to update the event" }).code(400);
+            }
+            const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
+            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
+            if (updateNotification.code == 500) {
+                console.log(updateNotification.message);
+                return h.response({ message: "Failed to update the event" }).code(400);
+            }
+            else if (updateNotification.code == 200) {
+                return h.response({ message: "Event updated successfully!" }).code(201);
+            }
         }
-        else if (updateNotification.code == 200) {
-            return h.response({ message: "Event updated successfully!" }).code(201);
+        else {
+            return h.response({ message: "Bad request, thumbnail status is undefined" }).code(400);
         }
     }
     catch (err) {
@@ -279,7 +321,7 @@ async function deleteEventHandler(request, h) {
             console.log("file id", fileId);
         }
         const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
-        if (!deleteThumbnail) {
+        if (deleteThumbnail === true) {
             const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
             const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
             if (!deleteNotification) {
