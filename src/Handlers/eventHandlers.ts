@@ -9,7 +9,7 @@ import {
   
 } from "./notificationHandlers";
 import {NotificationType } from "../Helpers"; 
-import { createThumbnailFile } from "./mediaHandlers";
+import { createThumbnailFile, deleteThumbnailFromDrive } from "./mediaHandlers";
 import fs from "fs";
 
 
@@ -302,7 +302,12 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
 }
 
 
-
+//create a function to extract the id from this link: https://drive.google.com/file/d/${response.data.id}/view?usp=sharing
+export async function extractFileIdFromDriveLink(link: string) {
+    const splitLink = link.split("/");
+    const fileId = splitLink[5];
+    return fileId;
+}
 export async function deleteEventHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
     const { prisma } = request.server.app;
     const { uniqueId } = request.payload as EventInput;
@@ -315,6 +320,7 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
              select:{
                 id:true,
                 uniqueId:true,
+                thumbnail:true,
                 eventNotifications: {
                     select:{
                         notificationId: true
@@ -327,36 +333,46 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
             console.log("event not found");
             return h.response({message: "Event not found"}).code(404);
         }
-
-        const specialKey = findEvent.uniqueId + NotificationType.EVENT;
-
-        const deleteNotification = await deleteEventNotificationHandler(
-            findEvent.eventNotifications.notificationId,
-            findEvent.uniqueId,
-          specialKey
-        );
-        
-        if(!deleteNotification){
-            console.log(deleteNotification);
-            return h.response({message: "Failed to delete the notification"}).code(400);
-        }else{
-            console.log("notification deleted");
-            console.log(deleteNotification);
+        let fileId
+        if(findEvent.thumbnail !== null){
+            fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            console.log("file id", fileId);
         }
-        
-        const eventDeletion = await executePrismaMethod(prisma, "event", "delete", {
-          where: {
-            id: findEvent.id,
-          },
-        });
+        const deleteThumbnail = await deleteThumbnailFromDrive(fileId);
+        if(!deleteThumbnail){
+            const specialKey = findEvent.uniqueId + NotificationType.EVENT;
 
-        if(!eventDeletion){
-            return h.response({message: "Failed to delete the event"}).code(400);
-        }else{
-            console.log("event deleted");
+            const deleteNotification = await deleteEventNotificationHandler(
+                findEvent.eventNotifications.notificationId,
+                findEvent.uniqueId,
+            specialKey
+            );
+            
+            if(!deleteNotification){
+                console.log(deleteNotification);
+                return h.response({message: "Failed to delete the notification"}).code(400);
+            }else{
+                console.log("notification deleted");
+                console.log(deleteNotification);
+            }
+            
+            const eventDeletion = await executePrismaMethod(prisma, "event", "delete", {
+            where: {
+                id: findEvent.id,
+            },
+            });
+
+            if(!eventDeletion){
+                return h.response({message: "Failed to delete the event"}).code(400);
+            }else{
+                console.log("event deleted");
+            }
+            const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
+            return h.response(message).code(201).message(message);
+        } else{
+            console.log("Failed to delete the thumbnail: "+deleteThumbnail);
+            return h.response({message: "Failed to delete event"}).code(400);
         }
-        const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
-        return h.response().code(201).message(message);
     }catch(err){
         console.log(err);
         return h.response({message: "Internal Server Error" + ":failed to delete the event:" + uniqueId}).code(500);

@@ -19,6 +19,7 @@ import {
   updateMediaNotificationHandler,
   deleteMediaNotificationHandler,
 } from "./notificationHandlers";
+import { file } from "googleapis/build/src/apis/file";
 
 
 
@@ -316,6 +317,38 @@ async function createAudioFile(
   } catch (error) {
     console.error("Error uploading file to Google Drive:", error);
     throw error;
+  }
+}
+async function deleteAudioFileFromDrive(fileId: string){
+  try{
+    
+    const deleteFile = await drive.files.delete({
+      fileId: fileId,   
+    });
+    if (!deleteFile) {
+      console.log("Failed to delete file");
+      return false;
+    }
+    return true;
+  }catch(err){
+    console.log(err);
+    throw err;
+  }
+}
+
+export async function deleteThumbnailFromDrive(fileId: string){
+  try{
+    const deleteFile = await drive.files.delete({
+      fileId: fileId,   
+    });
+    if (!deleteFile) {
+      console.log("Failed to delete file");
+      return false;
+    }
+    return true;
+  }catch(err){
+    console.log(err);
+    throw err;
   }
 }
 
@@ -805,6 +838,7 @@ export async function createThumbnailFile(
 }
 
 
+
 // Helper function to format duration
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -1131,40 +1165,7 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
 
 
 //list all audios
-export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
-  const { prisma } = request.server.app;
-
-  try{
-      const media = await executePrismaMethod(prisma, "media", "findMany", {
-          where: {
-              type: MediaType.AUDIO
-          },
-          orderBy: {
-              postedAt: "desc"
-          },
-          select:{
-              id: true,
-              uniqueId: true,
-              title: true,
-              description: true,
-              url: true,
-              duration: true,
-              postedAt: true,
-              updatedAt: true
-          }
-
-      });
-      if(!media){
-          console.log("No audio media found");
-          return h.response({message: "No audio media found"}).code(404);
-      }
-      return h.response(media).code(200);
-  }catch(err){
-      console.log(err);
-      return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
-  }
-}
-//upload audio to server
+//audio media
 export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
@@ -1199,7 +1200,11 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
         resolve();
       });
     });
-    console.log("filePath:"+ filePath,"mimeType:"+ mimeType,"filename:"+ filename);
+    console.log(
+      "filePath:" + filePath,
+      "mimeType:" + mimeType,
+      "filename:" + filename
+    );
     return h.response({ filePath, mimeType, filename }).code(200);
   } catch (error) {
     console.error("Error during file processing:", error);
@@ -1207,48 +1212,98 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
   }
 };
 
-export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
-  request: Hapi.Request,
-  h: Hapi.ResponseToolkit
-) => {
-  const { thumbnailFile } = request.payload as { thumbnailFile: any };
+export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
 
-  if (!thumbnailFile) {
-    return h.response({ error: "No file uploaded" }).code(400);
+  try{
+      const media = await executePrismaMethod(prisma, "media", "findMany", {
+          where: {
+              type: MediaType.AUDIO
+          },
+          orderBy: {
+              postedAt: "desc"
+          },
+          select:{
+              id: true,
+              uniqueId: true,
+              title: true,
+              description: true,
+              url: true,
+              duration: true,
+              postedAt: true,
+              updatedAt: true
+          }
+
+      });
+      if(!media){
+          console.log("No audio media found");
+          return h.response({message: "No audio media found"}).code(404);
+      }
+      return h.response(media).code(200);
+  }catch(err){
+      console.log(err);
+      return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
   }
-
-  const filename = thumbnailFile.hapi.filename;
-  const mimeType = thumbnailFile.hapi.headers["content-type"];
-  const uploadsDir = path.join(__dirname, "uploads");
-
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-  }
-
-  const filePath = path.join(uploadsDir, filename);
+}
+//upload audio to server
+export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
+  const { uniqueId } = request.payload as { uniqueId: string };
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      const fileStream = fs.createWriteStream(filePath);
-      thumbnailFile.pipe(fileStream);
-
-      fileStream.on("error", (err) => {
-        console.error("Error writing file:", err);
-        reject(err);
-      });
-
-      fileStream.on("finish", () => {
-        resolve();
-      });
+    const findAudio = await executePrismaMethod(prisma, "media", "findUnique", {
+      where: {
+        uniqueId: uniqueId,
+        type: MediaType.AUDIO,
+      },
+      select: {
+        id: true,
+        fileId: true,
+        mediaNotifications: {
+          select: {
+            notificationId: true,
+          },
+        },
+      },
     });
+    if (!findAudio) {
+      console.log("Audio not found");
+      return h.response({ message: "Audio not found" }).code(404);
+    }
 
-    return h.response({ filePath, mimeType, filename }).code(200);
+    //delete 
+    const deleteFromDrive = await deleteAudioFileFromDrive(findAudio.fileId);
+    if(deleteFromDrive){
+      const deleteAudio = await executePrismaMethod(prisma, "media", "delete", {
+        where: {
+          id: findAudio.id,
+        },
+      });
+      if (!deleteAudio) {
+        console.log("Failed to delete audio media");
+        return h.response({ message: "Failed to delete audio media" }).code(400);
+      }
+      const specialKey = findAudio.uniqueId + NotificationType.AUDIO;
+      const notification = await deleteMediaNotificationHandler(
+        findAudio.mediaNotifications.notificationId,
+        findAudio.uniqueId,
+        specialKey,
+        NotificationType.AUDIO
+      );
+      if (!notification) {
+        console.log("Failed to delete notification for audio media");
+        return h.response({ message: "Failed to delete notification for audio media" }).code(400);
+      }
+      return h.response({ message: "Audio deleted successfully" }).code(201);
+    }else{
+      console.log("Failed to delete audio media from google drive");
+      return h.response({ message: "Failed to delete audio media" }).code(400);
+    }
   } catch (error) {
-    console.error("Error during file processing:", error);
-    return h.response({ error: "Failed to store file" }).code(500);
+    console.error("Error deleting audio:", error);
+    return h.response("Error deleting audio").code(500);
   }
-};
-
+}
 //upload audio to google drive
 export async function pushAudioToDriveHandler(
   request: Hapi.Request,
@@ -1298,8 +1353,6 @@ export async function pushAudioToDriveHandler(
       .code(500);
   }
 };
-
-
 //update audio
 export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToolkit){
   const prisma = request.server.app.prisma;
@@ -1348,3 +1401,47 @@ export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToo
         .code(500);
     }
 }
+
+
+//eventthumbnail
+export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
+  request: Hapi.Request,
+  h: Hapi.ResponseToolkit
+) => {
+  const { thumbnailFile } = request.payload as { thumbnailFile: any };
+
+  if (!thumbnailFile) {
+    return h.response({ error: "No file uploaded" }).code(400);
+  }
+
+  const filename = thumbnailFile.hapi.filename;
+  const mimeType = thumbnailFile.hapi.headers["content-type"];
+  const uploadsDir = path.join(__dirname, "uploads");
+
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+  }
+
+  const filePath = path.join(uploadsDir, filename);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const fileStream = fs.createWriteStream(filePath);
+      thumbnailFile.pipe(fileStream);
+
+      fileStream.on("error", (err) => {
+        console.error("Error writing file:", err);
+        reject(err);
+      });
+
+      fileStream.on("finish", () => {
+        resolve();
+      });
+    });
+
+    return h.response({ filePath, mimeType, filename }).code(200);
+  } catch (error) {
+    console.error("Error during file processing:", error);
+    return h.response({ error: "Failed to store file" }).code(500);
+  }
+};

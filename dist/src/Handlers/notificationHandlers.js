@@ -22,7 +22,8 @@ const listNotificationsHandler = async (request, h) => {
                 createdAt: true,
                 updatedAt: true,
             },
-        });
+        } //
+        );
         if (!notifications || notifications.length === 0) {
             console.log("No notifications found");
             return h.response({ message: "No notifications found" }).code(404);

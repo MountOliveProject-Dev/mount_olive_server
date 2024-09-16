@@ -23,6 +23,7 @@ import {
   pushAudioToDriveHandler,
   storeThumbnailFileHandler,
   updateAudioFile,
+  deleteAudioFileHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -110,6 +111,23 @@ export const mediaPlugin: Hapi.Plugin<void> = {
             },
           },
         },
+      },
+      {
+        method: "POST",
+        path:"/api/media/delete-audio",
+        handler: deleteAudioFileHandler,
+        options: {
+          auth: false,
+          validate: {
+            payload: Joi.object({
+              uniqueId: Joi.string().required(),
+            }),
+            failAction: async (request, h, err) => {
+              throw err;
+            },
+          },
+        },
+
       },
       {
         method: "GET",

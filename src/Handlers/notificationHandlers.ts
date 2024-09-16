@@ -29,7 +29,7 @@ export const listNotificationsHandler = async (
           createdAt: true,
           updatedAt: true,
         },
-      }
+      }//
     );
 
     if (!notifications || notifications.length === 0) {

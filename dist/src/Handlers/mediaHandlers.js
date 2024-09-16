@@ -33,12 +33,14 @@ exports.deleteFolder = deleteFolder;
 exports.deleteManyFromGoogleDrive = deleteManyFromGoogleDrive;
 exports.getAllFolders = getAllFolders;
 exports.getAllFoldersInGoogleDrive = getAllFoldersInGoogleDrive;
+exports.deleteThumbnailFromDrive = deleteThumbnailFromDrive;
 exports.updateThumbnailHelper = updateThumbnailHelper;
 exports.createThumbnailFile = createThumbnailFile;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
 exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
+exports.deleteAudioFileHandler = deleteAudioFileHandler;
 exports.pushAudioToDriveHandler = pushAudioToDriveHandler;
 exports.updateAudioFile = updateAudioFile;
 const server_1 = __importDefault(require("../server"));
@@ -294,6 +296,38 @@ async function createAudioFile(name, description, duration, mimeType, path) {
     catch (error) {
         console.error("Error uploading file to Google Drive:", error);
         throw error;
+    }
+}
+async function deleteAudioFileFromDrive(fileId) {
+    try {
+        const deleteFile = await drive.files.delete({
+            fileId: fileId,
+        });
+        if (!deleteFile) {
+            console.log("Failed to delete file");
+            return false;
+        }
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+async function deleteThumbnailFromDrive(fileId) {
+    try {
+        const deleteFile = await drive.files.delete({
+            fileId: fileId,
+        });
+        if (!deleteFile) {
+            console.log("Failed to delete file");
+            return false;
+        }
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        throw err;
     }
 }
 async function updateAudioFileHelper(uniqueId, name, description, mimeType, findAudioId, path, reUploadMedia) {
@@ -923,39 +957,7 @@ exports.listAllVideoMediaHandler = listAllVideoMediaHandler;
 //   }
 // };
 //list all audios
-async function listAllAudioMediaHandler(request, h) {
-    const { prisma } = request.server.app;
-    try {
-        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
-            where: {
-                type: Helpers_1.MediaType.AUDIO
-            },
-            orderBy: {
-                postedAt: "desc"
-            },
-            select: {
-                id: true,
-                uniqueId: true,
-                title: true,
-                description: true,
-                url: true,
-                duration: true,
-                postedAt: true,
-                updatedAt: true
-            }
-        });
-        if (!media) {
-            console.log("No audio media found");
-            return h.response({ message: "No audio media found" }).code(404);
-        }
-        return h.response(media).code(200);
-    }
-    catch (err) {
-        console.log(err);
-        return h.response({ message: "Internal Server Error" + ":failed to get all audio media" }).code(500);
-    }
-}
-//upload audio to server
+//audio media
 const storeAudioFileHandler = async (request, h) => {
     const { audioFile } = request.payload;
     if (!audioFile) {
@@ -989,38 +991,92 @@ const storeAudioFileHandler = async (request, h) => {
     }
 };
 exports.storeAudioFileHandler = storeAudioFileHandler;
-const storeThumbnailFileHandler = async (request, h) => {
-    const { thumbnailFile } = request.payload;
-    if (!thumbnailFile) {
-        return h.response({ error: "No file uploaded" }).code(400);
-    }
-    const filename = thumbnailFile.hapi.filename;
-    const mimeType = thumbnailFile.hapi.headers["content-type"];
-    const uploadsDir = path.join(__dirname, "uploads");
-    if (!fs_1.default.existsSync(uploadsDir)) {
-        fs_1.default.mkdirSync(uploadsDir);
-    }
-    const filePath = path.join(uploadsDir, filename);
+async function listAllAudioMediaHandler(request, h) {
+    const { prisma } = request.server.app;
     try {
-        await new Promise((resolve, reject) => {
-            const fileStream = fs_1.default.createWriteStream(filePath);
-            thumbnailFile.pipe(fileStream);
-            fileStream.on("error", (err) => {
-                console.error("Error writing file:", err);
-                reject(err);
-            });
-            fileStream.on("finish", () => {
-                resolve();
-            });
+        const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findMany", {
+            where: {
+                type: Helpers_1.MediaType.AUDIO
+            },
+            orderBy: {
+                postedAt: "desc"
+            },
+            select: {
+                id: true,
+                uniqueId: true,
+                title: true,
+                description: true,
+                url: true,
+                duration: true,
+                postedAt: true,
+                updatedAt: true
+            }
         });
-        return h.response({ filePath, mimeType, filename }).code(200);
+        if (!media) {
+            console.log("No audio media found");
+            return h.response({ message: "No audio media found" }).code(404);
+        }
+        return h.response(media).code(200);
+    }
+    catch (err) {
+        console.log(err);
+        return h.response({ message: "Internal Server Error" + ":failed to get all audio media" }).code(500);
+    }
+}
+//upload audio to server
+async function deleteAudioFileHandler(request, h) {
+    const { prisma } = request.server.app;
+    const { uniqueId } = request.payload;
+    try {
+        const findAudio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
+            where: {
+                uniqueId: uniqueId,
+                type: Helpers_1.MediaType.AUDIO,
+            },
+            select: {
+                id: true,
+                fileId: true,
+                mediaNotifications: {
+                    select: {
+                        notificationId: true,
+                    },
+                },
+            },
+        });
+        if (!findAudio) {
+            console.log("Audio not found");
+            return h.response({ message: "Audio not found" }).code(404);
+        }
+        //delete 
+        const deleteFromDrive = await deleteAudioFileFromDrive(findAudio.fileId);
+        if (deleteFromDrive) {
+            const deleteAudio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
+                where: {
+                    id: findAudio.id,
+                },
+            });
+            if (!deleteAudio) {
+                console.log("Failed to delete audio media");
+                return h.response({ message: "Failed to delete audio media" }).code(400);
+            }
+            const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
+            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.mediaNotifications.notificationId, findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
+            if (!notification) {
+                console.log("Failed to delete notification for audio media");
+                return h.response({ message: "Failed to delete notification for audio media" }).code(400);
+            }
+            return h.response({ message: "Audio deleted successfully" }).code(201);
+        }
+        else {
+            console.log("Failed to delete audio media from google drive");
+            return h.response({ message: "Failed to delete audio media" }).code(400);
+        }
     }
     catch (error) {
-        console.error("Error during file processing:", error);
-        return h.response({ error: "Failed to store file" }).code(500);
+        console.error("Error deleting audio:", error);
+        return h.response("Error deleting audio").code(500);
     }
-};
-exports.storeThumbnailFileHandler = storeThumbnailFileHandler;
+}
 //upload audio to google drive
 async function pushAudioToDriveHandler(request, h) {
     const { name, description, filePath, mimeType } = request.payload;
@@ -1082,4 +1138,37 @@ async function updateAudioFile(request, h) {
             .code(500);
     }
 }
+//eventthumbnail
+const storeThumbnailFileHandler = async (request, h) => {
+    const { thumbnailFile } = request.payload;
+    if (!thumbnailFile) {
+        return h.response({ error: "No file uploaded" }).code(400);
+    }
+    const filename = thumbnailFile.hapi.filename;
+    const mimeType = thumbnailFile.hapi.headers["content-type"];
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs_1.default.existsSync(uploadsDir)) {
+        fs_1.default.mkdirSync(uploadsDir);
+    }
+    const filePath = path.join(uploadsDir, filename);
+    try {
+        await new Promise((resolve, reject) => {
+            const fileStream = fs_1.default.createWriteStream(filePath);
+            thumbnailFile.pipe(fileStream);
+            fileStream.on("error", (err) => {
+                console.error("Error writing file:", err);
+                reject(err);
+            });
+            fileStream.on("finish", () => {
+                resolve();
+            });
+        });
+        return h.response({ filePath, mimeType, filename }).code(200);
+    }
+    catch (error) {
+        console.error("Error during file processing:", error);
+        return h.response({ error: "Failed to store file" }).code(500);
+    }
+};
+exports.storeThumbnailFileHandler = storeThumbnailFileHandler;
 //# sourceMappingURL=mediaHandlers.js.map
