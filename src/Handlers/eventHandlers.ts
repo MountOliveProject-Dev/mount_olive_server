@@ -219,7 +219,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             if(!thumbnailLink){
                 return h.response({message: "Couldn't update thumbnail, please try again "}).code(400);
             }
-        
+        //
             const event = await executePrismaMethod(prisma, "event", "update", {
                 where: {
                     id: findEvent.id,

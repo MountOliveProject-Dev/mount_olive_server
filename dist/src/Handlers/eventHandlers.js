@@ -165,6 +165,7 @@ async function updateEventHandler(request, h) {
             if (!thumbnailLink) {
                 return h.response({ message: "Couldn't update thumbnail, please try again " }).code(400);
             }
+            //
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
                 where: {
                     id: findEvent.id,
