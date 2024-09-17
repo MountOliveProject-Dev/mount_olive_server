@@ -157,7 +157,7 @@ async function updateEventHandler(request, h) {
         if (!findEvent) {
             return h.response({ message: "Event not found" }).code(404);
         }
-        if (uploadThumbnail === true && filePath !== null && mimeType !== null && name !== null) {
+        if (uploadThumbnail === true) {
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
             thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
             if (!thumbnailLink) {
@@ -195,7 +195,7 @@ async function updateEventHandler(request, h) {
                 return h.response({ message: "Event updated successfully!" }).code(201);
             }
         }
-        else if (uploadThumbnail === false && filePath === null && mimeType === null && name === null) {
+        else if (uploadThumbnail === false) {
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
                 where: {
                     id: findEvent.id,
