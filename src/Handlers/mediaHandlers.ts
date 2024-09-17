@@ -1059,7 +1059,7 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
                 type: MediaType.VIDEO
             },
             orderBy: {
-                postedAt: "desc"
+                updatedAt: "desc"
             },
             select:{
                 id: true,
@@ -1228,7 +1228,7 @@ export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.Re
               type: MediaType.AUDIO
           },
           orderBy: {
-              postedAt: "desc"
+              updatedAt: "desc"
           },
           select:{
               id: true,

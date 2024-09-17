@@ -22,7 +22,7 @@ export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseT
             {
                 orderBy: [
                     {
-                    createdAt: "asc",
+                    updatedAt: "desc",
                     },
                 ],
             }

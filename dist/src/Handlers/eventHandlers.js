@@ -26,7 +26,7 @@ async function listEventsHandler(request, h) {
         const events = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findMany", {
             orderBy: [
                 {
-                    createdAt: "asc",
+                    updatedAt: "desc",
                 },
             ],
         });

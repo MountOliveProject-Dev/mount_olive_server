@@ -867,7 +867,7 @@ const listAllVideoMediaHandler = async (request, h) => {
                 type: Helpers_1.MediaType.VIDEO
             },
             orderBy: {
-                postedAt: "desc"
+                updatedAt: "desc"
             },
             select: {
                 id: true,
@@ -1004,7 +1004,7 @@ async function listAllAudioMediaHandler(request, h) {
                 type: Helpers_1.MediaType.AUDIO
             },
             orderBy: {
-                postedAt: "desc"
+                updatedAt: "desc"
             },
             select: {
                 id: true,
