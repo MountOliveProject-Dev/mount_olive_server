@@ -187,7 +187,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
       filePath,
     } = request.payload as EventInput;
     let thumbnailLink: any = null;
-    try{
+    try{//
         const findEvent = await executePrismaMethod(prisma, "event", "findUnique", {
             where: {
                 uniqueId: uniqueId,

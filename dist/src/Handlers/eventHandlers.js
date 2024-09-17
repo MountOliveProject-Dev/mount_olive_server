@@ -140,7 +140,7 @@ async function updateEventHandler(request, h) {
     const { prisma } = request.server.app;
     const { uniqueId, title, description, date, host, time, location, venue, uploadThumbnail, name, mimeType, filePath, } = request.payload;
     let thumbnailLink = null;
-    try {
+    try { //
         const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {
                 uniqueId: uniqueId,
