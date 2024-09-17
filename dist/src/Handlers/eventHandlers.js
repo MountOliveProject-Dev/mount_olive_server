@@ -318,41 +318,75 @@ async function deleteEventHandler(request, h) {
             console.log("event not found");
             return h.response({ message: "Event not found" }).code(404);
         }
-        let fileId;
         if (findEvent.thumbnail !== null) {
-            fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
             console.log("file id", fileId);
+            const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
+            if (deleteThumbnail === true) {
+                const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
+                const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
+                if (!deleteNotification) {
+                    console.log(deleteNotification);
+                    return h
+                        .response({ message: "Failed to delete the notification" })
+                        .code(400);
+                }
+                else {
+                    console.log("notification deleted");
+                    console.log(deleteNotification);
+                }
+                const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+                    where: {
+                        id: findEvent.id,
+                    },
+                });
+                if (!eventDeletion) {
+                    return h
+                        .response({ message: "Failed to delete the event" })
+                        .code(400);
+                }
+                else {
+                    console.log("event deleted");
+                }
+                const message = "Event with uniqueId: " +
+                    uniqueId +
+                    " was deleted successfully";
+                return h.response(message).code(201).message(message);
+            }
+            else {
+                console.log("Failed to delete the thumbnail: " + deleteThumbnail);
+                return h
+                    .response({ message: "Failed to delete event" })
+                    .code(400);
+            }
         }
-        const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
-        if (deleteThumbnail === true) {
-            const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
-            const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
-            if (!deleteNotification) {
-                console.log(deleteNotification);
-                return h.response({ message: "Failed to delete the notification" }).code(400);
-            }
-            else {
-                console.log("notification deleted");
-                console.log(deleteNotification);
-            }
-            const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
-                where: {
-                    id: findEvent.id,
-                },
-            });
-            if (!eventDeletion) {
-                return h.response({ message: "Failed to delete the event" }).code(400);
-            }
-            else {
-                console.log("event deleted");
-            }
-            const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
-            return h.response(message).code(201).message(message);
+        const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
+        const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
+        if (!deleteNotification) {
+            console.log(deleteNotification);
+            return h
+                .response({ message: "Failed to delete the notification" })
+                .code(400);
         }
         else {
-            console.log("Failed to delete the thumbnail: " + deleteThumbnail);
-            return h.response({ message: "Failed to delete event" }).code(400);
+            console.log("notification deleted");
+            console.log(deleteNotification);
         }
+        const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+            where: {
+                id: findEvent.id,
+            },
+        });
+        if (!eventDeletion) {
+            return h
+                .response({ message: "Failed to delete the event" })
+                .code(400);
+        }
+        else {
+            console.log("event deleted");
+        }
+        const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
+        return h.response(message).code(201).message(message);
     }
     catch (err) {
         console.log(err);
