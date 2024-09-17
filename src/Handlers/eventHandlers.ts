@@ -207,7 +207,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         }
         if(uploadThumbnail === true){
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
-
+            console.log("file id", fileId);
             thumbnailLink = await updateThumbnailHelper(
               fileId,
               name,
@@ -215,6 +215,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
               filePath,
               uploadThumbnail
             );
+            console.log("thumbnail link", thumbnailLink);
             if(!thumbnailLink){
                 return h.response({message: "Couldn't update thumbnail, please try again "}).code(400);
             }
