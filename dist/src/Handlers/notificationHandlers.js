@@ -89,7 +89,7 @@ const listNotificationsHandler = async (request, h) => {
             let media = {};
             console.log(associatedMedia);
             if (associatedMedia) {
-                if (associatedMedia.videoStatus) {
+                if (associatedMedia.videoStatus && !associatedMedia.media.id) {
                     notificationData.type = Helpers_1.NotificationType.VIDEO;
                     media = {
                         id: associatedMedia.media.id,
@@ -101,7 +101,7 @@ const listNotificationsHandler = async (request, h) => {
                         updatedAt: associatedMedia.media.updatedAt,
                     };
                 }
-                else if (associatedMedia.audioStatus) {
+                else if (associatedMedia.audioStatus && !associatedMedia.media.id) {
                     notificationData.type = Helpers_1.NotificationType.AUDIO;
                     media = {
                         id: associatedMedia.media.id,
@@ -114,7 +114,7 @@ const listNotificationsHandler = async (request, h) => {
                         updatedAt: associatedMedia.media.updatedAt,
                     };
                 }
-                else if (associatedMedia.eventStatus) {
+                else if (associatedMedia.eventStatus && !associatedMedia.media.id) {
                     notificationData.type = Helpers_1.NotificationType.EVENT;
                     media = {
                         id: associatedMedia.event.id,
@@ -136,6 +136,7 @@ const listNotificationsHandler = async (request, h) => {
                 ...notificationData,
                 ...media,
             });
+            console.log(data);
         }
         return h.response(data).code(200);
     }
