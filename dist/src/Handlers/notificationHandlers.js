@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteMediaNotificationHandler = exports.updateMediaNotificationHandler = exports.createMediaNotificationHandler = exports.deleteEventNotificationHandler = exports.updateEventNotificationHandler = exports.createEventNotificationHandler = exports.listNotificationsHandler = void 0;
+exports.checkIfThereAreNewNotifications = checkIfThereAreNewNotifications;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const listNotificationsHandler = async (request, h) => {
@@ -24,13 +25,14 @@ const listNotificationsHandler = async (request, h) => {
             },
         } //
         );
+        console.log(notifications);
         if (!notifications || notifications.length === 0) {
             console.log("No notifications found");
             return h.response({ message: "No notifications found" }).code(404);
         }
         const mediaItems = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findMany", {
             orderBy: {
-                id: "asc",
+                notificationId: "asc",
             },
             select: {
                 id: true,
@@ -71,6 +73,7 @@ const listNotificationsHandler = async (request, h) => {
                 },
             },
         });
+        console.log(mediaItems);
         if (!mediaItems) {
             console.log("No associated media found");
         }
@@ -86,6 +89,7 @@ const listNotificationsHandler = async (request, h) => {
             };
             const associatedMedia = mediaItems.find((media) => media.notificationId === notification.id);
             let media = {};
+            console.log(associatedMedia);
             if (associatedMedia) {
                 if (associatedMedia.videoStatus) {
                     notificationData.type = Helpers_1.NotificationType.VIDEO;
@@ -441,4 +445,7 @@ const deleteMediaNotificationHandler = async (notificationId, mediaId, specialKe
     }
 };
 exports.deleteMediaNotificationHandler = deleteMediaNotificationHandler;
+//function to check if there are any new notifications with 8 hours
+async function checkIfThereAreNewNotifications(request, h) {
+}
 //# sourceMappingURL=notificationHandlers.js.map

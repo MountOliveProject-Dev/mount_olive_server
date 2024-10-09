@@ -59,7 +59,14 @@ model Event {
   //
   eventNotifications engagementsManager?
 }
-
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  role     String
+  active Boolean
+  expiresAt DateTime
+  token   String? @unique
+}
 model Notification {
   id       Int     @id @default(autoincrement())
   title    String

@@ -31,7 +31,7 @@ export const listNotificationsHandler = async (
         },
       }//
     );
-
+    console.log(notifications);
     if (!notifications || notifications.length === 0) {
       console.log("No notifications found");
       return h.response({ message: "No notifications found" }).code(404);
@@ -43,7 +43,7 @@ export const listNotificationsHandler = async (
       "findMany",
       {
         orderBy: {
-          id: "asc",
+          notificationId: "asc",
         },
         select: {
           id: true,
@@ -85,7 +85,7 @@ export const listNotificationsHandler = async (
         },
       }
     );
-
+    console.log(mediaItems);
     if (!mediaItems) {
       console.log("No associated media found");
     }
@@ -105,7 +105,7 @@ export const listNotificationsHandler = async (
         (media) => media.notificationId === notification.id
       );
       let media: any = {};
-
+      console.log(associatedMedia);
       if (associatedMedia) {
         if (associatedMedia.videoStatus) {
           notificationData.type = NotificationType.VIDEO;
@@ -497,4 +497,12 @@ export const deleteMediaNotificationHandler = async (notificationId : number, me
   }
 };
 
+
+//function to check if there are any new notifications with 8 hours
+export async function checkIfThereAreNewNotifications(
+  request: Hapi.Request,
+  h: Hapi.ResponseToolkit
+) {
+  
+}
 
