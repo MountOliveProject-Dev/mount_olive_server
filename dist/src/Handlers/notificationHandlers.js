@@ -25,7 +25,6 @@ const listNotificationsHandler = async (request, h) => {
             },
         } //
         );
-        console.log(notifications);
         if (!notifications || notifications.length === 0) {
             console.log("No notifications found");
             return h.response({ message: "No notifications found" }).code(404);
@@ -73,7 +72,6 @@ const listNotificationsHandler = async (request, h) => {
                 },
             },
         });
-        console.log(mediaItems);
         if (!mediaItems) {
             console.log("No associated media found");
         }
