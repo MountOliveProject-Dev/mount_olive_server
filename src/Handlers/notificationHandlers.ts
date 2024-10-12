@@ -29,7 +29,7 @@ export const listNotificationsHandler = async (
           createdAt: true,
           updatedAt: true,
         },
-      }//
+      }
     );
 
     if (!notifications || notifications.length === 0) {
@@ -85,13 +85,14 @@ export const listNotificationsHandler = async (
         },
       }
     );
- 
-    if (!mediaItems) {
-      console.log("No associated media found");
+
+    if (!mediaItems || mediaItems.length === 0) {
+      console.log("No media items found");
+      return h.response({ message: "No media items found" }).code(404);
     }
 
     for (const notification of notifications) {
-      const notificationData = {
+      const notificationData: any = {
         notificationId: notification.id,
         notificationTitle: notification.title,
         notificationDescription: notification.description,
@@ -104,12 +105,11 @@ export const listNotificationsHandler = async (
       const associatedMedia = mediaItems.find(
         (media) => media.notificationId === notification.id
       );
-      let media: any = {};
-      console.log(associatedMedia);
+
       if (associatedMedia) {
-        if (associatedMedia.videoStatus && !associatedMedia.media.id) {
+        if (associatedMedia.videoStatus && associatedMedia.media) {
           notificationData.type = NotificationType.VIDEO;
-          media = {
+          notificationData.media = {
             id: associatedMedia.media.id,
             uniqueId: associatedMedia.media.uniqueId,
             title: associatedMedia.media.title,
@@ -118,9 +118,9 @@ export const listNotificationsHandler = async (
             postedAt: associatedMedia.media.postedAt,
             updatedAt: associatedMedia.media.updatedAt,
           };
-        } else if (associatedMedia.audioStatus && !associatedMedia.media.id) {
+        } else if (associatedMedia.audioStatus && associatedMedia.media) {
           notificationData.type = NotificationType.AUDIO;
-          media = {
+          notificationData.media = {
             id: associatedMedia.media.id,
             uniqueId: associatedMedia.media.uniqueId,
             title: associatedMedia.media.title,
@@ -130,9 +130,9 @@ export const listNotificationsHandler = async (
             postedAt: associatedMedia.media.postedAt,
             updatedAt: associatedMedia.media.updatedAt,
           };
-        } else if (associatedMedia.eventStatus && !associatedMedia.media.id) {
+        } else if (associatedMedia.eventStatus && associatedMedia.event) {
           notificationData.type = NotificationType.EVENT;
-          media = {
+          notificationData.event = {
             id: associatedMedia.event.id,
             uniqueId: associatedMedia.event.uniqueId,
             title: associatedMedia.event.title,
@@ -149,16 +149,12 @@ export const listNotificationsHandler = async (
         }
       }
 
-      data.push({
-        ...notificationData,
-        ...media,
-      });
-      console.log(data)
+      data.push(notificationData);
     }
 
     return h.response(data).code(200);
   } catch (err) {
-    console.log(err);
+    console.error("Error in listNotificationsHandler:", err);
     return h
       .response({
         message: "Internal Server Error: failed to get the notifications",

@@ -23,8 +23,7 @@ const listNotificationsHandler = async (request, h) => {
                 createdAt: true,
                 updatedAt: true,
             },
-        } //
-        );
+        });
         if (!notifications || notifications.length === 0) {
             console.log("No notifications found");
             return h.response({ message: "No notifications found" }).code(404);
@@ -72,8 +71,9 @@ const listNotificationsHandler = async (request, h) => {
                 },
             },
         });
-        if (!mediaItems) {
-            console.log("No associated media found");
+        if (!mediaItems || mediaItems.length === 0) {
+            console.log("No media items found");
+            return h.response({ message: "No media items found" }).code(404);
         }
         for (const notification of notifications) {
             const notificationData = {
@@ -86,12 +86,10 @@ const listNotificationsHandler = async (request, h) => {
                 type: "",
             };
             const associatedMedia = mediaItems.find((media) => media.notificationId === notification.id);
-            let media = {};
-            console.log(associatedMedia);
             if (associatedMedia) {
-                if (associatedMedia.videoStatus && !associatedMedia.media.id) {
+                if (associatedMedia.videoStatus && associatedMedia.media) {
                     notificationData.type = Helpers_1.NotificationType.VIDEO;
-                    media = {
+                    notificationData.media = {
                         id: associatedMedia.media.id,
                         uniqueId: associatedMedia.media.uniqueId,
                         title: associatedMedia.media.title,
@@ -101,9 +99,9 @@ const listNotificationsHandler = async (request, h) => {
                         updatedAt: associatedMedia.media.updatedAt,
                     };
                 }
-                else if (associatedMedia.audioStatus && !associatedMedia.media.id) {
+                else if (associatedMedia.audioStatus && associatedMedia.media) {
                     notificationData.type = Helpers_1.NotificationType.AUDIO;
-                    media = {
+                    notificationData.media = {
                         id: associatedMedia.media.id,
                         uniqueId: associatedMedia.media.uniqueId,
                         title: associatedMedia.media.title,
@@ -114,9 +112,9 @@ const listNotificationsHandler = async (request, h) => {
                         updatedAt: associatedMedia.media.updatedAt,
                     };
                 }
-                else if (associatedMedia.eventStatus && !associatedMedia.media.id) {
+                else if (associatedMedia.eventStatus && associatedMedia.event) {
                     notificationData.type = Helpers_1.NotificationType.EVENT;
-                    media = {
+                    notificationData.event = {
                         id: associatedMedia.event.id,
                         uniqueId: associatedMedia.event.uniqueId,
                         title: associatedMedia.event.title,
@@ -132,16 +130,12 @@ const listNotificationsHandler = async (request, h) => {
                     };
                 }
             }
-            data.push({
-                ...notificationData,
-                ...media,
-            });
-            console.log(data);
+            data.push(notificationData);
         }
         return h.response(data).code(200);
     }
     catch (err) {
-        console.log(err);
+        console.error("Error in listNotificationsHandler:", err);
         return h
             .response({
             message: "Internal Server Error: failed to get the notifications",
