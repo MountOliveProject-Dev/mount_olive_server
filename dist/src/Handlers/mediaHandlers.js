@@ -501,13 +501,18 @@ async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia
                     type: Helpers_1.MediaType.IMAGE,
                 },
             });
+            console.log("file found: ", findThumbnail);
             if (!findThumbnail) {
                 console.log("Thumbnail not found");
-                throw new Error("Thumbnail not found");
+                return "Thumbnail not found";
             }
-            await drive.files.delete({
+            const deleteThumbnail = await drive.files.delete({
                 fileId: fileId,
             });
+            if (!deleteThumbnail) {
+                console.log("Failed to delete thumbnail");
+                return "Error updating thumbnail";
+            }
             const thumbnailName = name || findThumbnail.title + "-" + Date.now();
             const fileMetadata = {
                 name: thumbnailName,
@@ -523,7 +528,8 @@ async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia
                 fields: "id",
             });
             if (!response.data.id) {
-                throw new Error("Failed to upload thumbnail to Google Drive");
+                console.log("Failed to upload thumbnail to Google Drive");
+                return "Error updating thumbnail";
             }
             // Set the file's sharing permissions to "anyone with the link"
             await drive.permissions.create({
@@ -579,51 +585,69 @@ async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia
                 });
             }
             return shareableLink;
-        }
-        else if (reUploadMedia === false) {
-            const findThumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "findUnique", {
-                where: {
-                    fileId: fileId,
-                    type: Helpers_1.MediaType.IMAGE,
-                },
-            });
-            if (!findThumbnail) {
-                console.log("thumbnail not found");
-                throw new Error("thumbnail not found");
-            }
-            const thumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "update", {
-                where: {
-                    fileId: fileId,
-                    uniqueId: findThumbnail.uniqueId,
-                    type: Helpers_1.MediaType.IMAGE,
-                },
-                data: {
-                    title: name || findThumbnail.title,
-                    updatedAt: (0, Helpers_1.getCurrentDate)(),
-                },
-            });
-            if (!thumbnail) {
-                console.log("Failed to update thumbnail media");
-                throw new Error("Failed to update thumbnail media");
-            }
-            const type = Helpers_1.NotificationType.AUDIO;
-            const read = false;
-            const notificationTitle = "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
-            const specialKey = findThumbnail.uniqueId + Helpers_1.NotificationType.IMAGE;
-            const getNotification = await (0, Helpers_1.executePrismaMethod)(prisma, "notification", "findFirst", {
-                where: {
-                    notificationEngagements: {
-                        specialKey: specialKey,
-                    },
-                },
-            });
-            const notification = await (0, notificationHandlers_1.updateMediaNotificationHandler)(getNotification.id, findThumbnail.id, specialKey, notificationTitle, description, read, type);
-            console.log(notification);
-            if (!notification) {
-                console.log("Failed to create notification for thumbnai");
-            }
-            return findThumbnail.url;
-        }
+        } // else if (reUploadMedia === false) {
+        //    const findThumbnail = await executePrismaMethod(
+        //      prisma,
+        //      "media",
+        //      "findUnique",
+        //      {
+        //        where: {
+        //          fileId: fileId,
+        //          type: MediaType.IMAGE,
+        //        },
+        //      }
+        //    );
+        //    if (!findThumbnail) {
+        //      console.log("thumbnail not found");
+        //      return "humbnail not found";
+        //    }
+        //    const thumbnail = await executePrismaMethod(prisma, "media", "update", {
+        //      where: {
+        //        fileId: fileId,
+        //        uniqueId: findThumbnail.uniqueId,
+        //        type: MediaType.IMAGE,
+        //      },
+        //      data: {
+        //        title: name || findThumbnail.title,
+        //        updatedAt: getCurrentDate(),
+        //      },
+        //    });
+        //    if (!thumbnail) {
+        //      console.log("Failed to update thumbnail media");
+        //      throw new Error("Failed to update thumbnail media");
+        //    }
+        //    const type = NotificationType.AUDIO;
+        //    const read = false;
+        //    const notificationTitle =
+        //      "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
+        //    const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
+        //    const getNotification = await executePrismaMethod(
+        //      prisma,
+        //      "notification",
+        //      "findFirst",
+        //      {
+        //        where: {
+        //          notificationEngagements: {
+        //            specialKey: specialKey,
+        //          },
+        //        },
+        //      }
+        //    );
+        //    const notification = await updateMediaNotificationHandler(
+        //      getNotification.id,
+        //      findThumbnail.id,
+        //      specialKey,
+        //      notificationTitle,
+        //      description,
+        //      read,
+        //      type
+        //    );
+        //    console.log(notification);
+        //    if (!notification) {
+        //      console.log("Failed to create notification for thumbnai");
+        //    }
+        //    return findThumbnail.url;
+        //  }
     }
     catch (err) {
         console.log(err);

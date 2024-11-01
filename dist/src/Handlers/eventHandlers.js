@@ -162,9 +162,15 @@ async function updateEventHandler(request, h) {
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
             console.log("file id", fileId);
             thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
-            console.log("thumbnail link", thumbnailLink);
-            if (!thumbnailLink) {
-                return h.response({ message: "Couldn't update thumbnail, please try again " }).code(400);
+            if (thumbnailLink === "Thumbnail not found") {
+                return h.response({ message: "Thumbnail not found" }).code(404);
+            }
+            else if (thumbnailLink === "Error updating thumbnail") {
+                return h
+                    .response({
+                    message: "Couldn't update thumbnail, please try again ",
+                })
+                    .code(400);
             }
             //
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
