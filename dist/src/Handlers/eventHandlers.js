@@ -158,8 +158,11 @@ async function updateEventHandler(request, h) {
         if (!findEvent) {
             return h.response({ message: "Event not found" }).code(404);
         }
-        if (uploadThumbnail === true && (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined)) {
-            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+        if (uploadThumbnail === true) {
+            let fileId = "";
+            if (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined) {
+                fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            }
             console.log("file id", fileId);
             thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
             if (thumbnailLink === "Thumbnail not found") {

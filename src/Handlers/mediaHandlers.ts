@@ -19,6 +19,7 @@ import {
   updateMediaNotificationHandler,
   deleteMediaNotificationHandler,
 } from "./notificationHandlers";
+import { extractFileIdFromDriveLink, pushThumbnailToDriveHandler } from "./eventHandlers";
 
 
 
@@ -555,24 +556,36 @@ export async function updateThumbnailHelper(
   mimeType: string,
   path: string,
   reUploadMedia: boolean,
-){
-   try {
-     const prisma = server.app.prisma;
-      const  description=  "Thumbnail for an event";
-     const folderInfo = await executePrismaMethod(
-       prisma,
-       "folder",
-       "findFirst",
-       {
-         where: {
-           folderType: folderType.Images,
-         },
-       }
-     );
-     if (!folderInfo) {
-       throw new Error("Thumbnail folder not found");
-     }
-     if (reUploadMedia === true) { 
+
+) {
+  try {
+    const prisma = server.app.prisma;
+    const description = "Thumbnail for an event";
+    const folderInfo = await executePrismaMethod(
+      prisma,
+      "folder",
+      "findFirst",
+      {
+        where: {
+          folderType: folderType.Images,
+        },
+      }
+    );
+    if (!folderInfo) {
+      throw new Error("Thumbnail folder not found");
+    }
+    if (reUploadMedia === true) {
+      if (fileId === "") {
+        const link = await pushThumbnailToDriveHandler(name, path, mimeType);
+        if (!link) {
+          console.log("Failed to upload thumbnail to Google Drive");
+          return "Error updating thumbnail";
+        }
+        fileId = await extractFileIdFromDriveLink(link);
+       
+      
+        return link;
+      } else {
         const findThumbnail = await executePrismaMethod(
           prisma,
           "media",
@@ -584,7 +597,7 @@ export async function updateThumbnailHelper(
             },
           }
         );
-        console.log("file found: ",findThumbnail);
+        console.log("file found: ", findThumbnail);
 
         if (!findThumbnail) {
           console.log("Thumbnail not found");
@@ -592,7 +605,6 @@ export async function updateThumbnailHelper(
         }
         try {
           const findThumbnailInDrive = await drive.files.get({
-            
             fileId: fileId,
             fields: "id, name",
           });
@@ -610,171 +622,109 @@ export async function updateThumbnailHelper(
           }
         }
 
+        const thumbnailName = name || findThumbnail.title + "-" + Date.now();
+        const fileMetadata = {
+          name: thumbnailName,
+          parents: [folderInfo.folderId],
+        };
+        const media = {
+          mimeType: mimeType,
+          body: fs.createReadStream(path),
+        };
+        const response = await drive.files.create({
+          requestBody: fileMetadata,
+          media: media,
+          fields: "id",
+        });
+        if (!response.data.id) {
+          console.log("Failed to upload thumbnail to Google Drive");
+          return "Error updating thumbnail";
+        }
+        // Set the file's sharing permissions to "anyone with the link"
+        await drive.permissions.create({
+          fileId: response.data.id,
+          requestBody: {
+            role: "reader",
+            type: "anyone",
+          },
+        });
+        // Get the shareable link
+        const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
 
-       const thumbnailName = name || findThumbnail.title + "-" + Date.now();
-       const fileMetadata = {
-         name: thumbnailName,
-         parents: [folderInfo.folderId],
-       };
-       const media = {
-         mimeType: mimeType,
-         body: fs.createReadStream(path),
-       };
-       const response = await drive.files.create({
-         requestBody: fileMetadata,
-         media: media,
-         fields: "id",
-       });
-       if (!response.data.id) {
-        console.log("Failed to upload thumbnail to Google Drive");
-        return "Error updating thumbnail";
-       }
-       // Set the file's sharing permissions to "anyone with the link"
-       await drive.permissions.create({
-         fileId: response.data.id,
-         requestBody: {
-           role: "reader",
-           type: "anyone",
-         },
-       });
-       // Get the shareable link
-       const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+        console.log(
+          `The thumbnail  ${name} with Unique ID: ${response.data.id} has been updated successfully!`
+        );
 
-       console.log(
-         `The thumbnail  ${name} with Unique ID: ${response.data.id} has been updated successfully!`
-       );
-      
-       const updateThumbnail = await executePrismaMethod(
-         prisma,
-         "media",
-         "update",
-         {
-           where: {
-             fileId: fileId,
-             uniqueId: findThumbnail.uniqueId,
-             type: MediaType.IMAGE,
-           },
-           data: {
-             title: name || findThumbnail.title,
-             description: description,
-             url: shareableLink,
-             fileId: response.data.id,
-             updatedAt: getCurrentDate(),
-           },
-         }
-       );
-       if (!updateThumbnail) {
-         console.log("Failed to update thumbnail");
-         throw new Error("Failed to update thumbnail");
-       }
-       const type = NotificationType.IMAGE;
-       const read = false;
-       const notificationTitle =
-         "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
-       const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
-       const getNotification = await executePrismaMethod(
-         prisma,
-         "notification",
-         "findFirst",
-         {
-           where: {
-             notificationEngagements: {
-               specialKey: specialKey,
-             },
-           },
-         }
-       );
-       const notification = await updateMediaNotificationHandler(
-         getNotification.id,
-         findThumbnail.id,
-         specialKey,
-         notificationTitle,
-         description,
-         read,
-         type
-       );
-       console.log(notification);
-       if (!notification) {
-         console.log("Failed to create notification for thumbnail media");
-       }
-       // Remove the file from the 'uploads' directory after processing
-       if (path && typeof path === "string") {
-         fs.unlink(path, (err) => {
-           if (err) {
-             console.error("Error deleting file:", err);
-           }
-         });
-       }
-       return shareableLink;
-      }// else if (reUploadMedia === false) {
-    //    const findThumbnail = await executePrismaMethod(
-    //      prisma,
-    //      "media",
-    //      "findUnique",
-    //      {
-    //        where: {
-    //          fileId: fileId,
-    //          type: MediaType.IMAGE,
-    //        },
-    //      }
-    //    );
-    //    if (!findThumbnail) {
-    //      console.log("thumbnail not found");
-    //      return "humbnail not found";
-    //    }
-    //    const thumbnail = await executePrismaMethod(prisma, "media", "update", {
-    //      where: {
-    //        fileId: fileId,
-    //        uniqueId: findThumbnail.uniqueId,
-    //        type: MediaType.IMAGE,
-    //      },
-    //      data: {
-    //        title: name || findThumbnail.title,
-    //        updatedAt: getCurrentDate(),
-    //      },
-    //    });
-    //    if (!thumbnail) {
-    //      console.log("Failed to update thumbnail media");
-    //      throw new Error("Failed to update thumbnail media");
-    //    }
-    //    const type = NotificationType.AUDIO;
-    //    const read = false;
-    //    const notificationTitle =
-    //      "The Thumbnail titled " + findThumbnail.title + " has just been updated!";
-    //    const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
-    //    const getNotification = await executePrismaMethod(
-    //      prisma,
-    //      "notification",
-    //      "findFirst",
-    //      {
-    //        where: {
-    //          notificationEngagements: {
-    //            specialKey: specialKey,
-    //          },
-    //        },
-    //      }
-    //    );
-
-    //    const notification = await updateMediaNotificationHandler(
-    //      getNotification.id,
-    //      findThumbnail.id,
-    //      specialKey,
-    //      notificationTitle,
-    //      description,
-    //      read,
-    //      type
-    //    );
-    //    console.log(notification);
-    //    if (!notification) {
-    //      console.log("Failed to create notification for thumbnai");
-    //    }
-
-    //    return findThumbnail.url;
-    //  }
-   } catch (err) {
-     console.log(err);
-     throw err;
-   }
+        const updateThumbnail = await executePrismaMethod(
+          prisma,
+          "media",
+          "update",
+          {
+            where: {
+              fileId: fileId,
+              uniqueId: findThumbnail.uniqueId,
+              type: MediaType.IMAGE,
+            },
+            data: {
+              title: name || findThumbnail.title,
+              description: description,
+              url: shareableLink,
+              fileId: response.data.id,
+              updatedAt: getCurrentDate(),
+            },
+          }
+        );
+        if (!updateThumbnail) {
+          console.log("Failed to update thumbnail");
+          throw new Error("Failed to update thumbnail");
+        }
+        const type = NotificationType.IMAGE;
+        const read = false;
+        const notificationTitle =
+          "The Thumbnail titled " +
+          findThumbnail.title +
+          " has just been updated!";
+        const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
+        const getNotification = await executePrismaMethod(
+          prisma,
+          "notification",
+          "findFirst",
+          {
+            where: {
+              notificationEngagements: {
+                specialKey: specialKey,
+              },
+            },
+          }
+        );
+        const notification = await updateMediaNotificationHandler(
+          getNotification.id,
+          findThumbnail.id,
+          specialKey,
+          notificationTitle,
+          description,
+          read,
+          type
+        );
+        console.log(notification);
+        if (!notification) {
+          console.log("Failed to create notification for thumbnail media");
+        }
+        // Remove the file from the 'uploads' directory after processing
+        if (path && typeof path === "string") {
+          fs.unlink(path, (err) => {
+            if (err) {
+              console.error("Error deleting file:", err);
+            }
+          });
+        }
+        return shareableLink;
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 }
 export async function createThumbnailFile(
   name: string,

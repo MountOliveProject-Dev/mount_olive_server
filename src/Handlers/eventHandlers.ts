@@ -206,8 +206,12 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         if(!findEvent){
             return h.response({message: "Event not found"}).code(404);
         }
-        if(uploadThumbnail === true && (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined)){
-            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+        if(uploadThumbnail === true ){
+            let fileId: any = "";
+            if (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined){
+                fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            }
+              
             console.log("file id", fileId);
 
             thumbnailLink = await updateThumbnailHelper(
@@ -215,7 +219,8 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
               name,
               mimeType,
               filePath,
-              uploadThumbnail
+              uploadThumbnail,
+            
             );
             
             if (thumbnailLink === "Thumbnail not found") {
