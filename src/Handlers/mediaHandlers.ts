@@ -19,7 +19,6 @@ import {
   updateMediaNotificationHandler,
   deleteMediaNotificationHandler,
 } from "./notificationHandlers";
-import { file } from "googleapis/build/src/apis/file";
 
 
 
@@ -591,9 +590,16 @@ export async function updateThumbnailHelper(
           console.log("Thumbnail not found");
           return "Thumbnail not found";
         }
+        const findThumbnailInDrive = await drive.files.get({
+          fileId: fileId,
+          fields: "id, name",
+        });
+        console.log("file found in drive: ",findThumbnailInDrive);
         const deleteThumbnail = await drive.files.delete({
            fileId: fileId,
+           
         });
+
         if (!deleteThumbnail) {
           console.log("Failed to delete thumbnail");
           return "Error updating thumbnail";

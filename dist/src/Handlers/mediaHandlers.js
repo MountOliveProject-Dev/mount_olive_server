@@ -506,6 +506,11 @@ async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia
                 console.log("Thumbnail not found");
                 return "Thumbnail not found";
             }
+            const findThumbnailInDrive = await drive.files.get({
+                fileId: fileId,
+                fields: "id, name",
+            });
+            console.log("file found in drive: ", findThumbnailInDrive);
             const deleteThumbnail = await drive.files.delete({
                 fileId: fileId,
             });
