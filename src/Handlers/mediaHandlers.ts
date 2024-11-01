@@ -590,20 +590,26 @@ export async function updateThumbnailHelper(
           console.log("Thumbnail not found");
           return "Thumbnail not found";
         }
-        const findThumbnailInDrive = await drive.files.get({
-          fileId: fileId,
-          fields: "id, name",
-        });
-        console.log("file found in drive: ",findThumbnailInDrive);
-        const deleteThumbnail = await drive.files.delete({
-           fileId: fileId,
-           
-        });
+        try {
+          const findThumbnailInDrive = await drive.files.get({
+            
+            fileId: fileId,
+            fields: "id, name",
+          });
+          console.log("File found in drive: ", findThumbnailInDrive);
 
-        if (!deleteThumbnail) {
-          console.log("Failed to delete thumbnail");
-          return "Error updating thumbnail";
+          const deleteThumbnail = await drive.files.delete({
+            fileId: fileId,
+          });
+          console.log("File deleted successfully: ", deleteThumbnail);
+        } catch (error: any) {
+          if (error.code === 404) {
+            console.error("File not found: ", fileId);
+          } else {
+            console.error("An error occurred: ", error);
+          }
         }
+
 
        const thumbnailName = name || findThumbnail.title + "-" + Date.now();
        const fileMetadata = {
