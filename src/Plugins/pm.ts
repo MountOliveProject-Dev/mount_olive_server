@@ -12,6 +12,7 @@ export const pm2plugin: Hapi.Plugin<void> = {
       console.log("Server closed successfully.");
       process.exit(0);
     });
+    //
 
     process.on("SIGTERM", async () => {
       console.log("Received SIGTERM signal. Closing server gracefully...");
