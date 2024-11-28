@@ -39,8 +39,8 @@ const eventInputValidator = Joi.object({
   }),
 
   uploadThumbnail: Joi.boolean().alter({
-    create: (schema) => schema.optional(),
-    update: (schema) => schema.optional(),
+    create: (schema) => schema.required(),
+    update: (schema) => schema.optional().allow(""),
   }),
   name: Joi.string().alter({
     create: (schema) => schema.optional().allow(""),

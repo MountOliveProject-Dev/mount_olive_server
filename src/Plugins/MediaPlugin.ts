@@ -24,6 +24,8 @@ import {
   storeThumbnailFileHandler,
   updateAudioFile,
   deleteAudioFileHandler,
+  listAllImageMediaHandler,
+  deleteThumbnailFromDriveHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -114,7 +116,7 @@ export const mediaPlugin: Hapi.Plugin<void> = {
       },
       {
         method: "POST",
-        path:"/api/media/delete-audio",
+        path: "/api/media/delete-audio",
         handler: deleteAudioFileHandler,
         options: {
           auth: false,
@@ -127,12 +129,33 @@ export const mediaPlugin: Hapi.Plugin<void> = {
             },
           },
         },
-
       },
       {
         method: "GET",
         path: "/api/media/get-audios",
         handler: listAllAudioMediaHandler,
+        options: {
+          auth: false,
+        },
+      },
+      //
+      {
+        method: "PUT",
+        path: "/api/media/delete-thumbnail-from-drive/{Id}",
+        handler: deleteThumbnailFromDriveHandler,
+        options: {
+          auth: false,
+          validate: {
+            params: Joi.object({
+              Id: Joi.string().required(),
+            }),
+          },
+        },
+      },
+      {
+        method: "GET",
+        path: "/api/media/get-images",
+        handler: listAllImageMediaHandler,
         options: {
           auth: false,
         },

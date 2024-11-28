@@ -118,6 +118,28 @@ exports.mediaPlugin = {
                     auth: false,
                 },
             },
+            //
+            {
+                method: "PUT",
+                path: "/api/media/delete-thumbnail-from-drive/{Id}",
+                handler: Handlers_1.deleteThumbnailFromDriveHandler,
+                options: {
+                    auth: false,
+                    validate: {
+                        params: joi_1.default.object({
+                            Id: joi_1.default.string().required(),
+                        }),
+                    },
+                },
+            },
+            {
+                method: "GET",
+                path: "/api/media/get-images",
+                handler: Handlers_1.listAllImageMediaHandler,
+                options: {
+                    auth: false,
+                },
+            },
             {
                 method: "GET",
                 path: "/api/media/get-all-folders",

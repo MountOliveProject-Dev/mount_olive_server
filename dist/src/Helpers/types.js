@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.folderType = exports.NotificationType = exports.MediaType = void 0;
+exports.RequestType = exports.LogType = exports.folderType = exports.NotificationType = exports.MediaType = void 0;
 var MediaType;
 (function (MediaType) {
     MediaType["VIDEO"] = "Video";
@@ -19,4 +19,17 @@ var folderType;
     folderType["Audios"] = "Audios";
     folderType["Images"] = "Images";
 })(folderType || (exports.folderType = folderType = {}));
+var LogType;
+(function (LogType) {
+    LogType["INFO"] = "Info";
+    LogType["ERROR"] = "Error";
+    LogType["WARNING"] = "Warning";
+})(LogType || (exports.LogType = LogType = {}));
+var RequestType;
+(function (RequestType) {
+    RequestType["CREATE"] = "Create";
+    RequestType["UPDATE"] = "Update";
+    RequestType["DELETE"] = "Delete";
+    RequestType["READ"] = "Read";
+})(RequestType || (exports.RequestType = RequestType = {}));
 //# sourceMappingURL=types.js.map

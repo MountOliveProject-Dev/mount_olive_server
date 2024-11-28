@@ -28,3 +28,16 @@ export enum folderType {
   Audios = "Audios",
   Images = "Images"
 }
+
+export enum LogType{
+  INFO = "Info",
+  ERROR = "Error",
+  WARNING = "Warning",
+}
+
+export enum RequestType{
+ CREATE = "Create",
+ UPDATE = "Update",
+ DELETE = "Delete",
+ READ = "Read",
+}

@@ -12,6 +12,7 @@ exports.pm2plugin = {
             console.log("Server closed successfully.");
             process.exit(0);
         });
+        //
         process.on("SIGTERM", async () => {
             console.log("Received SIGTERM signal. Closing server gracefully...");
             await server.stop({ timeout: 10000 }); // Wait for 10 seconds for existing connections to close

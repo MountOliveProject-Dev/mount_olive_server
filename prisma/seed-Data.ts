@@ -302,3 +302,104 @@
 //         }
 //     ]
 // }
+
+
+[{
+"title": "Sunday Worship Service",
+"date": "2024-11-24",
+"time": "09:00",
+"location": "Accra, Ghana",
+"venue": "Christ the King Church",
+"host": "Pastor John Doe",
+"uploadThumbnail": true,
+"description": "Join us for our Sunday worship service, featuring inspiring sermons and uplifting music."
+},
+
+{
+"title": "Youth Bible Study",
+"date": "2024-11-26",
+"time": "18:00",
+"location": "Kumasi, Ghana",
+"venue": "KNUST Campus Chapel",
+"host": "Youth Pastor Emma",
+"uploadThumbnail": false,
+"description": "Join our youth Bible study group for an evening of fellowship, prayer, and scripture exploration."
+},
+
+{
+"title": "Charity Fundraiser",
+"date": "2024-12-01",
+"time": "10:00",
+"location": "Takoradi, Ghana",
+"venue": "Takoradi Mall",
+"host": "Church Social Committee",
+"uploadThumbnail": true,
+"description": "Support our charity fundraiser event, featuring live music, auctions, and a raffle draw."
+},
+
+{
+"title": "Prayer and Fasting",
+"date": "2024-11-25",
+"time": "06:00",
+"location": "Accra, Ghana",
+"venue": "Christ the King Church",
+"host": "Pastor John Doe",
+"uploadThumbnail": false,
+"description": "Join us for a day of prayer and fasting, seeking God's guidance and blessings."
+},
+
+{
+"title": "Baptismal Service",
+"date": "2024-11-24",
+"time": "15:00",
+"location": "Kumasi, Ghana",
+"venue": "KNUST Campus Chapel",
+"host": "Pastor Emma",
+"uploadThumbnail": true,
+"description": "Witness the joy of baptism as we celebrate the new life in Christ."
+},
+
+{
+"title": "Marriage Seminar",
+"date": "2024-11-30",
+"time": "10:00",
+"location": "Accra, Ghana",
+"venue": "Christ the King Church",
+"host": "Pastor John Doe",
+"uploadThumbnail": false,
+"description": "Join our marriage seminar, featuring expert speakers and practical advice for building a strong and healthy marriage."
+},
+
+{
+"title": "Children's Christmas Party",
+"date": "2024-12-15",
+"time": "14:00",
+"location": "Takoradi, Ghana",
+"venue": "Takoradi Mall",
+"host": "Church Children's Ministry",
+"uploadThumbnail": true,
+"description": "Bring your kids to our fun-filled Christmas party, featuring games, crafts, and a special visit from Santa."
+},
+
+{
+"title": "New Year's Eve Service",
+"date": "2024-12-31",
+"time": "22:00",
+"location": "Accra, Ghana",
+"venue": "Christ the King Church",
+"host": "Pastor John Doe",
+"uploadThumbnail": false,
+"description": "Join us for a special New Year's Eve service, featuring music, prayer, and a countdown to midnight."
+},
+
+{
+"title": "Women's Conference",
+"date": "2024-11-28",
+"time": "09:00",
+"location": "Kumasi, Ghana",
+"venue": "KNUST Campus Chapel",
+"host": "Women's Ministry",
+"uploadThumbnail": true,
+"description": "Join our women's conference, featuring inspiring speakers, workshops, and fellowship."
+}
+]

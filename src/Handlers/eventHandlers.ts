@@ -1,6 +1,13 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
-import { executePrismaMethod, getCurrentDate } from "../Helpers";
+import {
+  executePrismaMethod,
+  getCurrentDate,
+  LogType,
+  NotificationType,
+  log,
+  RequestType,
+} from "../Helpers";
 import { EventInput, ManyEventInput } from "../Interfaces";
 import {
   createEventNotificationHandler,
@@ -8,9 +15,10 @@ import {
   deleteEventNotificationHandler,
   
 } from "./notificationHandlers";
-import {NotificationType } from "../Helpers"; 
+
 import { createThumbnailFile, deleteThumbnailFromDrive, updateThumbnailHelper } from "./mediaHandlers";
 import fs from "fs";
+
 
 
 
@@ -27,12 +35,20 @@ export async function listEventsHandler(request: Hapi.Request, h: Hapi.ResponseT
                 ],
             }
         );
-        if(!events){
+        if(!events|| events.length === 0){
+            let details = "There are no events in the system";
+            let logtype = LogType.WARNING;
+            if(!events){
+                details = "failed to retrieve events from the database" + details.toString();
+                logtype = LogType.ERROR
+            }
+            log(RequestType.READ,"No events found", logtype,details);
             return h.response({message: "No events found"}).code(404);
         }
+        log(RequestType.READ,"Events found", LogType.INFO);
         return h.response(events).code(200);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.READ,"Internal Server Error", LogType.ERROR,err.toString());
         return h.response({message: "Internal Server Error"}).code(500);
     }
 }
@@ -43,22 +59,22 @@ export async function pushThumbnailToDriveHandler(name: string, filePath: string
   try {
     // Ensure the filePath is provided and is a string
     if (!filePath || typeof filePath !== "string") {
-      console.log("Invalid file path provided");
+      log(RequestType.CREATE, "Invalid file path provided", LogType.ERROR);
       return "Invalid file path provided";
     }
 
     const shareableLink = await createThumbnailFile(name, mimeType, filePath);
 
     // Remove the file from the 'uploads' directory after processing
-    fs.unlink(filePath, (err) => {
+    fs.unlink(filePath, (err:any) => {
       if (err) {
-        console.error("Error deleting file:", err);
+        log(RequestType.CREATE, "Failed to delete file", LogType.ERROR, err.toString());
       }
     });
 
     return shareableLink;
-  } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+  } catch (error:any) {
+    log(RequestType.CREATE, "Error uploading thumbnail to Google Drive", LogType.ERROR, error.toString()|| "Error uploading thumbnail to Google Drive");
     return "Error uploading thumbnail to Google Drive";
   }
 }
@@ -102,6 +118,7 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
                     }
                   );
                   if (!event) {
+                    log(RequestType.CREATE, "Failed to create the event", LogType.ERROR, event.toString());
                     return h
                       .response({ message: "Failed to create the event" })
                       .code(400);
@@ -121,12 +138,14 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
                       uploadThumbnail
                     );
                   if (!createNotification) {
+                    log(RequestType.CREATE, "Failed to create the notification", LogType.ERROR, createNotification.toString());
                     return h
                       .response({
                         message: "Failed to create the notification",
                       })
                       .code(400);
                   }
+                  log(RequestType.CREATE, "Event created successfully", LogType.INFO);
                   return h.response(event).code(201);
         }else if(uploadThumbnail === false){
             const event = await executePrismaMethod(prisma, "event", "create", {
@@ -143,6 +162,7 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
             },
             });
             if(!event){
+                log(RequestType.CREATE, "Failed to create the event", LogType.ERROR, event.toString());
                 return h.response({message: "Failed to create the event"}).code(400);
             }
             const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
@@ -156,14 +176,17 @@ export async function createEventHandler(request: Hapi.Request, h: Hapi.Response
             uploadThumbnail
             );
             if(!createNotification){
+                log(RequestType.CREATE, "Failed to create the notification", LogType.ERROR, createNotification.toString());
                 return h.response({message: "Failed to create the notification"}).code(400);
             }
+            log(RequestType.CREATE, "Event created successfully", LogType.INFO);
             return h.response(event).code(201);
         }else{
+            log(RequestType.CREATE, "Bad request, thumbnail status is undefined", LogType.ERROR);
             return h.response({message: "Bad request, thumbnail status is undefined"}).code(400);
         }
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.CREATE, "Internal Server Error", LogType.ERROR, err.toString());
         return h.response({message: "Internal Server Error" + ":failed to create the event:" + title}).code(500);
     }
 }
@@ -204,15 +227,12 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
         });
 
         if(!findEvent){
+          log(RequestType.UPDATE, "Event not found", LogType.WARNING);
             return h.response({message: "Event not found"}).code(404);
         }
+
         if(uploadThumbnail === true ){
             let fileId: any = "";
-            if (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined){
-                fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
-            }
-              
-            console.log("file id", fileId);
 
             thumbnailLink = await updateThumbnailHelper(
               fileId,
@@ -224,13 +244,17 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             );
             
             if (thumbnailLink === "Thumbnail not found") {
+                log(RequestType.UPDATE, "Thumbnail not found", LogType.WARNING); 
                 return h.response({ message: "Thumbnail not found" }).code(404);
             } else if (thumbnailLink === "Error updating thumbnail") {
+                log(RequestType.UPDATE, "Error updating thumbnail", LogType.ERROR);
               return h
                 .response({
                   message: "Couldn't update thumbnail, please try again ",
                 })
                 .code(400);
+            }else{
+                log(RequestType.UPDATE, thumbnailLink.toString(), LogType.INFO);
             }
         //
             const event = await executePrismaMethod(prisma, "event", "update", {
@@ -251,6 +275,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
                 },
             });
             if(!event){
+                log(RequestType.UPDATE, "Failed to update the event", LogType.ERROR, event.toString());
                 return h.response({message: "Failed to update the event"}).code(400);
             }
             const notificationTitle =
@@ -265,11 +290,12 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             false
             );
             if (updateNotification.code== 500){
-                console.log(updateNotification.message);
+                log(RequestType.UPDATE, "Failed to update the event", LogType.ERROR, updateNotification.message);
                 
-                console.log("event deleted");
+
                 return h.response({message: "Failed to update the event"}).code(400);
             }else if(updateNotification.code == 200){
+                log(RequestType.UPDATE, "Event updated successfully", LogType.INFO);
                 return h.response({message: "Event updated successfully!"}).code(201);
             }
         } else if(uploadThumbnail === false){
@@ -290,6 +316,7 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             },
             });
             if(!event){
+                log(RequestType.UPDATE, "Failed to update the event", LogType.ERROR, event.toString());
                 return h.response({message: "Failed to update the event"}).code(400);
             }
             const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
@@ -303,17 +330,19 @@ export async function updateEventHandler(request: Hapi.Request, h: Hapi.Response
             false
             );
             if (updateNotification.code== 500){
-                console.log(updateNotification.message);
+                log(RequestType.UPDATE, "Failed to update the event", LogType.ERROR, updateNotification.message);
                 return h.response({message: "Failed to update the event"}).code(400);
             }else if(updateNotification.code == 200){
+                log(RequestType.UPDATE, "Event updated successfully", LogType.INFO);
                 return h.response({message: "Event updated successfully!"}).code(201);
             }
         }else{
+            log(RequestType.UPDATE, "Bad request, thumbnail status is undefined", LogType.ERROR);
             return h.response({message: "Bad request, thumbnail status is undefined"}).code(400);
         }
             
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.UPDATE, "Internal Server Error", LogType.ERROR, err.toString());
         return h.response({message: "Internal Server Error" + ":failed to update the event:" + uniqueId}).code(500);
     }
 }
@@ -336,9 +365,10 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
             });
             createdEventIds.push(parseInt(createdEvent.id));
         }
-        console.log('Created event IDs:', createdEventIds);
+       
 
         if (createdEventIds.length === 0) {
+            log(RequestType.CREATE, "Failed to create the events", LogType.ERROR);
             return h.response({ message: "Failed to create the events" }).code(400);
         }
         //create notification for each event
@@ -370,14 +400,16 @@ export async function createManyEventsHandler(request: Hapi.Request, h: Hapi.Res
             false
           );
           if (!createNotification) {
+            log(RequestType.CREATE, "Failed to create the notification", LogType.ERROR, createNotification);
             return h
               .response({ message: "Failed to create the notification" })
               .code(400);
           }
         }
+         log(RequestType.CREATE, "Events created successfully", LogType.INFO);
         return h.response().code(201);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.CREATE, "Internal Server Error", LogType.ERROR, err.toString());
         return h.response({message: "Internal Server Error" + ":failed to create the events"}).code(500);
     }
 }
@@ -409,15 +441,15 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
                 }
             }
         });
-        console.log("found the event ", findEvent);
+        console.log(findEvent); 
         if(!findEvent){
-            console.log("event not found");
+            log(RequestType.READ, "Event not found ", LogType.WARNING,findEvent.toString());
             return h.response({message: "Event not found"}).code(404);
         }
 
         if(findEvent.thumbnail !== null){
            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
-            console.log("file id", fileId);
+
             const deleteThumbnail = await deleteThumbnailFromDrive(fileId);
             if (deleteThumbnail === true) {
                 const specialKey = findEvent.uniqueId + NotificationType.EVENT;
@@ -429,13 +461,12 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
                 );
 
                 if (!deleteNotification) {
-                  console.log(deleteNotification);
+                  log(RequestType.DELETE, "Failed to delete the notification", LogType.ERROR, deleteNotification?.toString());
                   return h
                     .response({ message: "Failed to delete the notification" })
                     .code(400);
                 } else {
-                  console.log("notification deleted");
-                  console.log(deleteNotification);
+                  log(RequestType.DELETE, "Notification deleted", LogType.WARNING);
                 }
 
                 const eventDeletion = await executePrismaMethod(
@@ -450,11 +481,12 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
                 );
 
                 if (!eventDeletion) {
+                  log(RequestType.DELETE, "Failed to delete the event", LogType.ERROR, eventDeletion.toString());
                   return h
                     .response({ message: "Failed to delete the event" })
                     .code(400);
                 } else {
-                  console.log("event deleted");
+                  log(RequestType.DELETE, "Event deleted", LogType.INFO);
                 }
                 const message =
                   "Event with uniqueId: " +
@@ -462,9 +494,8 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
                   " was deleted successfully";
                 return h.response(message).code(201).message(message);
               } else {
-                console.log(
-                  "Failed to delete the thumbnail: " + deleteThumbnail
-                );
+                log(RequestType.DELETE, "Failed to delete the thumbnail", LogType.ERROR, deleteThumbnail.toString());
+                
                 return h
                   .response({ message: "Failed to delete event" })
                   .code(400);
@@ -479,13 +510,12 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
           );
 
           if (!deleteNotification) {
-            console.log(deleteNotification);
+            log(RequestType.DELETE, "Failed to delete the notification", LogType.ERROR, deleteNotification?.toString());
             return h
               .response({ message: "Failed to delete the notification" })
               .code(400);
           } else {
-            console.log("notification deleted");
-            console.log(deleteNotification);
+            log(RequestType.DELETE, "Notification deleted", LogType.INFO);
           }
 
           const eventDeletion = await executePrismaMethod(
@@ -500,18 +530,19 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
           );
 
           if (!eventDeletion) {
+            log(RequestType.DELETE, "Failed to delete the event", LogType.ERROR, eventDeletion.toString());
             return h
               .response({ message: "Failed to delete the event" })
               .code(400);
           } else {
-            console.log("event deleted");
+            log(RequestType.DELETE, "Event deleted", LogType.INFO);
           }
           const message =
             "Event with uniqueId: " + uniqueId + " was deleted successfully";
           return h.response(message).code(201).message(message); 
       
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.DELETE, "Internal Server Error", LogType.ERROR, err.toString());
         return h.response({message: "Internal Server Error" + ":failed to delete the event:" + uniqueId}).code(500);
     }
 }
@@ -526,12 +557,20 @@ export async function getEventHandler(request: Hapi.Request, h: Hapi.ResponseToo
                 uniqueId: uniqueId,
             },
         });
-        if(!event){
+        if(!event|| event.length === 0){
+            let details = "Event not found";
+            let logtype = LogType.WARNING;
+            if(!event){
+                details = "failed to retrieve the event with id:" + uniqueId + " from the database" + event.toString();
+                logtype = LogType.ERROR
+            }
+            log(RequestType.READ, "Event not found", logtype, details);
             return h.response({message: "Event not found"}).code(404);
         }
+        log(RequestType.READ, "Event found", LogType.INFO);
         return h.response(event).code(200);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.READ, "Internal Server Error", LogType.ERROR, err.toString());
         return h.response({message: "Internal Server Error" + ":failed to get the event:" + uniqueId}).code(500);
     }
 }
@@ -558,11 +597,13 @@ export async function searchEventByTitleOrUniqueIDHandler(request: Hapi.Request,
             },
         });
         if(!event){
+            log(RequestType.READ, "Event not found", LogType.WARNING);
             return h.response({message: "Event not found"}).code(404);
         }
+        log(RequestType.READ, "Event found", LogType.INFO);
         return h.response(event).code(200);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.READ, "Internal Server Error", LogType.ERROR, err);
         return h.response({message: "Internal Server Error" + ":failed to search the event:" + search}).code(500);
     }
 }
@@ -578,6 +619,7 @@ export async function listEventsByDateHandler(request: Hapi.Request, h: Hapi.Res
             },
         });
         if(!events){
+
             return h.response({message: "No events found"}).code(404);
         }
         return h.response(events).code(200);

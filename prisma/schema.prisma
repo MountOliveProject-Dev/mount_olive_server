@@ -109,8 +109,25 @@ model folder {
   media Media[]
 }
 
+enum LogType {
+  Info
+  Warning
+  Error
+}
 
-
-
+enum RequestType {
+  Create
+  Update
+  Delete
+  Read
+}
+model Log {
+  id        Int      @id @default(autoincrement())
+  message   String
+  requestType RequestType
+  type      LogType
+  detail    String?
+  timestamp String
+}
 
 

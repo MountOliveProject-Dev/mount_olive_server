@@ -11,9 +11,12 @@ import {
   getCurrentDate,
   NotificationType,
   folderType,
+  log,
+  LogType,
+  RequestType,
 } from "../Helpers";
 
-import { MediaInput, folderInput } from "../Interfaces";
+import { EventInput, MediaInput, folderInput } from "../Interfaces";
 import {
   createMediaNotificationHandler,
   updateMediaNotificationHandler,
@@ -32,7 +35,7 @@ dotenv.config();
 */
 
 const credentials = {
-  type: "service_account",
+  type: process.env.GOOGLE_TYPE,
   project_id: process.env.GOOGLE_PROJECT_ID,
   private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
   private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
@@ -44,17 +47,17 @@ const credentials = {
   client_x509_cert_url: process.env.GOOGLE_CLIENT_X509_CERT_URL,
 };
 if (!credentials.project_id) {
-  console.error("project_id is missing from the credentials");
+  log(RequestType.READ, "project_id is missing from the credentials", LogType.ERROR);
 }
 if (!credentials.private_key_id) {
-  console.error("private_key_id is missing from the credentials");
+  log(RequestType.READ, "private_key_id is missing from the credentials", LogType.ERROR);
 }
 
 if (!credentials.private_key) {
-  console.error("private_key is missing from the credentials");
+  log(RequestType.READ, "private_key is missing from the credentials", LogType.ERROR);
 }
 if (!credentials.client_email) {
-  console.error("client_email is missing from the credentials");
+  log(RequestType.READ, "client_email is missing from the credentials", LogType.ERROR);
 }
 
 const auth = new google.auth.GoogleAuth({
@@ -64,6 +67,22 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: "v3", auth });
 
+export async function deleteGoogleDriveFolder(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { folderId } = request.params as { folderId: string };
+  try {
+    const deleteFolder = await drive.files.delete({
+      fileId: folderId,
+    });
+    if (!deleteFolder) {
+      log(RequestType.DELETE, "Failed to delete folder", LogType.ERROR);
+      return h.response({ message: "Failed to delete folder" }).code(400);
+    }
+    return h.response("Folder with Id " + folderId + " deleted successfully").code(200);
+  } catch (error: any) {
+    log(RequestType.DELETE, "Failed to delete folder with Id " + folderId +"", LogType.ERROR, error.toString());
+    return h.response("Error deleting folder").code(500);
+  }
+}
 export async function createFolder(
   request: Hapi.Request,
   h: Hapi.ResponseToolkit
@@ -84,7 +103,7 @@ export async function createFolder(
       fields: "id",
     });
     if (!file) {
-      console.log("Failed to create folder");
+      log(RequestType.CREATE, "Failed to create folder", LogType.ERROR);
       return h.response({ message: "Failed to create folder" }).code(400);
     }
 
@@ -96,7 +115,8 @@ export async function createFolder(
       },
     });
     if (!folderId) {
-      console.log("Failed to create folder");
+      log(RequestType.CREATE, "Failed to create folder", LogType.ERROR);
+      return h.response({ message: "Failed to create folder" }).code(400);
     }
 
     console.log(
@@ -106,14 +126,14 @@ export async function createFolder(
         file.data.id +
         " has been created successfully!!"
     );
-
+    log(RequestType.CREATE, "Folder created successfully", LogType.INFO);
     return h
       .response({
         message: `The folder ${name} with Unique ID: ${file.data.id} has been created successfully!!`,
       })
       .code(201);
-  } catch (error) {
-    console.error("Error creating folder:", error);
+  } catch (error: any) {
+    log(RequestType.CREATE, "Failed to create folder", LogType.ERROR, error.toString());
     return h.response("Error creating folder").code(500);
   }
 }
@@ -135,16 +155,17 @@ export async function deleteFolder(
         fileId: folderId,
       });
       if (!deleteFromGoogle) {
-        console.log("Failed to delete folder");
+        log(RequestType.DELETE, "Failed to delete folder", LogType.ERROR);
         return h.response({ message: "Failed to delete folder" }).code(400);
       }
+      log(RequestType.DELETE, "Folder deleted successfully", LogType.INFO);
       return h.response("Folder deleted successfully").code(200);
     } else {
-      console.log("Failed to delete folder");
+     log(RequestType.DELETE, "Failed to delete folder", LogType.ERROR);
       return h.response({ message: "Failed to delete folder" }).code(400);
     }
-  } catch (error) {
-    console.error("Error deleting folder:", error);
+  } catch (error: any) {
+    log(RequestType.DELETE, "Failed to delete folder", LogType.ERROR, error.toString());
     return h.response("Error deleting folder").code(500);
   }
 }
@@ -158,7 +179,7 @@ export async function deleteManyFromGoogleDrive(
       fields: "files(id, name)",
     });
     if (!folders || !folders.data.files) {
-      console.log("No folders found");
+      log(RequestType.DELETE, "No folders found", LogType.ERROR);
       return h.response({ message: "No folders found" }).code(404);
     }
     const folderIds = folders.data.files
@@ -169,15 +190,16 @@ export async function deleteManyFromGoogleDrive(
         fileId: folderIds[i],
       });
       if (!deleteFolder) {
-        console.log("Failed to delete folder");
+        log(RequestType.DELETE, "Failed to delete the folder", LogType.ERROR);
         return h
           .response({ message: "Failed to delete the folder " })
           .code(400);
       }
     }
+    log(RequestType.DELETE, "All folders deleted successfully", LogType.INFO);
     return h.response("All folders deleted successfully").code(200);
-  } catch (error) {
-    console.error("Error deleting folders:", error);
+  } catch (error: any) {
+   log(RequestType.DELETE, "Failed to delete folders", LogType.ERROR, error.toString());
     return h.response("Error deleting folders").code(500);
   }
 }
@@ -194,9 +216,20 @@ export async function getAllFolders(
         folderType: true,
       },
     });
+    if (!folders || folders.length === 0) {
+      let details = "No folders found found in the database";
+      let logtype = LogType.WARNING;
+      if(!folders){
+        details = "failed to get folders from the database:" + folders;
+        logtype = LogType.ERROR;
+      }
+      log(RequestType.READ, "No folders found", logtype, details.toString());
+      return h.response({ message: "No folders found" }).code(404);
+    }
+    log(RequestType.READ, "Folders found", LogType.INFO);
     return h.response(folders).code(200);
-  } catch (error) {
-    console.error("Error getting folders:", error);
+  } catch (error: any) {
+    log(RequestType.READ, "Failed to get folders", LogType.ERROR, error.toString());
     return h.response("Error getting folders").code(500);
   }
 }
@@ -210,9 +243,20 @@ export async function getAllFoldersInGoogleDrive(
       q: "mimeType='application/vnd.google-apps.folder'",
       fields: "files(id, name)",
     });
+    if (!folders || !folders.data.files|| folders.data.files.length === 0) {
+      let details = "failed to get folders from Google Drive"+ folders;
+      let logtype = LogType.ERROR;
+      if(folders.data.files?.length === 0){
+        details = "No folders found in Google Drive";
+        logtype = LogType.WARNING;
+      }
+      log(RequestType.READ, "No folders found", logtype, details.toString());
+      return h.response({ message: "No folders found" }).code(404);
+    }
+    log(RequestType.READ, "Folders found", LogType.INFO);
     return h.response(folders.data.files).code(200);
-  } catch (error) {
-    console.error("Error getting folders:", error);
+  } catch (error:any) {
+    log(RequestType.READ, "Failed to get folders", LogType.ERROR, error.toString());
     return h.response("Error getting folders").code(500);
   }
 }
@@ -238,6 +282,7 @@ async function createAudioFile(
       }
     );
     if (!folderInfo) {
+      log(RequestType.CREATE, "Audio folder not found", LogType.ERROR);
       throw new Error("Audio folder not found");
     }
     const audioName = name + "-" + Date.now();
@@ -257,6 +302,7 @@ async function createAudioFile(
     });
 
     if (!response.data.id) {
+      
       throw new Error("Failed to upload file to Google Drive");
     }
 
@@ -271,10 +317,12 @@ async function createAudioFile(
 
     // Get the shareable link
     const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
-
-    console.log(
-      `The audio file ${name} with Unique ID: ${response.data.id} has been created successfully!`
+    log(
+      RequestType.CREATE,
+      `The audio file ${name} with Unique ID: ${response.data.id} has been created successfully!`,
+      LogType.INFO
     );
+  
     const audio = await executePrismaMethod(prisma, "media", "create", {
       data: {
         type: MediaType.AUDIO,
@@ -294,7 +342,7 @@ async function createAudioFile(
       },
     });
     if (!audio) {
-      console.log("Failed to create audio media");
+      log(RequestType.CREATE, "Failed to create audio media", LogType.ERROR);
       throw new Error("Failed to create audio media");
     }
     const type = NotificationType.AUDIO;
@@ -310,14 +358,18 @@ async function createAudioFile(
       read,
       type
     );
-    console.log(notification);
+    
     if (!notification) {
-      console.log("Failed to create notification for video media");
+      log(
+        RequestType.CREATE,
+        "Failed to create notification for audio media",
+        LogType.ERROR
+      );
     }
 
     return shareableLink;
-  } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+  } catch (error: any) {
+    log(RequestType.CREATE, "Failed to create audio media", LogType.ERROR, error.toString());
     throw error;
   }
 }
@@ -344,15 +396,45 @@ export async function deleteThumbnailFromDrive(fileId: string){
       fileId: fileId,   
     });
     if (!deleteFile) {
-      console.log("Failed to delete file");
+      log(RequestType.DELETE, "Failed to delete the image with id: " +fileId+" from Google Drive", LogType.ERROR);
+      
       return false;
     }
     return true;
-  }catch(err){
-    console.log(err);
+  }catch(err:any){
+    log(RequestType.DELETE, "Failed to delete the image with id: " +fileId+" from Google Drive", LogType.ERROR, err.toString());
+   
     throw err;
   }
 }
+export async function deleteThumbnailFromDriveHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { Id } = request.params as EventInput; ;
+  try {
+    const deleteFile = await drive.files.delete({
+      fileId: Id,
+    });
+    if (!deleteFile) {
+      log(
+        RequestType.DELETE,
+        "Failed to delete the image with id: " + Id + " from Google Drive",
+        LogType.ERROR
+      );
+
+      return h.response({message:"Error deleting image"}).code(400);
+    }
+    return h.response({message:"Image deleted successfully"}).code(200);
+  } catch (err: any) {
+    log(
+      RequestType.DELETE,
+      "Failed to delete the image with id: " + Id + " from Google Drive",
+      LogType.ERROR,
+      err.toString()
+    );
+
+    return h.response({message:"Error deleting image"}).code(500);
+  }
+}
+
 
 async function updateAudioFileHelper(
   uniqueId: string,
@@ -567,162 +649,138 @@ export async function updateThumbnailHelper(
       "findFirst",
       {
         where: {
+          folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
           folderType: folderType.Images,
         },
       }
     );
     if (!folderInfo) {
+      log(RequestType.UPDATE, "Thumbnail folder not found", LogType.ERROR);
       throw new Error("Thumbnail folder not found");
     }
     if (reUploadMedia === true) {
       if (fileId === "") {
         const link = await pushThumbnailToDriveHandler(name, path, mimeType);
         if (!link) {
-          console.log("Failed to upload thumbnail to Google Drive");
+          log(RequestType.UPDATE, "Failed to upload thumbnail to Google Drive", LogType.ERROR);
           return "Error updating thumbnail";
         }
-        fileId = await extractFileIdFromDriveLink(link);
-       
-      
-        return link;
-      } else {
-        const findThumbnail = await executePrismaMethod(
-          prisma,
-          "media",
-          "findUnique",
-          {
-            where: {
-              fileId: fileId,
-              type: MediaType.IMAGE,
-            },
-          }
-        );
-        console.log("file found: ", findThumbnail);
-
-        if (!findThumbnail) {
-          console.log("Thumbnail not found");
-          return "Thumbnail not found";
-        }
-        try {
-          const findThumbnailInDrive = await drive.files.get({
+        const thumbnail = await executePrismaMethod(prisma, "media", "create", {
+          data: {
+            type: MediaType.IMAGE,
+            title: name,
+            description: description,
+            url: link,
             fileId: fileId,
-            fields: "id, name",
-          });
-          console.log("File found in drive: ", findThumbnailInDrive);
-
-          const deleteThumbnail = await drive.files.delete({
-            fileId: fileId,
-          });
-          console.log("File deleted successfully: ", deleteThumbnail);
-        } catch (error: any) {
-          if (error.code === 404) {
-            console.error("File not found: ", fileId);
-          } else {
-            console.error("An error occurred: ", error);
-          }
-        }
-
-        const thumbnailName = name || findThumbnail.title + "-" + Date.now();
-        const fileMetadata = {
-          name: thumbnailName,
-          parents: [folderInfo.folderId],
-        };
-        const media = {
-          mimeType: mimeType,
-          body: fs.createReadStream(path),
-        };
-        const response = await drive.files.create({
-          requestBody: fileMetadata,
-          media: media,
-          fields: "id",
-        });
-        if (!response.data.id) {
-          console.log("Failed to upload thumbnail to Google Drive");
-          return "Error updating thumbnail";
-        }
-        // Set the file's sharing permissions to "anyone with the link"
-        await drive.permissions.create({
-          fileId: response.data.id,
-          requestBody: {
-            role: "reader",
-            type: "anyone",
-          },
-        });
-        // Get the shareable link
-        const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
-
-        console.log(
-          `The thumbnail  ${name} with Unique ID: ${response.data.id} has been updated successfully!`
-        );
-
-        const updateThumbnail = await executePrismaMethod(
-          prisma,
-          "media",
-          "update",
-          {
-            where: {
-              fileId: fileId,
-              uniqueId: findThumbnail.uniqueId,
-              type: MediaType.IMAGE,
-            },
-            data: {
-              title: name || findThumbnail.title,
-              description: description,
-              url: shareableLink,
-              fileId: response.data.id,
-              updatedAt: getCurrentDate(),
-            },
-          }
-        );
-        if (!updateThumbnail) {
-          console.log("Failed to update thumbnail");
-          throw new Error("Failed to update thumbnail");
-        }
-        const type = NotificationType.IMAGE;
-        const read = false;
-        const notificationTitle =
-          "The Thumbnail titled " +
-          findThumbnail.title +
-          " has just been updated!";
-        const specialKey = findThumbnail.uniqueId + NotificationType.IMAGE;
-        const getNotification = await executePrismaMethod(
-          prisma,
-          "notification",
-          "findFirst",
-          {
-            where: {
-              notificationEngagements: {
-                specialKey: specialKey,
+            postedAt: getCurrentDate(),
+            updatedAt: getCurrentDate(),
+            storageFolder: {
+              connect: {
+                folderId: folderInfo.folderId,
               },
             },
-          }
-        );
-        const notification = await updateMediaNotificationHandler(
-          getNotification.id,
-          findThumbnail.id,
-          specialKey,
-          notificationTitle,
-          description,
-          read,
-          type
-        );
-        console.log(notification);
-        if (!notification) {
-          console.log("Failed to create notification for thumbnail media");
+          },
+        });
+        if (!thumbnail) {
+          log(RequestType.CREATE, "Failed to create thumbnail media", LogType.ERROR);
+          throw new Error("Failed to create thumbnail media");
         }
-        // Remove the file from the 'uploads' directory after processing
-        if (path && typeof path === "string") {
-          fs.unlink(path, (err) => {
-            if (err) {
-              console.error("Error deleting file:", err);
+
+        return link;
+      } else if(fileId !== "" || fileId !== null){ {
+          
+            const findThumbnailInDrive = await drive.files.get({
+            fileId: fileId,
+            fields: "id, name",
+            });
+            if(!findThumbnailInDrive){
+            log(RequestType.UPDATE, "Thumbnail found in Google Drive", LogType.INFO);
+            return "Thumbnail not found";
             }
-          });
-        }
-        return shareableLink;
+          
+            const findThumbnail = await executePrismaMethod(
+              prisma,
+              "media",
+              "findUnique",
+              {
+                where: {
+                  fileId: fileId,
+                  type: MediaType.IMAGE,
+                },
+              }
+            );
+            if (!findThumbnail) {
+              log(RequestType.READ, "Thumbnail not found", LogType.ERROR);
+              return "Thumbnail not found";
+            }
+
+            const deleteThumbnail = await drive.files.delete({
+              fileId: fileId,
+            });
+            if (!deleteThumbnail) {
+              log(RequestType.DELETE, "Thumbnail not found in Google Drive", LogType.ERROR);
+              return "Failed to delete existing thumbnail";
+            }
+          log(
+            RequestType.DELETE,
+            "Thumbnail deleted successfully from Google Drive",
+            LogType.INFO
+          )
+         
+          const link = await pushThumbnailToDriveHandler(name, path, mimeType);
+          
+          if (!link) {
+            log(RequestType.UPDATE, "Failed to upload thumbnail to Google Drive", LogType.ERROR);
+            return "Error updating thumbnail";
+          }
+          const newId = await extractFileIdFromDriveLink(link);
+          if (!newId) {
+            log(RequestType.UPDATE, "Failed to extract file id from link", LogType.ERROR);
+            return "Error updating thumbnail";
+          }
+           const deleteThumbnailFromDB = await executePrismaMethod(
+             prisma,
+             "media",
+             "update",
+             {
+               where: {
+                 fileId: fileId,
+                 type: MediaType.IMAGE,
+                 uniqueId: findThumbnail.uniqueId,
+               },
+               data: {
+                 fileId: newId,
+                 url:link,
+                 updatedAt: getCurrentDate(),
+               },
+             }
+           );
+          if (!deleteThumbnailFromDB) {
+            log(RequestType.UPDATE, "Failed to update thumbnail from Db", LogType.ERROR);
+            return "Failed to update existing thumbnail";
+          }
+          return link;
+
+       
       }
+      
+       
     }
-  } catch (err) {
-    console.log(err);
+    }else{
+      const getLink = await executePrismaMethod(prisma, "media", "findUnique", {
+        where: {
+          fileId: fileId,
+          type: MediaType.IMAGE,
+        },
+      });
+      if (!getLink) {
+        log(RequestType.READ, "Thumbnail not found", LogType.ERROR);
+        return "Thumbnail not found";
+      }
+      return getLink.url;
+    }
+  } catch (err: any) {
+    log(RequestType.UPDATE, "Failed to update thumbnail", LogType.ERROR, err);
     throw err;
   }
 }
@@ -739,18 +797,21 @@ export async function createThumbnailFile(
       "findFirst",
       {
         where: {
+          folderId:process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
           folderType: folderType.Images,
         },
       }
     );
 
     if (!folderInfo) {
+      log(RequestType.CREATE, "Image folder not found", LogType.ERROR);
       throw new Error("Image folder not found");
     }
 
-    const audioName = name + "-" + Date.now();
+   
+    const thumbnailName = name + "-" + Date.now();
     const fileMetadata = {
-      name: audioName,
+      name: thumbnailName,
       parents: [folderInfo.folderId],
     };
 
@@ -766,6 +827,7 @@ export async function createThumbnailFile(
     });
 
     if (!response.data.id) {
+      log(RequestType.CREATE, "Failed to upload file to Google Drive", LogType.ERROR);
       throw new Error("Failed to upload file to Google Drive");
     }
 
@@ -780,12 +842,14 @@ export async function createThumbnailFile(
 
     // Get the shareable link
     const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
-
-    console.log(
-      `The thumbnail ${name} with Unique ID: ${response.data.id} has been created successfully!`
-    );
+    log(
+        RequestType.CREATE, 
+        `The thumbnail ${name} with Unique ID: ${response.data.id} has been created successfully!`,
+        LogType.INFO
+      );
+  
     const description = "Thumbnail for an event";
-    const audio = await executePrismaMethod(prisma, "media", "create", {
+    const thumbnail = await executePrismaMethod(prisma, "media", "create", {
       data: {
         type: MediaType.IMAGE,
         title: name,
@@ -801,13 +865,13 @@ export async function createThumbnailFile(
         },
       },
     });
-    if (!audio) {
+    if (!thumbnail) {
       console.log("Failed to create thumbnail media");
       throw new Error("Failed to create thumbnail media");
     }
     return shareableLink;
-  } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+  } catch (error:any) {
+    log(RequestType.CREATE,"Error uploading file to Google Drive",LogType.ERROR, error);
     throw error;
   }
 }
@@ -836,9 +900,10 @@ async function getDuration(filePath: string): Promise<string> {
   try {
     const duration = await getAudioDurationInSeconds(filePath);
     const formattedDuration = formatDuration(duration);
-    console.log(`Duration: ${formattedDuration}`);
+    log(RequestType.READ, `Audio duration: ${formattedDuration}`, LogType.INFO);
     return formattedDuration;
-  } catch (error) {
+  } catch (error: any) {
+    log(RequestType.READ, "Error getting audio duration", LogType.ERROR, error);
     console.error("Error getting audio duration:", error);
     throw error;
   }
@@ -870,7 +935,7 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             }
         });
         if(!media){
-            console.log("Failed to create video media");
+            log(RequestType.CREATE, "Failed to create video media", LogType.ERROR);
             return h.response({message: "Failed to create video media"}).code(400);
         }
         const type = NotificationType.VIDEO;
@@ -885,15 +950,15 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             read,
             type,
         );
-        console.log(notification);
+        
         if(!notification){
-            console.log("Failed to create notification for video media");
+            log(RequestType.CREATE, "Failed to create notification for video media", LogType.ERROR);
             return h.response({message: "Failed to create notification for video media"}).code(400);
         }
-        
+        log(RequestType.CREATE, "Video media created successfully", LogType.INFO);
         return h.response({message:"The video was posted successfully"}).code(201);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.CREATE, "Failed to create video media", LogType.ERROR, err);
         return h.response({message: "Internal Server Error" + ":failed to create video media"}).code(500);
     }
 
@@ -922,6 +987,7 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
           }
         );
         if (!findMedia) {
+          log(RequestType.UPDATE, "Media not found", LogType.ERROR);
           return h.response({ message: "Media not found" }).code(404);
         }
         const media = await executePrismaMethod(prisma, "media", "update", {
@@ -937,7 +1003,7 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
           },
         });
         if(!media){
-            console.log("Failed to update video media");
+            log(RequestType.UPDATE, "Failed to update video media", LogType.ERROR);
             return h.response({message: "Failed to update video media"}).code(400);
         }
 
@@ -953,15 +1019,15 @@ export async function updateVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             NotificationType.VIDEO
         );
         if(!notification){
-            console.log("Failed to update notification for video media");
+            log(RequestType.UPDATE, "Failed to update notification for video media", LogType.ERROR);
             return h.response({message: "Failed to update notification for video media"}).code(400);
         }
 
 
-
+        log(RequestType.UPDATE, "Video media updated successfully", LogType.INFO);
         return h.response({message:"The video was updated successfully"}).code(201);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.UPDATE, "Failed to update video media", LogType.ERROR, err);
         return h.response({message: "Internal Server Error" + ":failed to update video media"}).code(500);
     }
 }
@@ -989,6 +1055,7 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
           }
         );
         if (!findMedia) {
+          log(RequestType.DELETE, "Media not found", LogType.ERROR);
           return h.response({ message: "Media not found" }).code(404);
         }
         const media = await executePrismaMethod(prisma, "media", "delete", {
@@ -997,7 +1064,7 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             }
         });
         if(!media){
-            console.log("Failed to delete video media");
+            log(RequestType.DELETE, "Failed to delete video media", LogType.ERROR);
             return h.response({message: "Failed to delete video media"}).code(400);
         }
         const specialKey = findMedia.uniqueId + NotificationType.VIDEO;
@@ -1008,12 +1075,13 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
           NotificationType.VIDEO
         );
         if(!notification){
-            console.log("Failed to delete notification for video media");
+            log(RequestType.DELETE, "Failed to delete notification for video media", LogType.ERROR);
             return h.response({message: "Failed to delete notification for video media"}).code(400);
         }
+        log(RequestType.DELETE, "Video media deleted successfully", LogType.INFO);
         return h.response({message:"The video was deleted successfully"}).code(201);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.DELETE, "Failed to delete video media", LogType.ERROR, err);
         return h.response({message: "Internal Server Error" + ":failed to delete video media"}).code(500);
     }
 }
@@ -1042,12 +1110,13 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
 
         });
         if(!media){
-            console.log("No video media found");
+            log(RequestType.READ, "No video media found", LogType.ERROR);
             return h.response({message: "No video media found"}).code(404);
         }
+        log(RequestType.READ, "Video media found", LogType.INFO);
         return h.response(media).code(200);
-    }catch(err){
-        console.log(err);
+    }catch(err:any){
+        log(RequestType.READ, "Failed to get all video media", LogType.ERROR, err);
         return h.response({message: "Internal Server Error" + ":failed to get all video media"}).code(500);
     }
 }
@@ -1148,6 +1217,7 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
   const { audioFile } = request.payload as { audioFile: any };
 
   if (!audioFile) {
+    log(RequestType.CREATE, "No file uploaded", LogType.ERROR);
     return h.response({ error: "No file uploaded" }).code(400);
   }
 
@@ -1175,14 +1245,12 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
         resolve();
       });
     });
-    console.log(
-      "filePath:" + filePath,
-      "mimeType:" + mimeType,
-      "filename:" + filename
-    );
+    const details = "filePath:" + filePath + " ,mimeType:" + mimeType+ " ,filename:" + filename
+    
+    log(RequestType.CREATE, "File uploaded successfully", LogType.INFO,details);
     return h.response({ filePath, mimeType, filename }).code(200);
-  } catch (error) {
-    console.error("Error during file processing:", error);
+  } catch (error:any) {
+    log(RequestType.CREATE, "Failed to store file", LogType.ERROR, error);
     return h.response({ error: "Failed to store file" }).code(500);
   }
 };
@@ -1211,14 +1279,69 @@ export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.Re
           }
 
       });
-      if(!media){
-          console.log("No audio media found");
+      if(!media || media.length === 0){
+        let details = "No audio media is empty" 
+        let logtype = LogType.WARNING
+        if(!media){
+          details = "Media is undefined: " + media
+          logtype = LogType.ERROR
+        }
+          log(RequestType.READ, "No audio media found", logtype,details);
           return h.response({message: "No audio media found"}).code(404);
       }
+      log(RequestType.READ, "Audio media found", LogType.INFO);
       return h.response(media).code(200);
-  }catch(err){
-      console.log(err);
+  }catch(err:any){
+      log(RequestType.READ, "Failed to get all audio media", LogType.ERROR, err);
       return h.response({message: "Internal Server Error" + ":failed to get all audio media"}).code(500);
+  }
+}
+
+export async function listAllImageMediaHandler(
+  request: Hapi.Request,
+  h: Hapi.ResponseToolkit
+) {
+  const { prisma } = request.server.app;
+
+  try {
+    const media = await executePrismaMethod(prisma, "media", "findMany", {
+      where: {
+        type: MediaType.IMAGE,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      select: {
+        id: true,
+        uniqueId: true,
+        title: true,
+        description: true,
+        url: true,
+        duration: true,
+        host: true,
+        postedAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!media || media.length === 0) {
+      let details = "No image media is empty";
+      let logtype = LogType.WARNING;
+      if (!media) {
+        details = "Media is undefined: " + media;
+        logtype = LogType.ERROR;
+      }
+      log(RequestType.READ, "No image media found", logtype, details);
+      return h.response({ message: "No image media found" }).code(404);
+    }
+    log(RequestType.READ, "Image media found", LogType.INFO);
+    return h.response(media).code(200);
+  } catch (err: any) {
+    log(RequestType.READ, "Failed to get all Image media", LogType.ERROR, err);
+    return h
+      .response({
+        message: "Internal Server Error" + ":failed to get all image media",
+      })
+      .code(500);
   }
 }
 //upload audio to server
@@ -1243,7 +1366,7 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
       },
     });
     if (!findAudio) {
-      console.log("Audio not found");
+      log(RequestType.DELETE, "Audio not found", LogType.ERROR);
       return h.response({ message: "Audio not found" }).code(404);
     }
 
@@ -1256,7 +1379,7 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
         },
       });
       if (!deleteAudio) {
-        console.log("Failed to delete audio media");
+        log(RequestType.DELETE, "Failed to delete audio media", LogType.ERROR);
         return h.response({ message: "Failed to delete audio media" }).code(400);
       }
       const specialKey = findAudio.uniqueId + NotificationType.AUDIO;
@@ -1267,16 +1390,17 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
         NotificationType.AUDIO
       );
       if (!notification) {
-        console.log("Failed to delete notification for audio media");
+        log(RequestType.DELETE, "Failed to delete notification for audio media", LogType.ERROR);
         return h.response({ message: "Failed to delete notification for audio media" }).code(400);
       }
+      log(RequestType.DELETE, "Audio media deleted successfully", LogType.INFO);
       return h.response({ message: "Audio deleted successfully" }).code(201);
     }else{
-      console.log("Failed to delete audio media from google drive");
+      log(RequestType.DELETE, "Failed to delete audio media", LogType.ERROR);
       return h.response({ message: "Failed to delete audio media" }).code(400);
     }
-  } catch (error) {
-    console.error("Error deleting audio:", error);
+  } catch (error:any) {
+    log(RequestType.DELETE, "Failed to delete audio media", LogType.ERROR, error);
     return h.response("Error deleting audio").code(500);
   }
 }
@@ -1297,14 +1421,21 @@ export async function pushAudioToDriveHandler(
   try {
     // Ensure the filePath is provided and is a string
     if (!filePath || typeof filePath !== 'string') {
+      log(RequestType.CREATE, "Invalid file path", LogType.ERROR);
       return h.response({ error: 'Invalid file path' }).code(400);
     }
 
     let duration = '';
     try {
       duration = await getDuration(filePath);
-    } catch (durationError) {
-      console.warn("Could not calculate duration, proceeding without it:", durationError);
+    } catch (durationError: any) {
+      log(
+        RequestType.CREATE,
+        "Could not calculate duration, proceeding without it",
+        LogType.ERROR,
+        durationError
+      );
+     
     }
 
     const shareableLink = await createAudioFile(
@@ -1322,10 +1453,10 @@ export async function pushAudioToDriveHandler(
         console.error("Error deleting file:", err);
       }
     });
-
+    log(RequestType.CREATE, "Audio uploaded successfully", LogType.INFO);
     return h.response({ shareableLink }).code(200);
-  } catch (error) {
-    console.error("Error uploading file to Google Drive:", error);
+  } catch (error:any) {
+    log(RequestType.CREATE, "Failed to upload file to Google Drive", LogType.ERROR, error);
     return h
       .response({ error: "Failed to upload file to Google Drive" })
       .code(500);
@@ -1360,7 +1491,7 @@ export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToo
         }
       );
       if (!findAudioId){
-          console.log("Audio not found");
+          log(RequestType.UPDATE, "Audio not found", LogType.ERROR);
           return h.response({ message: "Audio not found" }).code(404);
       }
       shareableLink = await updateAudioFileHelper(
@@ -1373,9 +1504,11 @@ export async function updateAudioFile(request: Hapi.Request, h: Hapi.ResponseToo
         reUploadMedia,
         host
       );
+      log(RequestType.UPDATE, "Audio updated successfully", LogType.INFO);
       return h.response({ shareableLink }).code(200);
-    } catch (error) {
-      console.error("Error uploading file to Google Drive:", error);
+    } catch (error:any) {
+      log(RequestType.UPDATE, "Failed to update audio media", LogType.ERROR, error);
+    
       return h
         .response({ error: "Failed to upload file to Google Drive" })
         .code(500);
@@ -1391,6 +1524,7 @@ export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
   const { thumbnailFile } = request.payload as { thumbnailFile: any };
 
   if (!thumbnailFile) {
+    log(RequestType.CREATE, "No file uploaded", LogType.ERROR);
     return h.response({ error: "No file uploaded" }).code(400);
   }
 
@@ -1410,7 +1544,7 @@ export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
       thumbnailFile.pipe(fileStream);
 
       fileStream.on("error", (err) => {
-        console.error("Error writing file:", err);
+        log(RequestType.CREATE, "Error writing file", LogType.ERROR);
         reject(err);
       });
 
@@ -1418,10 +1552,10 @@ export const storeThumbnailFileHandler: Hapi.Lifecycle.Method = async (
         resolve();
       });
     });
-
+    log(RequestType.CREATE, "File uploaded successfully", LogType.INFO);
     return h.response({ filePath, mimeType, filename }).code(200);
-  } catch (error) {
-    console.error("Error during file processing:", error);
+  } catch (error:any) {
+    log(RequestType.CREATE, "Failed to store file", LogType.ERROR);
     return h.response({ error: "Failed to store file" }).code(500);
   }
 };

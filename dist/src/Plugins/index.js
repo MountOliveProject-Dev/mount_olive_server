@@ -20,5 +20,4 @@ __exportStar(require("./prisma"), exports);
 __exportStar(require("./status"), exports);
 __exportStar(require("./NotificationsPlugin"), exports);
 __exportStar(require("./MediaPlugin"), exports);
-//export * from "./firebaseAuthPlugin";
 //# sourceMappingURL=index.js.map

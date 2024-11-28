@@ -17,7 +17,6 @@ exports.listEventsByDateRangeHandler = listEventsByDateRangeHandler;
 const server_1 = __importDefault(require("../server"));
 const Helpers_1 = require("../Helpers");
 const notificationHandlers_1 = require("./notificationHandlers");
-const Helpers_2 = require("../Helpers");
 const mediaHandlers_1 = require("./mediaHandlers");
 const fs_1 = __importDefault(require("fs"));
 async function listEventsHandler(request, h) {
@@ -30,13 +29,21 @@ async function listEventsHandler(request, h) {
                 },
             ],
         });
-        if (!events) {
+        if (!events || events.length === 0) {
+            let details = "There are no events in the system";
+            let logtype = Helpers_1.LogType.WARNING;
+            if (!events) {
+                details = "failed to retrieve events from the database" + details.toString();
+                logtype = Helpers_1.LogType.ERROR;
+            }
+            (0, Helpers_1.log)(Helpers_1.RequestType.READ, "No events found", logtype, details);
             return h.response({ message: "No events found" }).code(404);
         }
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Events found", Helpers_1.LogType.INFO);
         return h.response(events).code(200);
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" }).code(500);
     }
 }
@@ -45,20 +52,20 @@ async function pushThumbnailToDriveHandler(name, filePath, mimeType) {
     try {
         // Ensure the filePath is provided and is a string
         if (!filePath || typeof filePath !== "string") {
-            console.log("Invalid file path provided");
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Invalid file path provided", Helpers_1.LogType.ERROR);
             return "Invalid file path provided";
         }
         const shareableLink = await (0, mediaHandlers_1.createThumbnailFile)(name, mimeType, filePath);
         // Remove the file from the 'uploads' directory after processing
         fs_1.default.unlink(filePath, (err) => {
             if (err) {
-                console.error("Error deleting file:", err);
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to delete file", Helpers_1.LogType.ERROR, err.toString());
             }
         });
         return shareableLink;
     }
     catch (error) {
-        console.error("Error uploading file to Google Drive:", error);
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Error uploading thumbnail to Google Drive", Helpers_1.LogType.ERROR, error.toString() || "Error uploading thumbnail to Google Drive");
         return "Error uploading thumbnail to Google Drive";
     }
 }
@@ -83,6 +90,7 @@ async function createEventHandler(request, h) {
                 },
             });
             if (!event) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the event", Helpers_1.LogType.ERROR, event.toString());
                 return h
                     .response({ message: "Failed to create the event" })
                     .code(400);
@@ -90,15 +98,17 @@ async function createEventHandler(request, h) {
             const notificationTitle = "A New Event titled " +
                 event.title +
                 " has just been posted!";
-            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const specialKey = event.uniqueId + Helpers_1.NotificationType.EVENT;
             const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false, uploadThumbnail);
             if (!createNotification) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the notification", Helpers_1.LogType.ERROR, createNotification.toString());
                 return h
                     .response({
                     message: "Failed to create the notification",
                 })
                     .code(400);
             }
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Event created successfully", Helpers_1.LogType.INFO);
             return h.response(event).code(201);
         }
         else if (uploadThumbnail === false) {
@@ -116,22 +126,26 @@ async function createEventHandler(request, h) {
                 },
             });
             if (!event) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the event", Helpers_1.LogType.ERROR, event.toString());
                 return h.response({ message: "Failed to create the event" }).code(400);
             }
             const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
-            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const specialKey = event.uniqueId + Helpers_1.NotificationType.EVENT;
             const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, description, false, uploadThumbnail);
             if (!createNotification) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the notification", Helpers_1.LogType.ERROR, createNotification.toString());
                 return h.response({ message: "Failed to create the notification" }).code(400);
             }
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Event created successfully", Helpers_1.LogType.INFO);
             return h.response(event).code(201);
         }
         else {
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Bad request, thumbnail status is undefined", Helpers_1.LogType.ERROR);
             return h.response({ message: "Bad request, thumbnail status is undefined" }).code(400);
         }
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" + ":failed to create the event:" + title }).code(500);
     }
 }
@@ -156,24 +170,26 @@ async function updateEventHandler(request, h) {
             }
         });
         if (!findEvent) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Event not found", Helpers_1.LogType.WARNING);
             return h.response({ message: "Event not found" }).code(404);
         }
         if (uploadThumbnail === true) {
             let fileId = "";
-            if (findEvent.thumbnail !== null || findEvent.thumbnail !== undefined) {
-                fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
-            }
-            console.log("file id", fileId);
             thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
             if (thumbnailLink === "Thumbnail not found") {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Thumbnail not found", Helpers_1.LogType.WARNING);
                 return h.response({ message: "Thumbnail not found" }).code(404);
             }
             else if (thumbnailLink === "Error updating thumbnail") {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Error updating thumbnail", Helpers_1.LogType.ERROR);
                 return h
                     .response({
                     message: "Couldn't update thumbnail, please try again ",
                 })
                     .code(400);
+            }
+            else {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, thumbnailLink.toString(), Helpers_1.LogType.INFO);
             }
             //
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
@@ -194,17 +210,18 @@ async function updateEventHandler(request, h) {
                 },
             });
             if (!event) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Failed to update the event", Helpers_1.LogType.ERROR, event.toString());
                 return h.response({ message: "Failed to update the event" }).code(400);
             }
             const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
-            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const specialKey = event.uniqueId + Helpers_1.NotificationType.EVENT;
             const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
             if (updateNotification.code == 500) {
-                console.log(updateNotification.message);
-                console.log("event deleted");
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Failed to update the event", Helpers_1.LogType.ERROR, updateNotification.message);
                 return h.response({ message: "Failed to update the event" }).code(400);
             }
             else if (updateNotification.code == 200) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Event updated successfully", Helpers_1.LogType.INFO);
                 return h.response({ message: "Event updated successfully!" }).code(201);
             }
         }
@@ -226,25 +243,28 @@ async function updateEventHandler(request, h) {
                 },
             });
             if (!event) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Failed to update the event", Helpers_1.LogType.ERROR, event.toString());
                 return h.response({ message: "Failed to update the event" }).code(400);
             }
             const notificationTitle = "The Event titled " + findEvent.title + " has just been updated!";
-            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const specialKey = event.uniqueId + Helpers_1.NotificationType.EVENT;
             const updateNotification = await (0, notificationHandlers_1.updateEventNotificationHandler)(findEvent.eventNotifications.notificationId, event.uniqueId, specialKey, notificationTitle, description, false);
             if (updateNotification.code == 500) {
-                console.log(updateNotification.message);
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Failed to update the event", Helpers_1.LogType.ERROR, updateNotification.message);
                 return h.response({ message: "Failed to update the event" }).code(400);
             }
             else if (updateNotification.code == 200) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Event updated successfully", Helpers_1.LogType.INFO);
                 return h.response({ message: "Event updated successfully!" }).code(201);
             }
         }
         else {
+            (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Bad request, thumbnail status is undefined", Helpers_1.LogType.ERROR);
             return h.response({ message: "Bad request, thumbnail status is undefined" }).code(400);
         }
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" + ":failed to update the event:" + uniqueId }).code(500);
     }
 }
@@ -265,8 +285,8 @@ async function createManyEventsHandler(request, h) {
             });
             createdEventIds.push(parseInt(createdEvent.id));
         }
-        console.log('Created event IDs:', createdEventIds);
         if (createdEventIds.length === 0) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the events", Helpers_1.LogType.ERROR);
             return h.response({ message: "Failed to create the events" }).code(400);
         }
         //create notification for each event
@@ -283,18 +303,20 @@ async function createManyEventsHandler(request, h) {
                 },
             });
             const notificationTitle = "A New Event titled " + event.title + " has just been posted!";
-            const specialKey = event.uniqueId + Helpers_2.NotificationType.EVENT;
+            const specialKey = event.uniqueId + Helpers_1.NotificationType.EVENT;
             const createNotification = await (0, notificationHandlers_1.createEventNotificationHandler)(event.uniqueId, specialKey, notificationTitle, event.description, false, false);
             if (!createNotification) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create the notification", Helpers_1.LogType.ERROR, createNotification);
                 return h
                     .response({ message: "Failed to create the notification" })
                     .code(400);
             }
         }
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Events created successfully", Helpers_1.LogType.INFO);
         return h.response().code(201);
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" + ":failed to create the events" }).code(500);
     }
 }
@@ -323,27 +345,25 @@ async function deleteEventHandler(request, h) {
                 }
             }
         });
-        console.log("found the event ", findEvent);
+        console.log(findEvent);
         if (!findEvent) {
-            console.log("event not found");
+            (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event not found ", Helpers_1.LogType.WARNING, findEvent.toString());
             return h.response({ message: "Event not found" }).code(404);
         }
         if (findEvent.thumbnail !== null) {
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
-            console.log("file id", fileId);
             const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
             if (deleteThumbnail === true) {
-                const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
+                const specialKey = findEvent.uniqueId + Helpers_1.NotificationType.EVENT;
                 const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
                 if (!deleteNotification) {
-                    console.log(deleteNotification);
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the notification", Helpers_1.LogType.ERROR, deleteNotification === null || deleteNotification === void 0 ? void 0 : deleteNotification.toString());
                     return h
                         .response({ message: "Failed to delete the notification" })
                         .code(400);
                 }
                 else {
-                    console.log("notification deleted");
-                    console.log(deleteNotification);
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Notification deleted", Helpers_1.LogType.WARNING);
                 }
                 const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
                     where: {
@@ -351,12 +371,13 @@ async function deleteEventHandler(request, h) {
                     },
                 });
                 if (!eventDeletion) {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the event", Helpers_1.LogType.ERROR, eventDeletion.toString());
                     return h
                         .response({ message: "Failed to delete the event" })
                         .code(400);
                 }
                 else {
-                    console.log("event deleted");
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Event deleted", Helpers_1.LogType.INFO);
                 }
                 const message = "Event with uniqueId: " +
                     uniqueId +
@@ -364,23 +385,22 @@ async function deleteEventHandler(request, h) {
                 return h.response(message).code(201).message(message);
             }
             else {
-                console.log("Failed to delete the thumbnail: " + deleteThumbnail);
+                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the thumbnail", Helpers_1.LogType.ERROR, deleteThumbnail.toString());
                 return h
                     .response({ message: "Failed to delete event" })
                     .code(400);
             }
         }
-        const specialKey = findEvent.uniqueId + Helpers_2.NotificationType.EVENT;
+        const specialKey = findEvent.uniqueId + Helpers_1.NotificationType.EVENT;
         const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
         if (!deleteNotification) {
-            console.log(deleteNotification);
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the notification", Helpers_1.LogType.ERROR, deleteNotification === null || deleteNotification === void 0 ? void 0 : deleteNotification.toString());
             return h
                 .response({ message: "Failed to delete the notification" })
                 .code(400);
         }
         else {
-            console.log("notification deleted");
-            console.log(deleteNotification);
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Notification deleted", Helpers_1.LogType.INFO);
         }
         const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
             where: {
@@ -388,18 +408,19 @@ async function deleteEventHandler(request, h) {
             },
         });
         if (!eventDeletion) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the event", Helpers_1.LogType.ERROR, eventDeletion.toString());
             return h
                 .response({ message: "Failed to delete the event" })
                 .code(400);
         }
         else {
-            console.log("event deleted");
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Event deleted", Helpers_1.LogType.INFO);
         }
         const message = "Event with uniqueId: " + uniqueId + " was deleted successfully";
         return h.response(message).code(201).message(message);
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" + ":failed to delete the event:" + uniqueId }).code(500);
     }
 }
@@ -412,13 +433,21 @@ async function getEventHandler(request, h) {
                 uniqueId: uniqueId,
             },
         });
-        if (!event) {
+        if (!event || event.length === 0) {
+            let details = "Event not found";
+            let logtype = Helpers_1.LogType.WARNING;
+            if (!event) {
+                details = "failed to retrieve the event with id:" + uniqueId + " from the database" + event.toString();
+                logtype = Helpers_1.LogType.ERROR;
+            }
+            (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event not found", logtype, details);
             return h.response({ message: "Event not found" }).code(404);
         }
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event found", Helpers_1.LogType.INFO);
         return h.response(event).code(200);
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
         return h.response({ message: "Internal Server Error" + ":failed to get the event:" + uniqueId }).code(500);
     }
 }
@@ -443,12 +472,14 @@ async function searchEventByTitleOrUniqueIDHandler(request, h) {
             },
         });
         if (!event) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event not found", Helpers_1.LogType.WARNING);
             return h.response({ message: "Event not found" }).code(404);
         }
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event found", Helpers_1.LogType.INFO);
         return h.response(event).code(200);
     }
     catch (err) {
-        console.log(err);
+        (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Internal Server Error", Helpers_1.LogType.ERROR, err);
         return h.response({ message: "Internal Server Error" + ":failed to search the event:" + search }).code(500);
     }
 }

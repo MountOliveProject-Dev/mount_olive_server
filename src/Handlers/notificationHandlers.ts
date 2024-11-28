@@ -1,6 +1,6 @@
 import Hapi from "@hapi/hapi";
 import server from "../server";
-import { executePrismaMethod, NotificationType, getCurrentDate } from "../Helpers";
+import { executePrismaMethod, NotificationType, getCurrentDate,log,LogType,RequestType } from "../Helpers";
 
 
 
@@ -33,7 +33,13 @@ export const listNotificationsHandler = async (
     );
 
     if (!notifications || notifications.length === 0) {
-      console.log("No notifications found");
+      let details = "There are no notifications in the system";
+      let logtype = LogType.WARNING;
+      if(!notifications){
+        details = "Failed to fetch notifications: " + notifications;
+        logtype = LogType.ERROR;
+      }
+      log(RequestType.READ,"No notifications found",logtype,details);
       return h.response({ message: "No notifications found" }).code(404);
     }
 
@@ -87,7 +93,7 @@ export const listNotificationsHandler = async (
     );
 
     if (!mediaItems || mediaItems.length === 0) {
-      console.log("No media items found");
+      log(RequestType.READ,"No media items found",LogType.WARNING);
       return h.response({ message: "No media items found" }).code(404);
     }
 
@@ -151,10 +157,11 @@ export const listNotificationsHandler = async (
 
       data.push(notificationData);
     }
-
+    log(RequestType.READ,"Notifications fetched successfully",LogType.INFO);
     return h.response(data).code(200);
-  } catch (err) {
-    console.error("Error in listNotificationsHandler:", err);
+  } catch (err:any) {
+    log(RequestType.READ,"Internal Server Error: failed to get the notifications",LogType.ERROR,err);
+   
     return h
       .response({
         message: "Internal Server Error: failed to get the notifications",
@@ -205,11 +212,11 @@ export const createEventNotificationHandler = async (eventId: string, specialKey
         }
        
         const message = "notification with ID "+ notification.id + "  was created successfully";
-        console.log(message);
+        log(RequestType.CREATE,message,LogType.INFO);
         return message;
-    }catch(err){
+    }catch(err:any){
+      log(RequestType.CREATE,"Failed to create the notification",LogType.ERROR,err);
         const message = err + " :Failed to create the notification!";
-        console.log( message);
         return message;
     }
 }
@@ -244,18 +251,21 @@ export const updateEventNotificationHandler = async (notificationId : number, ev
 
     if (!notification) {
       const message = " Failed to update the notification :";
-      console.log(notification + message);
+      log(RequestType.UPDATE,message,LogType.ERROR);
+
       const code = 500;
       return { code, message };
     }else{
       const message = "notification with ID " + notification.id + " has been updated successfully";
+      log(RequestType.UPDATE,message,LogType.INFO);
       const code = 200;
       return { code, message };
     }
 
     
-  } catch (err) {
+  } catch (err:any) {
     const message = err + " :Failed to update the notification";
+    log(RequestType.UPDATE,message,LogType.ERROR,err);
     const code = 500;
     return {code,message};
   }
@@ -283,7 +293,7 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
     );
     if (!notification) {
       const message = "notification not found";
-      console.log(message);
+      log(RequestType.DELETE,message,LogType.WARNING);
     }
 
     const deleteNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "delete", {
@@ -299,7 +309,7 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
 
     if(!deleteNotificationEngagement){
         const message = "Failed to delete the notification engagement";
-        console.log(message);
+        log(RequestType.DELETE,message,LogType.ERROR,deleteNotificationEngagement);
     }else {
         const deleteNotification = await executePrismaMethod(prisma, "notification", "delete", {
             where: {
@@ -309,14 +319,16 @@ export const deleteEventNotificationHandler = async (notificationId : number, ev
 
         if(!deleteNotification){
             const message = "Failed to delete the notification";
-            console.log(message);
+            log(RequestType.DELETE,message,LogType.ERROR,deleteNotification);
         }
 
         const message = "Notification was deleted successfully";
+        log(RequestType.DELETE,message,LogType.INFO);
         return message;
     }
-  } catch (err) {
+  } catch (err:any) {
     const message = err + " :Failed to delete the notification";
+    log(RequestType.DELETE,message,LogType.ERROR,err);
     return message;
   }
 };
@@ -367,18 +379,19 @@ export const createMediaNotificationHandler = async (mediaId: string, specialKey
             },
           }
         );
-        console.log(notification);
+        
         if(notification === null || notification === undefined){
             const message = "Failed to create the notification";
+            log(RequestType.CREATE,message,LogType.ERROR);
             console.log(message);
         }
        
         const message = "notification with ID "+ notification.id + "  was created successfully";
-        console.log(message);
+        log(RequestType.CREATE,message,LogType.INFO);
         return message;
-    }catch(err){
+    }catch(err:any){
         const message = err + " :Failed to create the notification!";
-        console.log( message);
+        log(RequestType.CREATE,message,LogType.ERROR,err);
         return message;
     }
 }
@@ -412,21 +425,23 @@ export const updateMediaNotificationHandler = async (notificationId : number, me
         },
       }
     );
-    console.log(notification);
+ 
     if (!notification) {
       const message = " Failed to update the notification :";
-      console.log(notification + message);
+      log(RequestType.UPDATE,message,LogType.ERROR,notification);
       const code = 500;
       return { code, message };
     }else{
       const message = "notification with ID " + notification.id + " has been updated successfully";
+      log(RequestType.UPDATE,message,LogType.INFO);
       const code = 200;
       return { code, message };
     }
 
     
-  } catch (err) {
+  } catch (err:any) {
     const message = err + " :Failed to update the notification";
+    log(RequestType.UPDATE,message,LogType.ERROR,err);
     const code = 500;
     return {code,message};
   }
@@ -456,7 +471,7 @@ export const deleteMediaNotificationHandler = async (notificationId : number, me
     );
     if (!notification) {
       const message = "notification not found";
-      console.log(message);
+      log(RequestType.DELETE,message,LogType.WARNING);
     }
 
     const deleteNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "delete", {
@@ -472,7 +487,7 @@ export const deleteMediaNotificationHandler = async (notificationId : number, me
 
     if(!deleteNotificationEngagement){
         const message = "Failed to delete the notification engagement";
-        console.log(message);
+        log(RequestType.DELETE,message,LogType.ERROR,deleteNotificationEngagement);
     }else {
         const deleteNotification = await executePrismaMethod(prisma, "notification", "delete", {
             where: {
@@ -482,14 +497,16 @@ export const deleteMediaNotificationHandler = async (notificationId : number, me
 
         if(!deleteNotification){
             const message = "Failed to delete the notification";
-            console.log(message);
+            log(RequestType.DELETE,message,LogType.ERROR,deleteNotification);
         }
 
         const message = "Notification was deleted successfully";
+        log(RequestType.DELETE,message,LogType.INFO);
         return message;
     }
-  } catch (err) {
+  } catch (err:any) {
     const message = err + " :Failed to delete the notification";
+    log(RequestType.DELETE,message,LogType.ERROR,err);
     return message;
   }
 };

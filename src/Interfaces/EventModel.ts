@@ -1,3 +1,4 @@
+import { LogType } from "@prisma/client";
 
 
 export interface EventInput {
@@ -17,7 +18,9 @@ export interface EventInput {
   name:string;
   mimeType:string;
   filePath:string;
+  Id:string;
 }
+
 
 //create modal for to create manyevents
 export interface ManyEventInput {
