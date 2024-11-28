@@ -41,6 +41,7 @@ exports.createThumbnailFile = createThumbnailFile;
 exports.createVideoMediaHandler = createVideoMediaHandler;
 exports.updateVideoMediaHandler = updateVideoMediaHandler;
 exports.deleteVideoMediaHandler = deleteVideoMediaHandler;
+exports.createFoldersInDatabaseHandler = createFoldersInDatabaseHandler;
 exports.listAllAudioMediaHandler = listAllAudioMediaHandler;
 exports.listAllImageMediaHandler = listAllImageMediaHandler;
 exports.deleteAudioFileHandler = deleteAudioFileHandler;
@@ -1045,6 +1046,33 @@ const storeAudioFileHandler = async (request, h) => {
     }
 };
 exports.storeAudioFileHandler = storeAudioFileHandler;
+async function createFoldersInDatabaseHandler(request, h) {
+    const { prisma } = request.server.app;
+    try {
+        const folder = await (0, Helpers_1.executePrismaMethod)(prisma, "folder", "createMany", {
+            data: [
+                {
+                    folderType: Helpers_1.folderType.Images,
+                    folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
+                },
+                {
+                    folderType: Helpers_1.folderType.Audios,
+                    folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID,
+                },
+            ],
+        });
+        if (!folder) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create folders in database", Helpers_1.LogType.ERROR, "Folder is undefined" + folder.toString());
+            return h.response({ message: "Failed to create folders in database" }).code(400);
+        }
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Folders created successfully", Helpers_1.LogType.INFO);
+        return h.response({ message: "Folders created successfully" }).code(201);
+    }
+    catch (err) {
+        (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create folders in database", Helpers_1.LogType.ERROR, err.toString());
+        return h.response({ message: "Internal Server Error" + ":failed to create folders in database" }).code(500);
+    }
+}
 async function listAllAudioMediaHandler(request, h) {
     const { prisma } = request.server.app;
     try {

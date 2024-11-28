@@ -173,6 +173,14 @@ exports.mediaPlugin = {
                 },
             },
             {
+                method: "GET",
+                path: "/api/media/create-folder-in-db",
+                handler: Handlers_1.createFoldersInDatabaseHandler,
+                options: {
+                    auth: false,
+                },
+            },
+            {
                 method: "POST",
                 path: "/api/media/create-folder",
                 handler: Handlers_1.createFolder,

@@ -1254,7 +1254,33 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
     return h.response({ error: "Failed to store file" }).code(500);
   }
 };
+export async function createFoldersInDatabaseHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+  const { prisma } = request.server.app;
+  try{
+    const folder = await executePrismaMethod(prisma, "folder", "createMany", {
+      data: [
+        {
+          folderType: folderType.Images,
+          folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
+        },
+        {
+          folderType: folderType.Audios,
+          folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID,
+        },
+      ],
+    });
+    if (!folder) {
+      log(RequestType.CREATE, "Failed to create folders in database", LogType.ERROR, "Folder is undefined"+folder.toString());
+      return h.response({ message: "Failed to create folders in database" }).code(400);
+    }
+    log(RequestType.CREATE, "Folders created successfully", LogType.INFO);
+    return h.response({ message: "Folders created successfully" }).code(201);
 
+  }catch(err:any){
+    log(RequestType.CREATE, "Failed to create folders in database", LogType.ERROR, err.toString());
+    return h.response({ message: "Internal Server Error" + ":failed to create folders in database" }).code(500);
+  }
+}
 export async function listAllAudioMediaHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
   const { prisma } = request.server.app;
 

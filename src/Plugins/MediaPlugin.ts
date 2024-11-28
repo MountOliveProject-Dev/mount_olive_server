@@ -26,6 +26,7 @@ import {
   deleteAudioFileHandler,
   listAllImageMediaHandler,
   deleteThumbnailFromDriveHandler,
+  createFoldersInDatabaseHandler,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -188,6 +189,14 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         method: "POST",
         path: "/api/media/delete-folder/{folderId}",
         handler: deleteFolder,
+        options: {
+          auth: false,
+        },
+      }, 
+      {
+        method: "GET",
+        path: "/api/media/create-folder-in-db",
+        handler: createFoldersInDatabaseHandler,
         options: {
           auth: false,
         },
