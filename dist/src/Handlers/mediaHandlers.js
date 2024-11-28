@@ -33,6 +33,7 @@ exports.createFolder = createFolder;
 exports.deleteFolder = deleteFolder;
 exports.deleteManyFromGoogleDrive = deleteManyFromGoogleDrive;
 exports.getAllFolders = getAllFolders;
+exports.deleteAllFilesInGoogleDrive = deleteAllFilesInGoogleDrive;
 exports.getAllFoldersInGoogleDrive = getAllFoldersInGoogleDrive;
 exports.deleteThumbnailFromDrive = deleteThumbnailFromDrive;
 exports.deleteThumbnailFromDriveHandler = deleteThumbnailFromDriveHandler;
@@ -244,6 +245,50 @@ async function getAllFolders(request, h) {
     catch (error) {
         (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Failed to get folders", Helpers_1.LogType.ERROR, error.toString());
         return h.response("Error getting folders").code(500);
+    }
+}
+async function deleteAllFilesInGoogleDrive(request, h) {
+    try {
+        //find each folder and delete all files in them
+        const folders = await drive.files.list({
+            q: "mimeType='application/vnd.google-apps.folder'",
+            fields: "files(id, name)",
+        });
+        if (!folders || !folders.data.files) {
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "No folders found", Helpers_1.LogType.ERROR);
+            return h.response({ message: "No folders found" }).code(404);
+        }
+        const folderIds = folders.data.files
+            .map((folder) => folder.id)
+            .filter((id) => id !== null && id !== undefined);
+        for (let i = 0; i < folderIds.length; i++) {
+            const files = await drive.files.list({
+                q: `'${folderIds[i]}' in parents`,
+                fields: "files(id, name)",
+            });
+            if (!files || !files.data.files) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "No files found", Helpers_1.LogType.ERROR);
+                return h.response({ message: "No files found" }).code(404);
+            }
+            const fileIds = files.data.files
+                .map((file) => file.id)
+                .filter((id) => id !== null && id !== undefined);
+            for (let j = 0; j < fileIds.length; j++) {
+                const deleteFile = await drive.files.delete({
+                    fileId: fileIds[j],
+                });
+                if (!deleteFile) {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the file", Helpers_1.LogType.ERROR);
+                    return h.response({ message: "Failed to delete the file" }).code(400);
+                }
+            }
+        }
+        (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "All files deleted successfully", Helpers_1.LogType.INFO);
+        return h.response("All files deleted successfully").code(200);
+    }
+    catch (error) {
+        (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete files", Helpers_1.LogType.ERROR, error.toString());
+        return h.response("Error deleting files").code(500);
     }
 }
 async function getAllFoldersInGoogleDrive(request, h) {

@@ -171,6 +171,14 @@ exports.mediaPlugin = {
                 options: {
                     auth: false,
                 },
+            }, //deleteAllFilesInGoogleDrive
+            {
+                method: "GET",
+                path: "/api/media/delete-all-files-in-drive",
+                handler: Handlers_1.deleteAllFilesInGoogleDrive,
+                options: {
+                    auth: false,
+                },
             },
             {
                 method: "GET",

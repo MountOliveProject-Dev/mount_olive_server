@@ -27,6 +27,7 @@ import {
   listAllImageMediaHandler,
   deleteThumbnailFromDriveHandler,
   createFoldersInDatabaseHandler,
+  deleteAllFilesInGoogleDrive,
 } from "../Handlers";
 
 export const mediaPlugin: Hapi.Plugin<void> = {
@@ -192,7 +193,15 @@ export const mediaPlugin: Hapi.Plugin<void> = {
         options: {
           auth: false,
         },
-      }, 
+      }, //deleteAllFilesInGoogleDrive
+      {
+        method: "GET",
+        path: "/api/media/delete-all-files-in-drive",
+        handler: deleteAllFilesInGoogleDrive,
+        options: {
+          auth: false,
+        },
+      },
       {
         method: "GET",
         path: "/api/media/create-folder-in-db",
