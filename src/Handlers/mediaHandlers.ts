@@ -1400,7 +1400,7 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
       return h.response({ message: "Failed to delete audio media" }).code(400);
     }
   } catch (error:any) {
-    log(RequestType.DELETE, "Failed to delete audio media", LogType.ERROR, error);
+    log(RequestType.DELETE, "Failed to delete audio media", LogType.ERROR, error.toString());
     return h.response("Error deleting audio").code(500);
   }
 }
