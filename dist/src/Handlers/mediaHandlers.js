@@ -1180,7 +1180,7 @@ async function deleteAudioFileHandler(request, h) {
         }
     }
     catch (error) {
-        (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete audio media", Helpers_1.LogType.ERROR, error);
+        (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete audio media", Helpers_1.LogType.ERROR, error.toString());
         return h.response("Error deleting audio").code(500);
     }
 }

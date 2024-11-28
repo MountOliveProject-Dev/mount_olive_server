@@ -95,7 +95,7 @@ const listNotificationsHandler = async (request, h) => {
             if (associatedMedia) {
                 if (associatedMedia.videoStatus && associatedMedia.media) {
                     notificationData.type = Helpers_1.NotificationType.VIDEO;
-                    notificationData.media = {
+                    Object.assign(notificationData, {
                         id: associatedMedia.media.id,
                         uniqueId: associatedMedia.media.uniqueId,
                         title: associatedMedia.media.title,
@@ -103,11 +103,11 @@ const listNotificationsHandler = async (request, h) => {
                         url: associatedMedia.media.url,
                         postedAt: associatedMedia.media.postedAt,
                         updatedAt: associatedMedia.media.updatedAt,
-                    };
+                    });
                 }
                 else if (associatedMedia.audioStatus && associatedMedia.media) {
                     notificationData.type = Helpers_1.NotificationType.AUDIO;
-                    notificationData.media = {
+                    Object.assign(notificationData, {
                         id: associatedMedia.media.id,
                         uniqueId: associatedMedia.media.uniqueId,
                         title: associatedMedia.media.title,
@@ -116,11 +116,11 @@ const listNotificationsHandler = async (request, h) => {
                         duration: associatedMedia.media.duration,
                         postedAt: associatedMedia.media.postedAt,
                         updatedAt: associatedMedia.media.updatedAt,
-                    };
+                    });
                 }
                 else if (associatedMedia.eventStatus && associatedMedia.event) {
                     notificationData.type = Helpers_1.NotificationType.EVENT;
-                    notificationData.event = {
+                    Object.assign(notificationData, {
                         id: associatedMedia.event.id,
                         uniqueId: associatedMedia.event.uniqueId,
                         title: associatedMedia.event.title,
@@ -133,7 +133,7 @@ const listNotificationsHandler = async (request, h) => {
                         host: associatedMedia.event.host,
                         description: associatedMedia.event.description,
                         thumbnail: associatedMedia.event.thumbnail,
-                    };
+                    });
                 }
             }
             data.push(notificationData);

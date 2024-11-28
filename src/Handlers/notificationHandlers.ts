@@ -35,11 +35,11 @@ export const listNotificationsHandler = async (
     if (!notifications || notifications.length === 0) {
       let details = "There are no notifications in the system";
       let logtype = LogType.WARNING;
-      if(!notifications){
+      if (!notifications) {
         details = "Failed to fetch notifications: " + notifications;
         logtype = LogType.ERROR;
       }
-      log(RequestType.READ,"No notifications found",logtype,details);
+      log(RequestType.READ, "No notifications found", logtype, details);
       return h.response({ message: "No notifications found" }).code(404);
     }
 
@@ -93,7 +93,7 @@ export const listNotificationsHandler = async (
     );
 
     if (!mediaItems || mediaItems.length === 0) {
-      log(RequestType.READ,"No media items found",LogType.WARNING);
+      log(RequestType.READ, "No media items found", LogType.WARNING);
       return h.response({ message: "No media items found" }).code(404);
     }
 
@@ -115,7 +115,7 @@ export const listNotificationsHandler = async (
       if (associatedMedia) {
         if (associatedMedia.videoStatus && associatedMedia.media) {
           notificationData.type = NotificationType.VIDEO;
-          notificationData.media = {
+          Object.assign(notificationData, {
             id: associatedMedia.media.id,
             uniqueId: associatedMedia.media.uniqueId,
             title: associatedMedia.media.title,
@@ -123,10 +123,10 @@ export const listNotificationsHandler = async (
             url: associatedMedia.media.url,
             postedAt: associatedMedia.media.postedAt,
             updatedAt: associatedMedia.media.updatedAt,
-          };
+          });
         } else if (associatedMedia.audioStatus && associatedMedia.media) {
           notificationData.type = NotificationType.AUDIO;
-          notificationData.media = {
+          Object.assign(notificationData, {
             id: associatedMedia.media.id,
             uniqueId: associatedMedia.media.uniqueId,
             title: associatedMedia.media.title,
@@ -135,10 +135,10 @@ export const listNotificationsHandler = async (
             duration: associatedMedia.media.duration,
             postedAt: associatedMedia.media.postedAt,
             updatedAt: associatedMedia.media.updatedAt,
-          };
+          });
         } else if (associatedMedia.eventStatus && associatedMedia.event) {
           notificationData.type = NotificationType.EVENT;
-          notificationData.event = {
+          Object.assign(notificationData, {
             id: associatedMedia.event.id,
             uniqueId: associatedMedia.event.uniqueId,
             title: associatedMedia.event.title,
@@ -151,17 +151,22 @@ export const listNotificationsHandler = async (
             host: associatedMedia.event.host,
             description: associatedMedia.event.description,
             thumbnail: associatedMedia.event.thumbnail,
-          };
+          });
         }
       }
 
       data.push(notificationData);
     }
-    log(RequestType.READ,"Notifications fetched successfully",LogType.INFO);
+    log(RequestType.READ, "Notifications fetched successfully", LogType.INFO);
     return h.response(data).code(200);
-  } catch (err:any) {
-    log(RequestType.READ,"Internal Server Error: failed to get the notifications",LogType.ERROR,err);
-   
+  } catch (err: any) {
+    log(
+      RequestType.READ,
+      "Internal Server Error: failed to get the notifications",
+      LogType.ERROR,
+      err
+    );
+
     return h
       .response({
         message: "Internal Server Error: failed to get the notifications",
