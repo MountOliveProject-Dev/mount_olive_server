@@ -1309,10 +1309,12 @@ export async function createFoldersInDatabaseHandler(request: Hapi.Request, h: H
       data: [
         {
           folderType: folderType.Images,
+          name:"Thumbnails",
           folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
         },
         {
           folderType: folderType.Audios,
+          name:"Sermons",
           folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID,
         },
       ],
