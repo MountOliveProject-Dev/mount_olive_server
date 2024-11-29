@@ -1098,10 +1098,12 @@ async function createFoldersInDatabaseHandler(request, h) {
             data: [
                 {
                     folderType: Helpers_1.folderType.Images,
+                    name: "Thumbnails",
                     folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
                 },
                 {
                     folderType: Helpers_1.folderType.Audios,
+                    name: "Sermons",
                     folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID,
                 },
             ],
