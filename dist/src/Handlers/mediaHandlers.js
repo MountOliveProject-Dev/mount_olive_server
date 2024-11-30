@@ -937,20 +937,39 @@ async function deleteVideoMediaHandler(request, h) {
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Media not found", Helpers_1.LogType.ERROR);
             return h.response({ message: "Media not found" }).code(404);
         }
+        const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.VIDEO;
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
+        console.log(notification);
+        if (notification === "notification not found" ||
+            notification === "Failed to delete the notification") {
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for video media", Helpers_1.LogType.ERROR);
+            return h
+                .response({
+                message: "Failed to video media",
+            })
+                .code(400);
+        }
+        else if (notification === "notification has been deleted successfully") {
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Notification for video media deleted successfully", Helpers_1.LogType.INFO);
+        }
+        else {
+            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete video media", Helpers_1.LogType.ERROR);
+            return h
+                .response({
+                message: "Failed to delete video media",
+            })
+                .code(400);
+        }
         const media = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
             where: {
-                id: findMedia.id
-            }
+                id: findMedia.id,
+            },
         });
         if (!media) {
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete video media", Helpers_1.LogType.ERROR);
-            return h.response({ message: "Failed to delete video media" }).code(400);
-        }
-        const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.VIDEO;
-        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
-        if (!notification) {
-            (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for video media", Helpers_1.LogType.ERROR);
-            return h.response({ message: "Failed to delete notification for video media" }).code(400);
+            return h
+                .response({ message: "Failed to delete video media" })
+                .code(400);
         }
         (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Video media deleted successfully", Helpers_1.LogType.INFO);
         return h.response({ message: "The video was deleted successfully" }).code(201);
@@ -1241,6 +1260,28 @@ async function deleteAudioFileHandler(request, h) {
         //delete 
         const deleteFromDrive = await deleteAudioFileFromDrive(findAudio.fileId);
         if (deleteFromDrive) {
+            const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
+            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
+            if (notification === "notification not found" ||
+                notification === "Failed to delete the notification") {
+                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for audio media", Helpers_1.LogType.ERROR);
+                return h
+                    .response({
+                    message: "Failed to audio media",
+                })
+                    .code(400);
+            }
+            else if (notification === "notification has been deleted successfully") {
+                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Notification for audio media deleted successfully", Helpers_1.LogType.INFO);
+            }
+            else {
+                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete audio media", Helpers_1.LogType.ERROR);
+                return h
+                    .response({
+                    message: "Failed to delete audio media",
+                })
+                    .code(400);
+            }
             const deleteAudio = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
                 where: {
                     id: findAudio.id,
@@ -1248,13 +1289,9 @@ async function deleteAudioFileHandler(request, h) {
             });
             if (!deleteAudio) {
                 (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete audio media", Helpers_1.LogType.ERROR);
-                return h.response({ message: "Failed to delete audio media" }).code(400);
-            }
-            const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
-            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
-            if (!notification) {
-                (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for audio media", Helpers_1.LogType.ERROR);
-                return h.response({ message: "Failed to delete notification for audio media" }).code(400);
+                return h
+                    .response({ message: "Failed to delete audio media" })
+                    .code(400);
             }
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Audio media deleted successfully", Helpers_1.LogType.INFO);
             return h.response({ message: "Audio deleted successfully" }).code(201);

@@ -509,6 +509,7 @@ export const deleteMediaNotificationHandler = async (mediaId: string,specialKey:
         const message = "Failed to delete the notification";
         log(RequestType.DELETE,message,LogType.ERROR,deleteNotificationEngagement);
     }
+    return "notification has been deleted successfully";
   } catch (err:any) {
     const message = err + " :Failed to delete the notification";
     log(RequestType.DELETE,message,LogType.ERROR,err);

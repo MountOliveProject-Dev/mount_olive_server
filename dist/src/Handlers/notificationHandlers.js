@@ -441,6 +441,7 @@ const deleteMediaNotificationHandler = async (mediaId, specialKey, type) => {
             const message = "Failed to delete the notification";
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, message, Helpers_1.LogType.ERROR, deleteNotificationEngagement);
         }
+        return "notification has been deleted successfully";
     }
     catch (err) {
         const message = err + " :Failed to delete the notification";
