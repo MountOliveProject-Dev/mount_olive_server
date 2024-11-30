@@ -983,7 +983,7 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             }
         });
         if(!media){
-            log(RequestType.CREATE, "Failed to create video media", LogType.ERROR);
+            log(RequestType.CREATE, "Failed to create video media", LogType.ERROR, media.toString());
             return h.response({message: "Failed to create video media"}).code(400);
         }
         const type = NotificationType.VIDEO;
@@ -1000,7 +1000,7 @@ export async function createVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
         );
         
         if(!notification){
-            log(RequestType.CREATE, "Failed to create notification for video media", LogType.ERROR);
+            log(RequestType.CREATE, "Failed to create notification for video media", LogType.ERROR, notification.toString());
             return h.response({message: "Failed to create notification for video media"}).code(400);
         }
         log(RequestType.CREATE, "Video media created successfully", LogType.INFO);
@@ -1117,7 +1117,6 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
         }
         const specialKey = findMedia.uniqueId + NotificationType.VIDEO;
         const notification = await deleteMediaNotificationHandler(
-          findMedia.mediaNotifications.notificationId,
           findMedia.uniqueId,
           specialKey,
           NotificationType.VIDEO
@@ -1460,7 +1459,6 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
       }
       const specialKey = findAudio.uniqueId + NotificationType.AUDIO;
       const notification = await deleteMediaNotificationHandler(
-        findAudio.mediaNotifications.notificationId,
         findAudio.uniqueId,
         specialKey,
         NotificationType.AUDIO

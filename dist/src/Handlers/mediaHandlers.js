@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -833,7 +843,7 @@ async function createVideoMediaHandler(request, h) {
             }
         });
         if (!media) {
-            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create video media", Helpers_1.LogType.ERROR);
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create video media", Helpers_1.LogType.ERROR, media.toString());
             return h.response({ message: "Failed to create video media" }).code(400);
         }
         const type = Helpers_1.NotificationType.VIDEO;
@@ -842,7 +852,7 @@ async function createVideoMediaHandler(request, h) {
         const specialKey = media.uniqueId + Helpers_1.NotificationType.VIDEO;
         const notification = await (0, notificationHandlers_1.createMediaNotificationHandler)(media.uniqueId, specialKey, notificationTitle, description, read, type);
         if (!notification) {
-            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create notification for video media", Helpers_1.LogType.ERROR);
+            (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Failed to create notification for video media", Helpers_1.LogType.ERROR, notification.toString());
             return h.response({ message: "Failed to create notification for video media" }).code(400);
         }
         (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Video media created successfully", Helpers_1.LogType.INFO);
@@ -937,7 +947,7 @@ async function deleteVideoMediaHandler(request, h) {
             return h.response({ message: "Failed to delete video media" }).code(400);
         }
         const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.VIDEO;
-        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
         if (!notification) {
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for video media", Helpers_1.LogType.ERROR);
             return h.response({ message: "Failed to delete notification for video media" }).code(400);
@@ -1241,7 +1251,7 @@ async function deleteAudioFileHandler(request, h) {
                 return h.response({ message: "Failed to delete audio media" }).code(400);
             }
             const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
-            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.mediaNotifications.notificationId, findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
+            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
             if (!notification) {
                 (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for audio media", Helpers_1.LogType.ERROR);
                 return h.response({ message: "Failed to delete notification for audio media" }).code(400);

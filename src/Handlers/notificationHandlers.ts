@@ -454,36 +454,51 @@ export const updateMediaNotificationHandler = async (notificationId : number, me
 
 //delete media notification
 
-export const deleteMediaNotificationHandler = async (notificationId : number, mediaId: string,specialKey: string, type: NotificationType) => {
+export const deleteMediaNotificationHandler = async (mediaId: string,specialKey: string, type: NotificationType) => {
   const { prisma } = server.app;
   try {
     const notification = await executePrismaMethod(
       prisma,
-      "notification",
+      "engagementsManager",
       "findUnique",
       {
         where: {
-          id: notificationId,
-          notificationEngagements: {
             specialKey: specialKey,
             type: type,
             media: {
-                uniqueId: mediaId
-            }
+              uniqueId: mediaId,
+            },
+        
+        },
+        select: {
+          id: true,
+            notificationId: true
         }
       }
-    }
     );
+
     if (!notification) {
-      const message = "notification not found";
-      log(RequestType.DELETE,message,LogType.WARNING);
+      log(RequestType.DELETE,"notification not found",LogType.ERROR);
+      return "notification not found";
     }
+    const deleteNotification = await executePrismaMethod(prisma, "notification", "delete", {
+        where: {
+            id: notification.notificationId
+        }
+    })
+
+    if(!deleteNotification){
+        const message = "Failed to delete the notification";
+        log(RequestType.DELETE,message,LogType.ERROR,deleteNotification.toString());
+        return message;
+    }
+   
 
     const deleteNotificationEngagement = await executePrismaMethod(prisma, "engagementsManager", "delete", {
         where: {
+          id:notification.id,
             specialKey: specialKey,
             type: type,
-            notificationId: notification.id,
             media: {
                 uniqueId: mediaId
             }
@@ -491,23 +506,8 @@ export const deleteMediaNotificationHandler = async (notificationId : number, me
     });
 
     if(!deleteNotificationEngagement){
-        const message = "Failed to delete the notification engagement";
+        const message = "Failed to delete the notification";
         log(RequestType.DELETE,message,LogType.ERROR,deleteNotificationEngagement);
-    }else {
-        const deleteNotification = await executePrismaMethod(prisma, "notification", "delete", {
-            where: {
-                id: notification.id
-            }
-        });
-
-        if(!deleteNotification){
-            const message = "Failed to delete the notification";
-            log(RequestType.DELETE,message,LogType.ERROR,deleteNotification);
-        }
-
-        const message = "Notification was deleted successfully";
-        log(RequestType.DELETE,message,LogType.INFO);
-        return message;
     }
   } catch (err:any) {
     const message = err + " :Failed to delete the notification";

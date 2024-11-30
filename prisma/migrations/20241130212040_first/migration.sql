@@ -7,6 +7,12 @@ CREATE TYPE "MediaType" AS ENUM ('Video', 'Audio', 'Image');
 -- CreateEnum
 CREATE TYPE "FolderType" AS ENUM ('Images', 'Audios');
 
+-- CreateEnum
+CREATE TYPE "LogType" AS ENUM ('Info', 'Warning', 'Error');
+
+-- CreateEnum
+CREATE TYPE "RequestType" AS ENUM ('Create', 'Update', 'Delete', 'Read');
+
 -- CreateTable
 CREATE TABLE "Media" (
     "id" SERIAL NOT NULL,
@@ -91,6 +97,18 @@ CREATE TABLE "folder" (
     "name" TEXT NOT NULL,
 
     CONSTRAINT "folder_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Log" (
+    "id" SERIAL NOT NULL,
+    "message" TEXT NOT NULL,
+    "requestType" "RequestType" NOT NULL,
+    "type" "LogType" NOT NULL,
+    "detail" TEXT,
+    "timestamp" TEXT NOT NULL,
+
+    CONSTRAINT "Log_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
