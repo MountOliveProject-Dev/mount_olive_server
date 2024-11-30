@@ -400,13 +400,21 @@ exports.updateMediaNotificationHandler = updateMediaNotificationHandler;
 const deleteMediaNotificationHandler = async (mediaId, specialKey, type) => {
     const { prisma } = server_1.default.app;
     try {
+        let audio = false;
+        let video = false;
+        if (type === Helpers_1.NotificationType.AUDIO) {
+            audio = true;
+        }
+        else if (type === Helpers_1.NotificationType.VIDEO) {
+            video = true;
+        }
         const notification = await (0, Helpers_1.executePrismaMethod)(prisma, "engagementsManager", "findUnique", {
             where: {
                 specialKey: specialKey,
                 type: type,
-                media: {
-                    uniqueId: mediaId,
-                },
+                videoStatus: video,
+                audioStatus: audio,
+                mediaId: mediaId,
             },
             select: {
                 id: true,
