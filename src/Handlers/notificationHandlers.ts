@@ -476,7 +476,7 @@ export const deleteMediaNotificationHandler = async (mediaId: string,specialKey:
         }
       }
     );
-
+    console.log(notification);
     if (!notification) {
       log(RequestType.DELETE,"notification not found",LogType.ERROR);
       return "notification not found";

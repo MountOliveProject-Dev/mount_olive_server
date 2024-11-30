@@ -1262,6 +1262,7 @@ async function deleteAudioFileHandler(request, h) {
         if (deleteFromDrive) {
             const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
             const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
+            console.log(notification);
             if (notification === "notification not found" ||
                 notification === "Failed to delete the notification") {
                 (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for audio media", Helpers_1.LogType.ERROR);

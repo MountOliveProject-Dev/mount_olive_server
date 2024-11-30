@@ -413,6 +413,7 @@ const deleteMediaNotificationHandler = async (mediaId, specialKey, type) => {
                 notificationId: true
             }
         });
+        console.log(notification);
         if (!notification) {
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "notification not found", Helpers_1.LogType.ERROR);
             return "notification not found";

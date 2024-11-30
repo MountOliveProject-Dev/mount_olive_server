@@ -1483,6 +1483,7 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
         specialKey,
         NotificationType.AUDIO
       );
+      console.log(notification)
        if (
          notification === "notification not found" ||
          notification === "Failed to delete the notification"
