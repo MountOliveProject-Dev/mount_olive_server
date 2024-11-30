@@ -1094,14 +1094,17 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
             },
             select: {
               id: true,
+              uniqueId: true,
               mediaNotifications: {
                 select: {
+                  id:true,
                   notificationId: true,
                 },
               },
             },
           }
         );
+        
         if (!findMedia) {
           log(RequestType.DELETE, "Media not found", LogType.ERROR);
           return h.response({ message: "Media not found" }).code(404);
@@ -1109,11 +1112,12 @@ export async function deleteVideoMediaHandler(request: Hapi.Request, h: Hapi.Res
         
         const specialKey = findMedia.uniqueId + NotificationType.VIDEO;
         const notification = await deleteMediaNotificationHandler(
+          findMedia.mediaNotifications.notificationId,
           findMedia.uniqueId,
           specialKey,
           NotificationType.VIDEO
         );
-        console.log(notification);
+        
         if (
           notification === "notification not found" ||
           notification === "Failed to delete the notification"
@@ -1459,6 +1463,7 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
         type: MediaType.AUDIO,
       },
       select: {
+        uniqueId: true,
         id: true,
         fileId: true,
         mediaNotifications: {
@@ -1479,11 +1484,12 @@ export async function deleteAudioFileHandler(request: Hapi.Request, h: Hapi.Resp
      
       const specialKey = findAudio.uniqueId + NotificationType.AUDIO;
       const notification = await deleteMediaNotificationHandler(
+        findAudio.mediaNotifications.notificationId,
         findAudio.uniqueId,
         specialKey,
         NotificationType.AUDIO
       );
-      console.log(notification)
+      
        if (
          notification === "notification not found" ||
          notification === "Failed to delete the notification"

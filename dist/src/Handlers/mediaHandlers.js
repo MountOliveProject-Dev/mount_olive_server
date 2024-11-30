@@ -926,8 +926,10 @@ async function deleteVideoMediaHandler(request, h) {
             },
             select: {
                 id: true,
+                uniqueId: true,
                 mediaNotifications: {
                     select: {
+                        id: true,
                         notificationId: true,
                     },
                 },
@@ -938,8 +940,7 @@ async function deleteVideoMediaHandler(request, h) {
             return h.response({ message: "Media not found" }).code(404);
         }
         const specialKey = findMedia.uniqueId + Helpers_1.NotificationType.VIDEO;
-        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
-        console.log(notification);
+        const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findMedia.mediaNotifications.notificationId, findMedia.uniqueId, specialKey, Helpers_1.NotificationType.VIDEO);
         if (notification === "notification not found" ||
             notification === "Failed to delete the notification") {
             (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for video media", Helpers_1.LogType.ERROR);
@@ -1244,6 +1245,7 @@ async function deleteAudioFileHandler(request, h) {
                 type: Helpers_1.MediaType.AUDIO,
             },
             select: {
+                uniqueId: true,
                 id: true,
                 fileId: true,
                 mediaNotifications: {
@@ -1261,8 +1263,7 @@ async function deleteAudioFileHandler(request, h) {
         const deleteFromDrive = await deleteAudioFileFromDrive(findAudio.fileId);
         if (deleteFromDrive) {
             const specialKey = findAudio.uniqueId + Helpers_1.NotificationType.AUDIO;
-            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
-            console.log(notification);
+            const notification = await (0, notificationHandlers_1.deleteMediaNotificationHandler)(findAudio.mediaNotifications.notificationId, findAudio.uniqueId, specialKey, Helpers_1.NotificationType.AUDIO);
             if (notification === "notification not found" ||
                 notification === "Failed to delete the notification") {
                 (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete notification for audio media", Helpers_1.LogType.ERROR);
