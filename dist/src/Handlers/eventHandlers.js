@@ -387,6 +387,41 @@ async function deleteEventHandler(request, h) {
         }
         if (findEvent.thumbnail !== null) {
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            if (findEvent.thumbnail === "Invalid file path provided" ||
+                findEvent.thumbnail ===
+                    "Error uploading thumbnail to Google Drive" ||
+                findEvent.thumbnail.contains("https://drive.google.com/") ===
+                    false) {
+                const specialKey = findEvent.uniqueId + Helpers_1.NotificationType.EVENT;
+                const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
+                if (!deleteNotification) {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the notification", Helpers_1.LogType.ERROR, deleteNotification === null || deleteNotification === void 0 ? void 0 : deleteNotification.toString());
+                    return h
+                        .response({ message: "Failed to delete the notification" })
+                        .code(400);
+                }
+                else {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Notification deleted", Helpers_1.LogType.WARNING);
+                }
+                const eventDeletion = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "delete", {
+                    where: {
+                        id: findEvent.id,
+                    },
+                });
+                if (!eventDeletion) {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the event", Helpers_1.LogType.ERROR, eventDeletion.toString());
+                    return h
+                        .response({ message: "Failed to delete the event" })
+                        .code(400);
+                }
+                else {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Event deleted", Helpers_1.LogType.INFO);
+                }
+                const message = "Event with uniqueId: " +
+                    uniqueId +
+                    " was deleted successfully";
+                return h.response(message).code(201).message(message);
+            }
             const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
             if (deleteThumbnail === true) {
                 const deleteThumbnailMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {

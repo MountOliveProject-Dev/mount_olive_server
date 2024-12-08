@@ -87,7 +87,7 @@ export async function pushThumbnailReplacementToDriveHandler(name: string, fileP
       log(RequestType.UPDATE, "Invalid file path provided", LogType.ERROR);
       return "Invalid file path provided";
     }
-
+    
     const shareableLink = await updateThumbnailFile(name, mimeType, filePath, uniqueId);
 
     // Remove the file from the 'uploads' directory after processing
@@ -521,7 +521,69 @@ export async function deleteEventHandler(request: Hapi.Request, h: Hapi.Response
 
         if(findEvent.thumbnail !== null){
            const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            if (
+              findEvent.thumbnail === "Invalid file path provided" ||
+              findEvent.thumbnail ===
+                "Error uploading thumbnail to Google Drive" ||
+              findEvent.thumbnail.contains("https://drive.google.com/") ===
+                false
+            ) {
+              const specialKey = findEvent.uniqueId + NotificationType.EVENT;
 
+              const deleteNotification = await deleteEventNotificationHandler(
+                findEvent.eventNotifications.notificationId,
+                findEvent.uniqueId,
+                specialKey
+              );
+
+              if (!deleteNotification) {
+                log(
+                  RequestType.DELETE,
+                  "Failed to delete the notification",
+                  LogType.ERROR,
+                  deleteNotification?.toString()
+                );
+                return h
+                  .response({ message: "Failed to delete the notification" })
+                  .code(400);
+              } else {
+                log(
+                  RequestType.DELETE,
+                  "Notification deleted",
+                  LogType.WARNING
+                );
+              }
+
+              const eventDeletion = await executePrismaMethod(
+                prisma,
+                "event",
+                "delete",
+                {
+                  where: {
+                    id: findEvent.id,
+                  },
+                }
+              );
+
+              if (!eventDeletion) {
+                log(
+                  RequestType.DELETE,
+                  "Failed to delete the event",
+                  LogType.ERROR,
+                  eventDeletion.toString()
+                );
+                return h
+                  .response({ message: "Failed to delete the event" })
+                  .code(400);
+              } else {
+                log(RequestType.DELETE, "Event deleted", LogType.INFO);
+              }
+              const message =
+                "Event with uniqueId: " +
+                uniqueId +
+                " was deleted successfully";
+              return h.response(message).code(201).message(message);
+            }
             const deleteThumbnail = await deleteThumbnailFromDrive(fileId);
             if (deleteThumbnail === true) {
                 const deleteThumbnailMedia = await executePrismaMethod(

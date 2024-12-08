@@ -700,6 +700,7 @@ export async function updateThumbnailHelper(
   try {
     const prisma = server.app.prisma;
     const description = "Thumbnail for an event";
+
     const folderInfo = await executePrismaMethod(
       prisma,
       "folder",
@@ -717,7 +718,7 @@ export async function updateThumbnailHelper(
     }
     if (reUploadMedia === true) {
 
-      if (fileId === "") {
+      if (fileId === "" || fileId === null) {
         const uniqueId ="";
         const link = await pushThumbnailReplacementToDriveHandler(
           name,
@@ -992,7 +993,7 @@ export async function updateThumbnailFile(
       const thumbnail = await executePrismaMethod(prisma, "media", "create", {
         data: {
           type: MediaType.IMAGE,
-          title: name,
+          title: thumbnailName,
           description: "Thumbnail for an event",
           url: shareableLink,
           fileId: response.data.id,

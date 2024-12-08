@@ -629,7 +629,7 @@ async function updateThumbnailHelper(fileId, name, mimeType, path, reUploadMedia
             throw new Error("Thumbnail folder not found");
         }
         if (reUploadMedia === true) {
-            if (fileId === "") {
+            if (fileId === "" || fileId === null) {
                 const uniqueId = "";
                 const link = await (0, eventHandlers_1.pushThumbnailReplacementToDriveHandler)(name, path, mimeType, uniqueId);
                 if (!link) {
@@ -814,7 +814,7 @@ async function updateThumbnailFile(name, mimeType, path, uniqueId) {
             const thumbnail = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "create", {
                 data: {
                     type: Helpers_1.MediaType.IMAGE,
-                    title: name,
+                    title: thumbnailName,
                     description: "Thumbnail for an event",
                     url: shareableLink,
                     fileId: response.data.id,
