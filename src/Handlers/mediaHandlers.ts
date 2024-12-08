@@ -22,7 +22,7 @@ import {
   updateMediaNotificationHandler,
   deleteMediaNotificationHandler,
 } from "./notificationHandlers";
-import { extractFileIdFromDriveLink, pushThumbnailToDriveHandler } from "./eventHandlers";
+import { extractFileIdFromDriveLink, pushThumbnailReplacementToDriveHandler, pushThumbnailToDriveHandler } from "./eventHandlers";
 
 
 
@@ -510,9 +510,15 @@ async function updateAudioFileHelper(
       throw new Error("Audio folder not found");
     }
     if(reUploadMedia === true){
-      await drive.files.delete({
+      const deleteFromDrive = await drive.files.delete({
         fileId: findAudioId,
       });
+
+      if (!deleteFromDrive) {
+        console.log("Failed to delete existing audio from Google Drive");
+        throw new Error("Failed to delete existing audio from Google Drive");
+      }
+      log(RequestType.DELETE, "Audio deleted successfully from Google Drive", LogType.INFO);
       const durat = getDuration(path);
       const duration = durat.toString();
       const audioName = name + "-" + Date.now();
@@ -597,9 +603,13 @@ async function updateAudioFileHelper(
           },
         }
       );
+      if (!getNotification) {
+        log(RequestType.READ, "Notification not found", LogType.ERROR);
+        throw new Error("Notification not found");
+      }
       const notification = await updateMediaNotificationHandler(
         getNotification.id,
-        findAudio.id,
+        findAudio.uniqueId,
         specialKey,
         notificationTitle,
         description || findAudio.description,
@@ -661,7 +671,7 @@ async function updateAudioFileHelper(
       
       const notification = await updateMediaNotificationHandler(
         getNotification.id,
-        findAudio.id,
+        findAudio.uniqueId,
         specialKey,
         notificationTitle,
         description || findAudio.description,
@@ -685,8 +695,7 @@ export async function updateThumbnailHelper(
   name: string,
   mimeType: string,
   path: string,
-  reUploadMedia: boolean,
-
+  reUploadMedia: boolean
 ) {
   try {
     const prisma = server.app.prisma;
@@ -707,114 +716,96 @@ export async function updateThumbnailHelper(
       throw new Error("Thumbnail folder not found");
     }
     if (reUploadMedia === true) {
+
       if (fileId === "") {
-        const link = await pushThumbnailToDriveHandler(name, path, mimeType);
+        const uniqueId ="";
+        const link = await pushThumbnailReplacementToDriveHandler(
+          name,
+          path,
+          mimeType,
+          uniqueId
+        );
         if (!link) {
-          log(RequestType.UPDATE, "Failed to upload thumbnail to Google Drive", LogType.ERROR);
+          log(
+            RequestType.UPDATE,
+            "Failed to upload thumbnail to Google Drive",
+            LogType.ERROR
+          );
           return "Error updating thumbnail";
         }
-        const thumbnail = await executePrismaMethod(prisma, "media", "create", {
-          data: {
-            type: MediaType.IMAGE,
-            title: name,
-            description: description,
-            url: link,
-            fileId: fileId,
-            postedAt: getCurrentDate(),
-            updatedAt: getCurrentDate(),
-            storageFolder: {
-              connect: {
-                folderId: folderInfo.folderId,
-              },
-            },
-          },
-        });
-        if (!thumbnail) {
-          log(RequestType.CREATE, "Failed to create thumbnail media", LogType.ERROR);
-          throw new Error("Failed to create thumbnail media");
-        }
-
+        fileId = await extractFileIdFromDriveLink(link);
         return link;
-      } else if(fileId !== "" || fileId !== null){ {
-          
-            const findThumbnailInDrive = await drive.files.get({
-            fileId: fileId,
-            fields: "id, name",
-            });
-            if(!findThumbnailInDrive){
-            log(RequestType.UPDATE, "Thumbnail found in Google Drive", LogType.INFO);
-            return "Thumbnail not found";
-            }
-          
-            const findThumbnail = await executePrismaMethod(
-              prisma,
-              "media",
-              "findUnique",
-              {
-                where: {
-                  fileId: fileId,
-                  type: MediaType.IMAGE,
-                },
-              }
-            );
-            if (!findThumbnail) {
-              log(RequestType.READ, "Thumbnail not found", LogType.ERROR);
-              return "Thumbnail not found";
-            }
-
-            const deleteThumbnail = await drive.files.delete({
+      } else {
+        const findThumbnailInDrive: any = await drive.files.get({
+          fileId: fileId,
+          fields: "id, name",
+        });
+        if (!findThumbnailInDrive || findThumbnailInDrive.data.id !== fileId) {
+          log(
+            RequestType.UPDATE,
+            "Thumbnail not found in Google Drive",
+            LogType.INFO
+          );
+          return "Thumbnail not found";
+        }
+        const findThumbnail = await executePrismaMethod(
+          prisma,
+          "media",
+          "findUnique",
+          {
+            where: {
               fileId: fileId,
-            });
-            if (!deleteThumbnail) {
-              log(RequestType.DELETE, "Thumbnail not found in Google Drive", LogType.ERROR);
-              return "Failed to delete existing thumbnail";
-            }
+              type: MediaType.IMAGE,
+            },
+          }
+        );
+        if (!findThumbnail) {
+          log(RequestType.READ, "Thumbnail not found", LogType.ERROR);
+          return "Thumbnail not found";
+        }
+        const deleteThumbnail = await drive.files.delete({
+          fileId: fileId,
+        });
+        if (!deleteThumbnail) {
           log(
             RequestType.DELETE,
-            "Thumbnail deleted successfully from Google Drive",
-            LogType.INFO
-          )
-         
-          const link = await pushThumbnailToDriveHandler(name, path, mimeType);
-          
-          if (!link) {
-            log(RequestType.UPDATE, "Failed to upload thumbnail to Google Drive", LogType.ERROR);
-            return "Error updating thumbnail";
-          }
-          const newId = await extractFileIdFromDriveLink(link);
-          if (!newId) {
-            log(RequestType.UPDATE, "Failed to extract file id from link", LogType.ERROR);
-            return "Error updating thumbnail";
-          }
-           const deleteThumbnailFromDB = await executePrismaMethod(
-             prisma,
-             "media",
-             "update",
-             {
-               where: {
-                 fileId: fileId,
-                 type: MediaType.IMAGE,
-                 uniqueId: findThumbnail.uniqueId,
-               },
-               data: {
-                 fileId: newId,
-                 url:link,
-                 updatedAt: getCurrentDate(),
-               },
-             }
-           );
-          if (!deleteThumbnailFromDB) {
-            log(RequestType.UPDATE, "Failed to update thumbnail from Db", LogType.ERROR);
-            return "Failed to update existing thumbnail";
-          }
-          return link;
+            "Failed to delete existing thumbnail from Google Drive",
+            LogType.ERROR
+          );
+          return "Failed to delete existing thumbnail";
+        }
+        log(
+          RequestType.DELETE,
+          "Thumbnail deleted successfully from Google Drive",
+          LogType.INFO
+        );
+        const link = await pushThumbnailReplacementToDriveHandler(
+          name,
+          path,
+          mimeType,
+          findThumbnail.uniqueId
+        );
+        if (!link) {
+          log(
+            RequestType.UPDATE,
+            "Failed to upload thumbnail to Google Drive",
+            LogType.ERROR
+          );
+          return "Error updating thumbnail";
+        }
+        const newId = await extractFileIdFromDriveLink(link);
 
-       
+        if (!newId) {
+          log(
+            RequestType.UPDATE,
+            "Failed to extract file id from link",
+            LogType.ERROR
+          );
+          return "Error updating thumbnail";
+        }
+        return link;
       }
-      
-       
-    }
-    }else{
+    } else {
       const getLink = await executePrismaMethod(prisma, "media", "findUnique", {
         where: {
           fileId: fileId,
@@ -828,7 +819,12 @@ export async function updateThumbnailHelper(
       return getLink.url;
     }
   } catch (err: any) {
-    log(RequestType.UPDATE, "Failed to update thumbnail", LogType.ERROR, err);
+    log(
+      RequestType.UPDATE,
+      "Failed to update thumbnail",
+      LogType.ERROR,
+      err.toString()
+    );
     throw err;
   }
 }
@@ -850,7 +846,7 @@ export async function createThumbnailFile(
         },
       }
     );
-
+    
     if (!folderInfo) {
       log(RequestType.CREATE, "Image folder not found", LogType.ERROR);
       throw new Error("Image folder not found");
@@ -920,6 +916,125 @@ export async function createThumbnailFile(
     return shareableLink;
   } catch (error:any) {
     log(RequestType.CREATE,"Error uploading file to Google Drive",LogType.ERROR, error);
+    throw error;
+  }
+}
+
+export async function updateThumbnailFile(
+  name: string,
+  mimeType: string,
+  path: string,
+  uniqueId: string,
+) {
+  try {
+    const prisma = server.app.prisma;
+    const folderInfo = await executePrismaMethod(
+      prisma,
+      "folder",
+      "findFirst",
+      {
+        where: {
+          folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
+          folderType: folderType.Images,
+        },
+      }
+    );
+
+    if (!folderInfo) {
+      log(RequestType.CREATE, "Image folder not found", LogType.ERROR);
+      throw new Error("Image folder not found");
+    }
+
+    const thumbnailName = name + "-" + Date.now();
+    const fileMetadata = {
+      name: thumbnailName,
+      parents: [folderInfo.folderId],
+    };
+
+    const media = {
+      mimeType: mimeType,
+      body: fs.createReadStream(path),
+    };
+
+    const response = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      fields: "id",
+    });
+
+    if (!response.data.id) {
+      log(
+        RequestType.CREATE,
+        "Failed to upload file to Google Drive",
+        LogType.ERROR
+      );
+      throw new Error("Failed to upload file to Google Drive");
+    }
+
+    // Set the file's sharing permissions to "anyone with the link"
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+
+    // Get the shareable link
+    const shareableLink = `https://drive.google.com/file/d/${response.data.id}/view?usp=sharing`;
+    log(
+      RequestType.CREATE,
+      `The thumbnail ${name} with Unique ID: ${response.data.id} has been updated successfully!`,
+      LogType.INFO
+    );
+
+    if(uniqueId === ""|| uniqueId === null){
+      const thumbnail = await executePrismaMethod(prisma, "media", "create", {
+        data: {
+          type: MediaType.IMAGE,
+          title: name,
+          description: "Thumbnail for an event",
+          url: shareableLink,
+          fileId: response.data.id,
+          postedAt: getCurrentDate(),
+          updatedAt: getCurrentDate(),
+          storageFolder: {
+            connect: {
+              folderId: folderInfo.folderId,
+            },
+          },
+        },
+      });
+      if (!thumbnail) {
+        console.log("Failed to create thumbnail media");
+        throw new Error("Failed to create thumbnail media");
+      }
+      return shareableLink;
+    }else{
+      const thumbnail = await executePrismaMethod(prisma, "media", "update", {
+        where: {
+          uniqueId: uniqueId,
+          type: MediaType.IMAGE
+        },
+        data: {
+          url: shareableLink,
+          fileId: response.data.id,
+          updatedAt: getCurrentDate(),
+        },
+      });
+      if (!thumbnail) {
+        console.log("Failed to create thumbnail media");
+        throw new Error("Failed to create thumbnail media");
+      }
+      return shareableLink;
+    }
+  } catch (error: any) {
+    log(
+      RequestType.CREATE,
+      "Error uploading file to Google Drive",
+      LogType.ERROR,
+      error
+    );
     throw error;
   }
 }
@@ -1208,84 +1323,6 @@ export const listAllVideoMediaHandler = async (request: Hapi.Request, h: Hapi.Re
 */
 
 
-// export const createAudioMediaHandler: Hapi.Lifecycle.Method = async (
-//   request: Hapi.Request,
-//   h: Hapi.ResponseToolkit
-// ) => {
-//   const { audioFile, name, description } = request.payload as AudioPayload;
-//   console.log("...about to upload file to google drive");
-
-//   if (!audioFile) {
-//     return h.response({ error: "No file uploaded" }).code(400);
-//   }
-
-//   const filename = audioFile.hapi.filename;
-//   const mimeType = audioFile.hapi.headers["content-type"];
-//   console.log("File name:", filename);
-
-//   const uploadsDir = path.join(__dirname, "uploads");
-//   if (!fs.existsSync(uploadsDir)) {
-//     fs.mkdirSync(uploadsDir);
-//   }
-
-//   const filePath = path.join(uploadsDir, filename);
-//   console.log("File path:", filePath);
-
-//   try {
-//     // Wrap file writing in a promise to wait until it's fully completed
-//     await new Promise<void>((resolve, reject) => {
-//       const fileStream = fs.createWriteStream(filePath);
-//       audioFile.pipe(fileStream);
-
-//       fileStream.on("error", (err) => {
-//         console.error("Error writing file:", err);
-//         reject(err);
-//       });
-
-//       fileStream.on("finish", () => {
-//         console.log("...file uploaded to server");
-//         resolve();
-//       });
-//     });
-
-//     console.log("...file done processing, about to upload to google drive");
-
-//     // Use music-metadata to get the duration
-//   //  const buffer = fs.readFileSync(filePath);
-//   //  const metadata = audioMetadata.parse(buffer, mimeType);
-//     const duration =  0;
-//     console.log("Duration:", duration);
-
-//     // Upload the file to Google Drive
-//     const fileDetails = await createAudioFile(
-//       audioFile,
-//       name,
-//       description,
-//       duration,
-//       mimeType,
-//       filePath
-//     );
-//     console.log("File details:", fileDetails);
-
-//     // Remove the file from the 'uploads' directory after processing
-//     if (filePath && typeof filePath === "string") {
-//       fs.unlink(filePath, (err) => {
-//         if (err) {
-//           console.error("Error deleting file:", err);
-//         }
-//       });
-//     }
-
-//     console.log("File written successfully to uploads folder");
-//     return h.response(fileDetails).code(200);
-//   } catch (error) {
-//     console.error("Error during file processing:", error);
-//     return h
-//       .response({ error: "Failed to upload file to Google Drive" })
-//       .code(500);
-//   }
-// };
-
 
 //list all audios
 //audio media
@@ -1324,11 +1361,16 @@ export const storeAudioFileHandler: Hapi.Lifecycle.Method = async (
         resolve();
       });
     });
-    const details = "filePath:" + filePath + " ,mimeType:" + mimeType+ " ,filename:" + filename
-    
-    log(RequestType.CREATE, "File uploaded successfully", LogType.INFO,details);
+
+    const details = `filePath: ${filePath}, mimeType: ${mimeType}, filename: ${filename}`;
+    log(
+      RequestType.CREATE,
+      "File uploaded successfully",
+      LogType.INFO,
+      details
+    );
     return h.response({ filePath, mimeType, filename }).code(200);
-  } catch (error:any) {
+  } catch (error: any) {
     log(RequestType.CREATE, "Failed to store file", LogType.ERROR, error);
     return h.response({ error: "Failed to store file" }).code(500);
   }
@@ -1341,12 +1383,12 @@ export async function createFoldersInDatabaseHandler(request: Hapi.Request, h: H
         {
           folderType: folderType.Images,
           name:"Thumbnails",
-          folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID,
+          folderId: process.env.GOOGLE_DRIVE_IMAGE_FOLDER_ID||"",
         },
         {
           folderType: folderType.Audios,
           name:"Sermons",
-          folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID,
+          folderId: process.env.GOOGLE_DRIVE_AUDIO_FOLDER_ID||"",
         },
       ],
     });

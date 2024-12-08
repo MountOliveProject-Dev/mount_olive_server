@@ -73,7 +73,8 @@ export const mediaPlugin: Hapi.Plugin<void> = {
             parse: true,
             timeout: 3000000,
             multipart: true,
-            maxBytes: 104857600000, // Limit to 100MB
+            maxBytes: 10485760000000, // Limit to 100MB
+            allow: "multipart/form-data",
           },
           validate: {
             payload: Joi.object({

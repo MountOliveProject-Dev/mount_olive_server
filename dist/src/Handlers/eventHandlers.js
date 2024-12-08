@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listEventsHandler = listEventsHandler;
 exports.pushThumbnailToDriveHandler = pushThumbnailToDriveHandler;
+exports.pushThumbnailReplacementToDriveHandler = pushThumbnailReplacementToDriveHandler;
 exports.createEventHandler = createEventHandler;
 exports.updateEventHandler = updateEventHandler;
 exports.createManyEventsHandler = createManyEventsHandler;
@@ -66,6 +67,28 @@ async function pushThumbnailToDriveHandler(name, filePath, mimeType) {
     }
     catch (error) {
         (0, Helpers_1.log)(Helpers_1.RequestType.CREATE, "Error uploading thumbnail to Google Drive", Helpers_1.LogType.ERROR, error.toString() || "Error uploading thumbnail to Google Drive");
+        return "Error uploading thumbnail to Google Drive";
+    }
+}
+async function pushThumbnailReplacementToDriveHandler(name, filePath, mimeType, uniqueId) {
+    const prisma = server_1.default.app.prisma;
+    try {
+        // Ensure the filePath is provided and is a string
+        if (!filePath || typeof filePath !== "string") {
+            (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Invalid file path provided", Helpers_1.LogType.ERROR);
+            return "Invalid file path provided";
+        }
+        const shareableLink = await (0, mediaHandlers_1.updateThumbnailFile)(name, mimeType, filePath, uniqueId);
+        // Remove the file from the 'uploads' directory after processing
+        fs_1.default.unlink(filePath, (err) => {
+            if (err) {
+                (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Failed to delete file", Helpers_1.LogType.ERROR, err.toString());
+            }
+        });
+        return shareableLink;
+    }
+    catch (error) {
+        (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Error uploading thumbnail to Google Drive", Helpers_1.LogType.ERROR, error.toString() || "Error uploading thumbnail to Google Drive");
         return "Error uploading thumbnail to Google Drive";
     }
 }
@@ -154,7 +177,7 @@ async function updateEventHandler(request, h) {
     const { prisma } = request.server.app;
     const { uniqueId, title, description, date, host, time, location, venue, uploadThumbnail, name, mimeType, filePath, } = request.payload;
     let thumbnailLink = null;
-    try { //
+    try {
         const findEvent = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "findUnique", {
             where: {
                 uniqueId: uniqueId,
@@ -164,10 +187,10 @@ async function updateEventHandler(request, h) {
                 thumbnail: true,
                 eventNotifications: {
                     select: {
-                        notificationId: true
-                    }
-                }
-            }
+                        notificationId: true,
+                    },
+                },
+            },
         });
         if (!findEvent) {
             (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Event not found", Helpers_1.LogType.WARNING);
@@ -175,6 +198,16 @@ async function updateEventHandler(request, h) {
         }
         if (uploadThumbnail === true) {
             let fileId = "";
+            if (findEvent.thumbnail !== null &&
+                findEvent.thumbnail !== undefined &&
+                findEvent.thumbnail !== "Invalid file path provided" &&
+                findEvent.thumbnail !== "Error uploading thumbnail to Google Drive") {
+                fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
+            }
+            else if (findEvent.thumbnail === "Invalid file path provided" ||
+                findEvent.thumbnail === "Error uploading thumbnail to Google Drive") {
+                fileId = findEvent.thumbnail;
+            }
             thumbnailLink = await (0, mediaHandlers_1.updateThumbnailHelper)(fileId, name, mimeType, filePath, uploadThumbnail);
             if (thumbnailLink === "Thumbnail not found") {
                 (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Thumbnail not found", Helpers_1.LogType.WARNING);
@@ -183,15 +216,12 @@ async function updateEventHandler(request, h) {
             else if (thumbnailLink === "Error updating thumbnail") {
                 (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Error updating thumbnail", Helpers_1.LogType.ERROR);
                 return h
-                    .response({
-                    message: "Couldn't update thumbnail, please try again ",
-                })
+                    .response({ message: "Couldn't update thumbnail, please try again" })
                     .code(400);
             }
             else {
                 (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, thumbnailLink.toString(), Helpers_1.LogType.INFO);
             }
-            //
             const event = await (0, Helpers_1.executePrismaMethod)(prisma, "event", "update", {
                 where: {
                     id: findEvent.id,
@@ -260,12 +290,18 @@ async function updateEventHandler(request, h) {
         }
         else {
             (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Bad request, thumbnail status is undefined", Helpers_1.LogType.ERROR);
-            return h.response({ message: "Bad request, thumbnail status is undefined" }).code(400);
+            return h
+                .response({ message: "Bad request, thumbnail status is undefined" })
+                .code(400);
         }
     }
     catch (err) {
         (0, Helpers_1.log)(Helpers_1.RequestType.UPDATE, "Internal Server Error", Helpers_1.LogType.ERROR, err.toString());
-        return h.response({ message: "Internal Server Error" + ":failed to update the event:" + uniqueId }).code(500);
+        return h
+            .response({
+            message: "Internal Server Error: failed to update the event: " + uniqueId,
+        })
+            .code(500);
     }
 }
 // create many events
@@ -345,7 +381,6 @@ async function deleteEventHandler(request, h) {
                 }
             }
         });
-        console.log(findEvent);
         if (!findEvent) {
             (0, Helpers_1.log)(Helpers_1.RequestType.READ, "Event not found ", Helpers_1.LogType.WARNING, findEvent.toString());
             return h.response({ message: "Event not found" }).code(404);
@@ -354,6 +389,14 @@ async function deleteEventHandler(request, h) {
             const fileId = await extractFileIdFromDriveLink(findEvent.thumbnail);
             const deleteThumbnail = await (0, mediaHandlers_1.deleteThumbnailFromDrive)(fileId);
             if (deleteThumbnail === true) {
+                const deleteThumbnailMedia = await (0, Helpers_1.executePrismaMethod)(prisma, "media", "delete", {
+                    where: {
+                        fileId: fileId,
+                    },
+                });
+                if (!deleteThumbnailMedia) {
+                    (0, Helpers_1.log)(Helpers_1.RequestType.DELETE, "Failed to delete the thumbnail", Helpers_1.LogType.ERROR, deleteThumbnailMedia.toString());
+                }
                 const specialKey = findEvent.uniqueId + Helpers_1.NotificationType.EVENT;
                 const deleteNotification = await (0, notificationHandlers_1.deleteEventNotificationHandler)(findEvent.eventNotifications.notificationId, findEvent.uniqueId, specialKey);
                 if (!deleteNotification) {

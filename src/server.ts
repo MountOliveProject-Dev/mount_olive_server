@@ -22,6 +22,10 @@ const server: Hapi.Server = Hapi.server({
   port: process.env.PORT || 8001,
   host: process.env.HOST || "localhost",
   routes: {
+     timeout: {
+      server: 600000, // 10 minutes
+      socket: 600000  // 10 minutes
+    },
     cors: {
       origin: ["*"],
       credentials: true,
